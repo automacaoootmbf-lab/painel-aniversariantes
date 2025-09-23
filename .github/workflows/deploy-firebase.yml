@@ -1,27 +1,29 @@
-name: Deploy to Firebase Hosting (main)
+#.github/workflows/deploy-firebase.yml
 
+name: Deploy to Firebase Hosting on Push to Main
+
+# Aciona o fluxo de trabalho apenas em eventos de push para a branch 'main'
 on:
   push:
     branches:
       - main
 
 jobs:
-  deploy:
+  build_and_deploy:
+    # Usa a versão mais recente do Ubuntu como ambiente de execução
     runs-on: ubuntu-latest
     steps:
+      # Passo 1: Faz o checkout do código do repositório para que o fluxo de trabalho possa acessá-lo
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Se precisar rodar build, habilite as linhas abaixo
-      # - name: Install deps
-      #   run: npm ci
-      # - name: Build
-      #   run: npm run build
-
-      - name: Deploy to Firebase Hosting
+      # Passo 2: Implanta o código no Firebase Hosting
+      - name: Deploy to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.GCP_SA_KEY }}
-          projectId: ${{ secrets.FIREBASE_PROJECT }}
+          # Injeta a chave da conta de serviço a partir dos GitHub Secrets para autenticação
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
+          # Especifica o ID do projeto Firebase de destino para evitar ambiguidade
+          projectId: 'aniversariantes-automation'
+          # Implanta no canal 'live', tornando-o a versão de produção
           channelId: live
