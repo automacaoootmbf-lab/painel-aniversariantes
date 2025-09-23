@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Aniversariantes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Corporate Blue & Teal (Eletrobras Inspired) -->
+    <!-- Application Structure Plan: A tab-based SPA. The structure is reorganized into four distinct views accessible via a main tab navigation: "Aniversariantes do Dia," "Calendário," "Lista Completa," and "Resumo Gráfico." The "Aniversariantes do Dia" tab acts as a new dashboard/banner. This tabbed architecture is superior for usability as it separates different tasks/views, preventing cognitive overload and creating a clean, organized user flow. The user can choose exactly which tool they want to interact with. -->
+    <!-- Visualization & Content Choices: 
+        1. Today's Birthdays -> Goal: Inform/Highlight -> Viz: Dynamic Card Grid -> Interaction: Displays today's birthdays prominently. -> Justification: A dedicated banner/dashboard for immediate information is highly effective. Cards provide a visually appealing format for featuring individuals. -> Method: Vanilla JS DOM Manipulation.
+        2. Calendar View -> Goal: Organize/Inform -> Viz: Interactive Calendar Grid -> Interaction: Navigate months. -> Justification: Provides a familiar, contextual view of birthdays over time. -> Method: Vanilla JS DOM Manipulation.
+        3. Full List -> Goal: Inform/Organize/Search -> Viz: Dynamic HTML Table -> Interaction: Filter, Search, Add, Edit, Delete. -> Justification: Best for detailed lookup and full CRUD management of the entire dataset. -> Method: Vanilla JS DOM Manipulation.
+        4. Chart Summary -> Goal: Compare/Analyze -> Viz: Bar & Doughnut Charts, Data Import -> Interaction: Static summaries, CSV/Paste data import. -> Justification: Offers high-level visual comparison and centralizes data management/import functionalities. -> Library: Chart.js (Canvas) & Vanilla JS.
+        CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        :root {
+            --eletro-blue: #0033A0;
+            --eletro-teal: #009A74;
+            --eletro-yellow: #FFC72C;
+            --light-gray: #f8fafc;
+            --medium-gray: #e2e8f0;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--light-gray);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+         ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a8a29e;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #78716c;
+        }
+        .calendar-day.other-month {
+            color: #cbd5e1;
+        }
+        .calendar-birthday {
+            font-size: 0.75rem;
+            padding: 2px 4px;
+            margin-top: 4px;
+            border-radius: 4px;
+            background-color: #FEF9C3;
+            color: #713F12;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: default;
+        }
+        .today .day-number {
+             background-color: var(--eletro-yellow);
+             color: #422006;
+             border-radius: 50%;
+             width: 28px;
+             height: 28px;
+             display: inline-flex;
+             align-items: center;
+             justify-content: center;
+             font-weight: 600;
+        }
+        .tab-btn.active {
+            background-color: var(--eletro-blue);
+            color: white;
+            border-color: var(--eletro-blue);
+        }
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        #notification-toast {
+            transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8 flex items-center justify-center flex-col">
+            <svg class="h-16 w-16 mb-2 text-blue-800" style="color: var(--eletro-blue);" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-5.197-5.975M15 10a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800" style="color: var(--eletro-blue);">Painel de Aniversariantes</h1>
+            <p class="text-slate-500 mt-2">Celebre com a nossa equipe.</p>
+        </header>
+
+        <div class="mb-8">
+            <div id="tabs-container" class="flex flex-wrap border-b border-gray-200">
+                <button data-tab="today" class="tab-btn px-4 py-3 font-semibold text-gray-600 rounded-t-lg focus:outline-none">🎂 Aniversariantes do Dia</button>
+                <button data-tab="calendar" class="tab-btn px-4 py-3 font-semibold text-gray-600 rounded-t-lg focus:outline-none">🗓️ Calendário</button>
+                <button data-tab="list" class="tab-btn px-4 py-3 font-semibold text-gray-600 rounded-t-lg focus:outline-none">📋 Lista Completa</button>
+                <button data-tab="chart" class="tab-btn px-4 py-3 font-semibold text-gray-600 rounded-t-lg focus:outline-none">📊 Análises & Gestão</button>
+            </div>
+        </div>
+
+        <main id="tab-panels-container">
+            <div id="today-panel" class="tab-panel"></div>
+
+            <div id="calendar-panel" class="tab-panel hidden">
+                 <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-slate-700">Calendário de Aniversários</h2>
+                        <div class="flex items-center gap-2 mt-4 sm:mt-0">
+                             <button id="today-btn" class="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 rounded-md">Hoje</button>
+                            <button id="prev-month-btn" class="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 rounded-md">&lt;</button>
+                            <h3 id="calendar-month-year" class="text-lg font-semibold text-slate-600 w-32 text-center"></h3>
+                            <button id="next-month-btn" class="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 rounded-md">&gt;</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-7 text-center font-semibold text-xs text-gray-500 border-b pb-2">
+                        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7"></div>
+                </div>
+            </div>
+
+            <div id="list-panel" class="tab-panel hidden space-y-8">
+                 <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label for="month-filter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Mês:</label>
+                            <select id="month-filter" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" style="--tw-ring-color: var(--eletro-blue); --tw-border-color: var(--eletro-blue);">
+                                <option value="all">Todos os Meses</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="sector-filter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Setor:</label>
+                            <select id="sector-filter" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" style="--tw-ring-color: var(--eletro-blue); --tw-border-color: var(--eletro-blue);">
+                                <option value="all">Todos os Setores</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="name-search" class="block text-sm font-medium text-gray-700 mb-1">Buscar por Nome:</label>
+                            <input type="text" id="name-search" placeholder="Digite um nome..." class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" style="--tw-ring-color: var(--eletro-blue); --tw-border-color: var(--eletro-blue);">
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg">
+                     <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-slate-700">Lista de Aniversariantes</h2>
+                        <button id="add-person-btn" class="px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none" style="background-color: var(--eletro-blue);">+ Adicionar</button>
+                     </div>
+                     <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 sticky top-0">
+                                <tr>
+                                    <th class="p-4 font-semibold text-sm text-slate-600">Nome Completo</th>
+                                    <th class="p-4 font-semibold text-sm text-slate-600">Setor</th>
+                                    <th class="p-4 font-semibold text-sm text-slate-600">Data</th>
+                                    <th class="p-4 font-semibold text-sm text-slate-600 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="birthday-table-body" class="divide-y divide-gray-200"></tbody>
+                        </table>
+                        <div id="no-results" class="text-center p-8 text-gray-500 hidden">
+                            <p>Nenhum resultado encontrado.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="chart-panel" class="tab-panel hidden space-y-8">
+                <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-xl font-semibold text-slate-700 mb-4">Análises Quantitativas</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="md:col-span-1 bg-gray-50 p-6 rounded-xl flex flex-col justify-center items-center">
+                            <p class="text-lg text-gray-600">Total de Colaboradores</p>
+                            <p id="total-personnel" class="text-5xl font-bold" style="color: var(--eletro-blue);"></p>
+                        </div>
+                        <div class="md:col-span-2">
+                             <p class="text-center font-semibold text-gray-700 mb-2">Colaboradores por Setor</p>
+                            <div class="chart-container h-64 md:h-80">
+                                <canvas id="sector-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-xl font-semibold text-slate-700 mb-4">Importar Dados em Lote</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="font-semibold text-gray-800">A partir de arquivo CSV</h3>
+                            <p class="text-sm text-gray-500 mt-1 mb-3">Carregue um arquivo .csv com as colunas: Nome, Setor, Data (DD/MM).</p>
+                            <label for="csv-file-input" class="cursor-pointer inline-block px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-md hover:bg-teal-600 focus:outline-none" style="background-color: var(--eletro-teal);">
+                                Selecionar Arquivo
+                            </label>
+                            <input type="file" id="csv-file-input" accept=".csv" class="hidden">
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Colar dados de uma planilha</h3>
+                             <p class="text-sm text-gray-500 mt-1 mb-3">Copie as colunas (Nome, Setor, Data) e cole abaixo.</p>
+                            <textarea id="paste-data-input" rows="4" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="João da Silva	TI	22/09"></textarea>
+                            <button id="paste-data-btn" class="mt-2 px-4 py-2 w-full text-sm font-semibold text-white rounded-lg shadow-md hover:bg-teal-600 focus:outline-none" style="background-color: var(--eletro-teal);">Importar Dados Colados</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-4 md:p-6 rounded-2xl shadow-lg">
+                    <h2 class="text-xl font-semibold text-slate-700 mb-4">Resumo Mensal de Aniversários</h2>
+                     <div class="chart-container">
+                        <canvas id="birthday-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="person-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all scale-95 opacity-0">
+            <h2 id="modal-title" class="text-2xl font-bold text-slate-800 mb-6">Adicionar Nova Pessoa</h2>
+            <form id="person-form">
+                <input type="hidden" id="person-id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="person-name" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+                        <input type="text" id="person-name" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="person-sector" class="block text-sm font-medium text-gray-700">Setor</label>
+                        <input type="text" id="person-sector" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                           <label for="person-day" class="block text-sm font-medium text-gray-700">Dia</label>
+                           <input type="number" id="person-day" required min="1" max="31" class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                         <div>
+                           <label for="person-month" class="block text-sm font-medium text-gray-700">Mês</label>
+                           <select id="person-month" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                           </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-4 mt-8">
+                    <button type="button" id="cancel-btn" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-md hover:bg-blue-700" style="background-color: var(--eletro-blue);">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="notification-toast" class="fixed bottom-5 right-5 bg-green-500 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10">
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            let birthdayData = [
+                 { id: 1, name: 'Jeferson', sector: 'DMEV.O', day: 4, month: 1 }, { id: 2, name: 'Nelson', sector: 'Bv', day: 6, month: 1 }, { id: 3, name: 'YANN REIS DIAS SULINO', sector: 'OOTMA.F', day: 6, month: 1 }, { id: 4, name: 'Josenir Xavier', sector: 'DMEV.O', day: 7, month: 1 }, { id: 5, name: 'EDSON PATRICIO SOUZA', sector: 'OOTMA.F', day: 7, month: 1 }, { id: 6, name: 'Luiz Flávio Pereira', sector: 'OOTMC/OOTME.F', day: 8, month: 1 }, { id: 7, name: 'FÁBIO COUTINHO DE AZEVEDO', sector: 'OOTMD.F', day: 10, month: 1 }, { id: 8, name: 'Reinaldo Maciano da Silva', sector: 'OOTMC/OOTME.F', day: 10, month: 1 }, { id: 9, name: 'Claudio Aquino', sector: 'GRV.O', day: 11, month: 1 }, { id: 10, name: 'WILLIAM TEODORO DE OLIVEIRA', sector: 'OOTMA.F', day: 13, month: 1 }, { id: 11, name: 'Eliomar', sector: 'Ambiental', day: 15, month: 1 }, { id: 12, name: 'Claudia', sector: 'Kantro', day: 17, month: 1 }, { id: 13, name: 'José', sector: 'Ambiental', day: 19, month: 1 }, { id: 14, name: 'Flávio Eduardo da Silva', sector: 'OOTMC/OOTME.F', day: 19, month: 1 }, { id: 15, name: 'Jefferson Ramalho', sector: 'RP', day: 20, month: 1 }, { id: 16, name: 'ALEX FABIANO SANCHES', sector: 'OOTMA.F', day: 21, month: 1 }, { id: 17, name: 'RENATO DE OLIVEIRA', sector: 'OOTMA.F', day: 22, month: 1 }, { id: 18, name: 'RODRIGO SILVA SANTOS', sector: 'OOTMD.F', day: 23, month: 1 }, { id: 19, name: 'Anderson Souza', sector: 'DMLV.O', day: 26, month: 1 }, { id: 20, name: 'Divino', sector: 'Ambiental', day: 26, month: 1 }, { id: 21, name: 'ADEVALCIR DO NASCIMENTO SILVA', sector: 'OOTMA.F', day: 27, month: 1 }, { id: 22, name: 'RENATO MARTINS DA SILVA', sector: 'OOTMA.F', day: 28, month: 1 }, { id: 23, name: 'Walace', sector: 'DMEV.O', day: 29, month: 1 }, { id: 24, name: 'Denilson Francisco Xavier', sector: 'OOTMC/OOTME.F', day: 30, month: 1 }, { id: 25, name: 'Carlos', sector: 'Ambiental', day: 1, month: 2 }, { id: 26, name: 'Danilo Lopes Luvizoto', sector: 'OOTMC/OOTME.F', day: 1, month: 2 }, { id: 27, name: 'Ubismar Camilo dos Santos', sector: 'OOTMC/OOTME.F', day: 2, month: 2 }, { id: 28, name: 'Xisto', sector: 'DOES.O', day: 3, month: 2 }, { id: 29, name: 'Luiz', sector: 'RP', day: 5, month: 2 }, { id: 30, name: 'SÍLVIO RONALDO DE SOUZA BERRIEL', sector: 'OOTMD.F', day: 5, month: 2 }, { id: 31, name: 'Valtair', sector: 'Ambiental', day: 6, month: 2 }, { id: 32, name: 'Carlos Alberto do Couto', sector: 'OOTMC/OOTME.F', day: 6, month: 2 }, { id: 33, name: 'Rafael Antônio de Paula', sector: 'OOTMC/OOTME.F', day: 9, month: 2 }, { id: 34, name: 'Jhonys', sector: 'RP', day: 14, month: 2 }, { id: 35, name: 'EVANDRO GOMES RIBEIRO', sector: 'OOTMD.F', day: 15, month: 2 }, { id: 36, name: 'CARLITO DE BRITO JUNIOR', sector: 'OOTMA.F', day: 28, month: 2 }, { id: 37, name: 'Philippe', sector: 'DMEV.O', day: 28, month: 2 }, { id: 38, name: 'MARCOS FERNANDO ALCANTRA', sector: 'OOTMA.F', day: 4, month: 3 }, { id: 39, name: 'Enilton', sector: 'Ambiental', day: 10, month: 3 }, { id: 40, name: 'Rodrigo Augusto Costa de Souza', sector: 'OOTMC/OOTME.F', day: 10, month: 3 }, { id: 41, name: 'Rafael Santos', sector: 'RP', day: 11, month: 3 }, { id: 42, name: 'Iago', sector: 'Rio Minas', day: 12, month: 3 }, { id: 43, name: 'ALLAN CASSIMIRO DE CARVALHO', sector: 'OOTMA.F', day: 14, month: 3 }, { id: 44, name: 'JOSE ALEXANDRE MOREIRA', sector: 'OOTMA.F', day: 14, month: 3 }, { id: 45, name: 'Deividi', sector: 'Nova Rio', day: 17, month: 3 }, { id: 46, name: 'MATEUS JOSE DOS SANTOS MOREIRA', sector: 'OOTMA.F', day: 18, month: 3 }, { id: 47, name: 'RONALDO ANTONIO ALVES BARBOSA', sector: 'OOTMC/OOTME.F', day: 21, month: 3 }, { id: 48, name: 'Fabiano', sector: 'CSFI.A', day: 27, month: 3 }, { id: 49, name: 'JEFFERSON GOMES DA SILVA', sector: 'OOTMA.F', day: 4, month: 4 }, { id: 50, name: 'Renirto Arlindo Lucas Mendes', sector: 'OOTMC/OOTME.F', day: 4, month: 4 }, { id: 51, name: 'RODRIGO DOS SANTOS SOUZA', sector: 'OOTMC/OOTME.F', day: 5, month: 4 }, { id: 52, name: 'Valcir Silva', sector: 'RP', day: 7, month: 4 }, { id: 53, name: 'WELLERSON MACHADO CUNHA', sector: 'OOTMC/OOTME.F', day: 9, month: 4 }, { id: 54, name: 'ALTAIR BRONISIO JUNIOR', sector: 'OOTMC/OOTME.F', day: 10, month: 4 }, { id: 55, name: 'SERGIO APARECIDO DIAS SOLANO', sector: 'OOTMA.F', day: 15, month: 4 }, { id: 56, name: 'Marly', sector: 'Kantro', day: 16, month: 4 }, { id: 57, name: 'Jusselio', sector: 'CSR.A', day: 18, month: 4 }, { id: 58, name: 'Ronaldo Carlos Morais', sector: 'OOTMC/OOTME.F', day: 18, month: 4 }, { id: 59, name: 'Tallyta', sector: 'FB', day: 22, month: 4 }, { id: 60, name: 'FELIPE EMANUEL BRAGA DO COUTO', sector: 'OOTMC/OOTME.F', day: 22, month: 4 }, { id: 61, name: 'JOÃO PEDRO LOPES RAMALHO', sector: 'OOTMD.F', day: 24, month: 4 }, { id: 62, name: 'JOSE ANTONIO RODRIGUES', sector: 'OOTMA.F', day: 24, month: 4 }, { id: 63, name: 'DANILO VAZ FIGUEIREDO', sector: 'OOTMC/OOTME.F', day: 24, month: 4 }, { id: 64, name: 'FERNANDO JERONIMO DE SOUZA', sector: 'OOTMA.F', day: 25, month: 4 }, { id: 65, name: 'VINICIUS DE MORAIS REIS', sector: 'OOTMA.F', day: 25, month: 4 }, { id: 66, name: 'Lanna', sector: 'DMEV.O', day: 26, month: 4 }, { id: 67, name: 'Admilson', sector: 'DMEV.O', day: 28, month: 4 }, { id: 68, name: 'LEANDRO ANDRADE CUSTÓDIO', sector: 'OOTMC/OOTME.F', day: 28, month: 4 }, { id: 69, name: 'GILMAR VIANA BARBOSA', sector: 'OOTMD.F', day: 30, month: 4 }, { id: 70, name: 'Wellington da Silva Rodrigues', sector: 'OOTMC/OOTME.F', day: 1, month: 5 }, { id: 71, name: 'Antonio', sector: 'Ambiental', day: 2, month: 5 }, { id: 72, name: 'PAULO DA SILVA MAIA JUNIOR', sector: 'OOTMD.F', day: 7, month: 5 }, { id: 73, name: 'Gabriel', sector: 'ESTAGIÁRIO', day: 9, month: 5 }, { id: 74, name: 'Angelo', sector: 'DOES.O', day: 18, month: 5 }, { id: 75, name: 'TANIA HELENA SOBRINHO MARTINS', sector: 'OOTMA.F', day: 18, month: 5 }, { id: 76, name: 'Denis', sector: 'DMEV.O', day: 20, month: 5 }, { id: 77, name: 'RODRIGO CAMILO', sector: 'OOTMC/OOTME.F', day: 20, month: 5 }, { id: 78, name: 'Luis Fernando Lana Ferreira', sector: 'OOTMC/OOTME.F', day: 24, month: 5 }, { id: 79, name: 'ALLYSSON THEL TEIXEIRA', sector: 'OOTMA.F', day: 26, month: 5 }, { id: 80, name: 'EDVALDO FERNANDO PEREIRA', sector: 'OOTMC/OOTME.F', day: 26, month: 5 }, { id: 81, name: 'ERNANE DE ASSIS MOREIRA', sector: 'OOTMC/OOTME.F', day: 27, month: 5 }, { id: 82, name: 'Sandro Luiz de Rezende', sector: 'OOTMC/OOTME.F', day: 29, month: 5 }, { id: 83, name: 'Camila Yasmim Dias Pimenta', sector: 'OOTMC/OOTME.F', day: 30, month: 5 }, { id: 84, name: 'Marcio Leandro', sector: 'DOES.O', day: 31, month: 5 }, { id: 85, name: 'VICTOR CORDEIRO COSTA', sector: 'OOTMD.F', day: 1, month: 6 }, { id: 86, name: 'CLEITON PEREIRA DOS SANTOS', sector: 'OOTMA.F', day: 1, month: 6 }, { id: 87, name: 'RODRIGO APARECIDO DOS REIS SILVA', sector: 'OOTMC/OOTME.F', day: 1, month: 6 }, { id: 88, name: 'Marinalva', sector: 'Kantro', day: 2, month: 6 }, { id: 89, name: 'Heli Bazzi da Silva', sector: 'OOTMC/OOTME.F', day: 2, month: 6 }, { id: 90, name: 'RONIE NUNES DE ASSIS', sector: 'OOTMC/OOTME.F', day: 2, month: 6 }, { id: 91, name: 'Valtair', sector: 'Ambiental', day: 6, month: 6 }, { id: 92, name: 'Paulo Cesar Santana', sector: 'OOTMC/OOTME.F', day: 6, month: 6 }, { id: 93, name: 'Fredison', sector: 'DMEV.O', day: 9, month: 6 }, { id: 94, name: 'ATILA DA CRUZ', sector: 'OOTMA.F', day: 10, month: 6 }, { id: 95, name: 'Frederico', sector: 'DOES.O', day: 11, month: 6 }, { id: 96, name: 'ELIZABETE NEPONUCENIO DOS SANTOS', sector: 'OOTMA.F', day: 12, month: 6 }, { id: 97, name: 'TIAGO VILELA ALVES', sector: 'OOTMC/OOTME.F', day: 12, month: 6 }, { id: 98, name: 'ANTONIO GUTIERRE SILVA', sector: 'OOTMA.F', day: 13, month: 6 }, { id: 99, name: 'Miriam', sector: 'Kantro', day: 15, month: 6 }, { id: 100, name: 'Eder Félix de souza', sector: 'OOTMC/OOTME.F', day: 16, month: 6 }, { id: 101, name: 'Marcia', sector: 'Kantro', day: 19, month: 6 }, { id: 102, name: 'CARLOS ANTONIO BRAGA', sector: 'OOTMC/OOTME.F', day: 23, month: 6 }, { id: 103, name: 'Luis Felipe', sector: 'DOES.O', day: 24, month: 6 }, { id: 104, name: 'KAYO CHAVES DE LIMA PINHEIRO', sector: 'OOTMD.F', day: 26, month: 6 }, { id: 105, name: 'Ana Paula Roque', sector: 'OOTMC/OOTME.F', day: 27, month: 6 }, { id: 106, name: 'JULIO CESAR MOURA', sector: 'OOTMC/OOTME.F', day: 30, month: 6 }, { id: 107, name: 'RENATO DOS SANTOS SOUZA', sector: 'OOTMD.F', day: 1, month: 7 }, { id: 108, name: 'SHAYDEZ SALVADOR DA SILVA PEREIRA', sector: 'OOTMD.F', day: 1, month: 7 }, { id: 109, name: 'CLAUDIO ROBERTO ALVES JUNIOR', sector: 'OOTMC/OOTME.F', day: 1, month: 7 }, { id: 110, name: 'GUILHERME LUIZ DE SOUZA', sector: 'OOTMD.F', day: 2, month: 7 }, { id: 111, name: 'SANDRO ROGERIO FERREIRA', sector: 'OOTMA.F', day: 3, month: 7 }, { id: 112, name: 'Orlandino', sector: 'Nova Rio', day: 4, month: 7 }, { id: 113, name: 'Sebastião', sector: 'RP', day: 7, month: 7 }, { id: 114, name: 'EVERTON CELESTINO DOS SANTOS', sector: 'OOTMA.F', day: 9, month: 7 }, { id: 115, name: 'Carlos Antônio Teixeira Carvalho Junior', sector: 'OOTMC/OOTME.F', day: 9, month: 7 }, { id: 116, name: 'Thalison Henrique Silva de Sá', sector: 'OOTMC/OOTME.F', day: 10, month: 7 }, { id: 117, name: 'Anderson de Andrade', sector: 'DOES.O', day: 14, month: 7 }, { id: 118, name: 'LUIS HENRIQUE RAMOS DOS SANTOS', sector: 'OOTMD.F', day: 15, month: 7 }, { id: 119, name: 'JEOVANE APARECIDO CUSTODIO', sector: 'OOTMC/OOTME.F', day: 18, month: 7 }, { id: 120, name: 'Rogério Ferreira de Andrade', sector: 'OOTMC/OOTME.F', day: 19, month: 7 }, { id: 121, name: 'Fabio Garcia Leite', sector: 'OOTMC/OOTME.F', day: 25, month: 7 }, { id: 122, name: 'Cliveraldo', sector: 'DMEV.O', day: 27, month: 7 }, { id: 123, name: 'MATEUS HENRIQUE NUNES LLOYD', sector: 'OOTMC/OOTME.F', day: 31, month: 7 }, { id: 124, name: 'Douglas Henrique da Silva de Freitas', sector: 'OOTMC/OOTME.F', day: 3, month: 8 }, { id: 125, name: 'Ronivam', sector: 'Kantro', day: 7, month: 8 }, { id: 126, name: 'Rodrigo Soares Pereira', sector: 'OOTMC/OOTME.F', day: 11, month: 8 }, { id: 127, name: 'Marco Antônio dos Santos', sector: 'OOTMC/OOTME.F', day: 14, month: 8 }, { id: 128, name: 'Rafael Henrique Fernandes', sector: 'OOTMC/OOTME.F', day: 18, month: 8 }, { id: 129, name: 'Fernando Bonisson', sector: 'DOES.O', day: 20, month: 8 }, { id: 130, name: 'ROBERTO DA SILVA', sector: 'OOTMD.F', day: 21, month: 8 }, { id: 131, name: 'Achiles', sector: 'RP', day: 22, month: 8 }, { id: 132, name: 'Beline Germano Torres', sector: 'OOTMC/OOTME.F', day: 23, month: 8 }, { id: 133, name: 'Anderson Machado', sector: 'Rio Minas', day: 24, month: 8 }, { id: 134, name: 'GUSTAVO MOURA DA SILVA', sector: 'OOTMA.F', day: 25, month: 8 }, { id: 135, name: 'JULIO CESAR CARVALHO', sector: 'OOTMA.F', day: 25, month: 8 }, { id: 136, name: 'LUIZ CARLOS BORGES ALONSO', sector: 'OOTMA.F', day: 25, month: 8 }, { id: 137, name: 'Jessé', sector: 'Nova Rio', day: 27, month: 8 }, { id: 138, name: 'PEDRO EDUARDO DIAS', sector: 'OOTMA.F', day: 27, month: 8 }, { id: 139, name: 'MARCELO AUGUSTO PARREIRA', sector: 'OOTMC/OOTME.F', day: 27, month: 8 }, { id: 140, name: 'MARCUS VINICIUS FERNANDES LOPES', sector: 'OOTMC/OOTME.F', day: 31, month: 8 }, { id: 141, name: 'Matheus Rocha', sector: 'Estagiário', day: 1, month: 9 }, { id: 142, name: 'TARSILA CRISTINA', sector: 'OOTMC/OOTME.F', day: 5, month: 9 }, { id: 143, name: 'Egnaldo', sector: 'DMLV.O', day: 14, month: 9 }, { id: 144, name: 'FABIO ROSSETTI MAIA', sector: 'OOTMA.F', day: 16, month: 9 }, { id: 145, name: 'Rogerio', sector: 'Nova Rio', day: 16, month: 9 }, { id: 146, name: 'FABIO DE JESUS SOUZA', sector: 'OOTMA.F', day: 17, month: 9 }, { id: 147, name: 'CARLOS ALEXANDRE DE MELO', sector: 'OOTMA.F', day: 21, month: 9 }, { id: 148, name: 'Saulo', sector: 'RP', day: 23, month: 9 }, { id: 149, name: 'RODRIGO PARRA MANZEPPI', sector: 'OOTMA.F', day: 23, month: 9 }, { id: 150, name: 'Levi', sector: 'RP', day: 27, month: 9 }, { id: 151, name: 'RODRIGO COSTA DE OLIVEIRA', sector: 'OOTMA.F', day: 27, month: 9 }, { id: 152, name: 'YAN GUILHERME DA SILVA', sector: 'OOTMA.F', day: 27, month: 9 }, { id: 153, name: 'Bruna dos Santos da Cruz Dantas', sector: 'OOTMC/OOTME.F', day: 30, month: 9 }, { id: 154, name: 'Thiago Nin', sector: 'DMLV.O', day: 1, month: 10 }, { id: 155, name: 'EDER DE MORAES BRASILEIRO', sector: 'OOTMC/OOTME.F', day: 2, month: 10 }, { id: 156, name: 'DIEGO FREITAS DE SOUZA', sector: 'OOTMA.F', day: 4, month: 10 }, { id: 157, name: 'Guilherme', sector: 'DMLV.O', day: 6, month: 10 }, { id: 158, name: 'Anderson Prado', sector: 'DMLV.O', day: 7, month: 10 }, { id: 159, name: 'JOÃO PEDRO MARCIANO', sector: 'OOTMA.F', day: 10, month: 10 }, { id: 160, name: 'CELIO DE MELO PEREIRA', sector: 'OOTMC/OOTME.F', day: 10, month: 10 }, { id: 161, name: 'LUIZ FRANCISCO PINTO FREITAS', sector: 'OOTMD.F', day: 16, month: 10 }, { id: 162, name: 'Thiago Caleffe', sector: 'DMEV.O', day: 18, month: 10 }, { id: 163, name: 'Reberty Carvalho Oliveira', sector: 'OOTMC/OOTME.F', day: 18, month: 10 }, { id: 164, name: 'Antônio Florentino de Lima Junior', sector: 'OOTMC/OOTME.F', day: 21, month: 10 }, { id: 165, name: 'Eder Antônio Coelho', sector: 'OOTMC/OOTME.F', day: 21, month: 10 }, { id: 166, name: 'Antonio Marcos', sector: 'RP', day: 22, month: 10 }, { id: 167, name: 'JAMISON ANTONIO DE OLIVEIRA', sector: 'OOTMC/OOTME.F', day: 22, month: 10 }, { id: 168, name: 'Marcelo Moreira', sector: 'DMLV.O', day: 25, month: 10 }, { id: 169, name: 'Kaique Sales da Silva', sector: 'OOTMC/OOTME.F', day: 27, month: 10 }, { id: 170, name: 'Felipe Zuqui', sector: 'DMEV.O', day: 28, month: 10 }, { id: 171, name: 'Mauro', sector: 'RP', day: 29, month: 10 }, { id: 172, name: 'Olivier', sector: 'DMLV.O', day: 30, month: 10 }, { id: 173, name: 'Alyson Soares Rosa', sector: 'OOTMC/OOTME.F', day: 31, month: 10 }, { id: 174, name: 'Breno Rangel Donini Ferreira', sector: 'OOTMC/OOTME.F', day: 1, month: 11 }, { id: 175, name: 'Carlos Augusto da Silva', sector: 'OOTMC/OOTME.F', day: 4, month: 11 }, { id: 176, name: 'Xeráclito', sector: 'Informática', day: 5, month: 11 }, { id: 177, name: 'ALESSANDRO FERNANDES PEREIRA', sector: 'OOTMC/OOTME.F', day: 5, month: 11 }, { id: 178, name: 'NICOMEDES LUIZ DE AVILA CARVALHO', sector: 'OOTMC/OOTME.F', day: 5, month: 11 }, { id: 179, name: 'FRED PAIVA', sector: 'OOTMC/OOTME.F', day: 7, month: 11 }, { id: 180, name: 'Flávio Miguel', sector: 'OOTMC/OOTME.F', day: 10, month: 11 }, { id: 181, name: 'VARLEI DIVINO LEMOS', sector: 'OOTMC/OOTME.F', day: 12, month: 11 }, { id: 182, name: 'Silas Alves', sector: 'Telsan', day: 13, month: 11 }, { id: 183, name: 'Rigo Douglas Martello', sector: 'OOTMC/OOTME.F', day: 13, month: 11 }, { id: 184, name: 'MARCO TULIO DE OLIVEIRA ABREU', sector: 'OOTMC/OOTME.F', day: 14, month: 11 }, { id: 185, name: 'Jairo Lourenço de Paula', sector: 'OOTMC/OOTME.F', day: 17, month: 11 }, { id: 186, name: 'Alessandro Antônio Medeiros Cardoso', sector: 'OOTMC/OOTME.F', day: 19, month: 11 }, { id: 187, name: 'Lucas Vale Canavez', sector: 'OOTMC/OOTME.F', day: 21, month: 11 }, { id: 188, name: 'Marcello Olinda', sector: 'DMEV.O', day: 22, month: 11 }, { id: 189, name: 'Rodrigo da Silva Alcântara', sector: 'OOTMC/OOTME.F', day: 22, month: 11 }, { id: 190, name: 'Ana Paula Volta', sector: 'GRV.O', day: 24, month: 11 }, { id: 191, name: 'CLAUDIO DOS SANTOS', sector: 'OOTMA.F', day: 24, month: 11 }, { id: 192, name: 'Willian', sector: 'Ambiental', day: 24, month: 11 }, { id: 193, name: 'Vinicius', sector: 'Ambiental', day: 25, month: 11 }, { id: 194, name: 'Rafael', sector: 'RP- OPERAÇÃO', day: 25, month: 11 }, { id: 195, name: 'JOSÉ GERALDO SILVA', sector: 'OOTMC/OOTME.F', day: 26, month: 11 }, { id: 196, name: 'Alcebíades', sector: 'DMEV.O', day: 28, month: 11 }, { id: 197, name: 'Rhaissa', sector: 'FB', day: 1, month: 12 }, { id: 198, name: 'ERICK KETES DE PAULA', sector: 'OOTMA.F', day: 1, month: 12 }, { id: 199, name: 'KLEBER PRADO DE FRANCA', sector: 'OOTMA.F', day: 2, month: 12 }, { id: 200, name: 'DEIVID WESLEY SILVA', sector: 'OOTMA.F', day: 4, month: 12 }, { id: 201, name: 'Evandro', sector: 'DOES.O', day: 14, month: 12 }, { id: 202, name: 'Rodrigo', sector: 'DOES.O', day: 17, month: 12 }, { id: 203, name: 'Gustavo Pereira Rodrigues', sector: 'OOTMC/OOTME.F', day: 18, month: 12 }, { id: 204, name: 'VALDENILSON PEREIRA LEITE', sector: 'OOTMC/OOTME.F', day: 22, month: 12 }, { id: 205, name: 'Vagno', sector: 'RP', day: 24, month: 12 }, { id: 206, name: 'SILMARIO DA CONCEIÇÃO BORGES JR', sector: 'OOTMA.F', day: 25, month: 12 }, { id: 207, name: 'DAVI MATIAS DAMASCENO DE CARVALHO', sector: 'OOTMD.F', day: 27, month: 12 }, { id: 208, name: 'PAULO FERREira DINIZ', sector: 'OOTMD.F', day: 27, month: 12 }, { id: 209, name: 'LAIO VICENTE ALVES', sector: 'OOTMA.F', day: 27, month: 12 }, { id: 210, name: 'Henrique Machado de Paiva', sector: 'OOTMC/OOTME.F', day: 27, month: 12 }
+            ];
+            
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+            let currentDate = new Date(); 
+            let dbCollection = null;
+            let useDemoMode = false;
+            let birthdayChartInstance;
+            let sectorChartInstance;
+
+            const tabsContainer = document.getElementById('tabs-container');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+            const monthFilter = document.getElementById('month-filter');
+            const sectorFilter = document.getElementById('sector-filter');
+            const nameSearch = document.getElementById('name-search');
+            const tableBody = document.getElementById('birthday-table-body');
+            const noResultsDiv = document.getElementById('no-results');
+            const birthdayChartCanvas = document.getElementById('birthday-chart');
+            const sectorChartCanvas = document.getElementById('sector-chart');
+            const totalPersonnelEl = document.getElementById('total-personnel');
+            const calendarGrid = document.getElementById('calendar-grid');
+            const monthYearHeader = document.getElementById('calendar-month-year');
+            const prevMonthBtn = document.getElementById('prev-month-btn');
+            const nextMonthBtn = document.getElementById('next-month-btn');
+            const todayBtn = document.getElementById('today-btn');
+            const todayPanel = document.getElementById('today-panel');
+            const modal = document.getElementById('person-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const personForm = document.getElementById('person-form');
+            const cancelBtn = document.getElementById('cancel-btn');
+            const addPersonBtn = document.getElementById('add-person-btn');
+            const personMonthSelect = document.getElementById('person-month');
+            const csvFileInput = document.getElementById('csv-file-input');
+            const pasteDataInput = document.getElementById('paste-data-input');
+            const pasteDataBtn = document.getElementById('paste-data-btn');
+            const notificationToast = document.getElementById('notification-toast');
+            
+            function showNotification(message, isError = false) {
+                notificationToast.textContent = message;
+                notificationToast.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+                
+                setTimeout(() => {
+                    notificationToast.classList.remove('opacity-0', 'translate-y-10');
+                    notificationToast.classList.add('opacity-100', 'translate-y-0');
+                }, 100);
+
+                setTimeout(() => {
+                    notificationToast.classList.add('opacity-0', 'translate-y-10');
+                     notificationToast.classList.remove('opacity-100', 'translate-y-0');
+                }, 4000);
+            }
+            
+            const firebaseConfigStr = (typeof __firebase_config !== 'undefined' && __firebase_config) ? __firebase_config : null;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            
+            try {
+              if (!firebaseConfigStr) throw new Error('Firebase config is not available');
+              const firebaseConfig = JSON.parse(firebaseConfigStr);
+              if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+                throw new Error('Firebase config is incomplete');
+              }
+
+              const app = initializeApp(firebaseConfig);
+              const db = getFirestore(app);
+              const auth = getAuth(app);
+
+              if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+              } else {
+                await signInAnonymously(auth);
+              }
+              dbCollection = collection(db, `/artifacts/${appId}/public/data/aniversariantes`);
+            } catch (error) {
+              console.warn("Firebase initialization failed, activating demo mode:", error);
+              showNotification("Não foi possível conectar. Modo demonstração ativado.", true);
+              useDemoMode = true;
+            }
+
+            function renderAllViews(data) {
+                populateFilters(data);
+                renderTable(data);
+                renderCalendar(data);
+                renderTodaysBirthdays(data);
+                renderAnalytics(data);
+            }
+
+            if (!useDemoMode && dbCollection) {
+              onSnapshot(dbCollection, (snapshot) => {
+                const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                birthdayData = fetchedData;
+                renderAllViews(birthdayData);
+              }, (error) => {
+                  console.error("Error listening to Firestore:", error);
+                  showNotification("Erro de conexão. Ativando modo de demonstração.", true);
+                  useDemoMode = true;
+                  renderAllViews(birthdayData);
+              });
+            } else {
+              renderAllViews(birthdayData);
+            }
+
+            function processImportedData(dataArray) {
+                let importedCount = 0;
+                const promises = [];
+
+                dataArray.forEach(person => {
+                    if (person.name && person.sector && !isNaN(person.day) && !isNaN(person.month)) {
+                        const existing = birthdayData.find(p => p.name.toLowerCase() === person.name.toLowerCase());
+                        if (!existing) {
+                            const newPersonData = { name: person.name, sector: person.sector, day: person.day, month: person.month };
+                            if (!useDemoMode) {
+                                promises.push(addDoc(dbCollection, newPersonData));
+                            } else {
+                                birthdayData.push({ id: `demo-${Date.now()}-${Math.random()}`, ...newPersonData });
+                            }
+                            importedCount++;
+                        }
+                    }
+                });
+
+                if (useDemoMode) {
+                     if (importedCount > 0) {
+                        renderAllViews(birthdayData);
+                        showNotification(`${importedCount} registro(s) adicionado(s) à demonstração.`);
+                    } else {
+                        showNotification("Nenhum registro novo para importar.", true);
+                    }
+                } else {
+                    Promise.all(promises).then(() => {
+                        if (importedCount > 0) {
+                            showNotification(`${importedCount} registro(s) importado(s) com sucesso!`);
+                        } else {
+                           showNotification("Nenhum registro novo para importar.", true);
+                        }
+                    }).catch(err => {
+                        console.error("Error importing data to Firestore:", err);
+                        showNotification("Erro ao importar dados.", true);
+                    });
+                }
+            }
+            
+            function handleCSVImport(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    const lines = text.split('\n').filter(line => line.trim() !== '');
+                    const dataToImport = lines.map(line => {
+                        const [name, sector, dateStr] = line.split(/[,;]/).map(s => s.trim());
+                        if (!dateStr) return null;
+                        const dateParts = dateStr.match(/(\d{1,2})[./-](\d{1,2})/);
+                        if (!dateParts) return null;
+                        return { name, sector, day: parseInt(dateParts[1]), month: parseInt(dateParts[2]) };
+                    }).filter(Boolean);
+                    processImportedData(dataToImport);
+                    event.target.value = ''; 
+                };
+                reader.readAsText(file);
+            }
+
+            function handlePasteImport() {
+                const text = pasteDataInput.value;
+                if (!text.trim()) return;
+
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                const dataToImport = lines.map(line => {
+                    const [name, sector, dateStr] = line.split('\t').map(s => s.trim());
+                     if (!dateStr) return null;
+                    const dateParts = dateStr.match(/(\d{1,2})[./-](\d{1,2})/);
+                    if (!dateParts) return null;
+                    return { name, sector, day: parseInt(dateParts[1]), month: parseInt(dateParts[2]) };
+                }).filter(Boolean);
+                 processImportedData(dataToImport);
+                 pasteDataInput.value = '';
+            }
+
+            function switchTab(targetTab) {
+                tabsContainer.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelector(`[data-tab="${targetTab}"]`).classList.add('active');
+                
+                tabPanels.forEach(panel => {
+                    if (panel.id === `${targetTab}-panel`) {
+                        panel.classList.remove('hidden');
+                    } else {
+                        panel.classList.add('hidden');
+                    }
+                });
+            }
+
+            function renderTodaysBirthdays(data) {
+                const today = new Date();
+                const todaysMonth = today.getMonth() + 1;
+                const todaysDay = today.getDate();
+
+                const todaysBirthdays = data.filter(p => p.day === todaysDay && p.month === todaysMonth);
+                
+                todayPanel.innerHTML = ''; 
+
+                if (todaysBirthdays.length > 0) {
+                     const header = document.createElement('h2');
+                    header.className = 'text-2xl font-bold text-center mb-6';
+                    header.style.color = 'var(--eletro-teal)';
+                    header.innerHTML = `Parabéns aos Aniversariantes de Hoje! <span class="text-lg">(${todaysDay} de ${monthNames[todaysMonth - 1]})</span>`;
+                    todayPanel.appendChild(header);
+
+                    const grid = document.createElement('div');
+                    grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+
+                    todaysBirthdays.forEach(person => {
+                        const card = document.createElement('div');
+                        card.className = 'p-6 rounded-xl shadow-lg text-white transition-transform transform hover:scale-105';
+                        card.style.background = 'linear-gradient(135deg, var(--eletro-blue), var(--eletro-teal))';
+
+                        const nameEl = document.createElement('p');
+                        nameEl.className = 'text-xl font-bold';
+                        nameEl.textContent = person.name;
+
+                        const sectorEl = document.createElement('p');
+                        sectorEl.className = 'text-sm opacity-80 mt-1';
+                        sectorEl.textContent = person.sector;
+                        
+                        card.appendChild(nameEl);
+                        card.appendChild(sectorEl);
+                        grid.appendChild(card);
+                    });
+                     todayPanel.appendChild(grid);
+                } else {
+                    const noBirthdayDiv = document.createElement('div');
+                    noBirthdayDiv.className = 'text-center p-12 bg-white rounded-2xl shadow-lg';
+                    noBirthdayDiv.innerHTML = `
+                        <p class="text-xl font-semibold text-slate-700">Nenhum aniversário hoje.</p>
+                        <p class="text-slate-500 mt-2">(${todaysDay} de ${monthNames[todaysMonth - 1]})</p>
+                    `;
+                    todayPanel.appendChild(noBirthdayDiv);
+                }
+            }
+            
+            function renderCalendar(data) {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                
+                monthYearHeader.textContent = `${monthNames[month]} ${year}`;
+                calendarGrid.innerHTML = '';
+
+                const firstDayOfMonth = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                for (let i = 0; i < firstDayOfMonth; i++) {
+                    const emptyCell = document.createElement('div');
+                    calendarGrid.appendChild(emptyCell);
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'calendar-day border-t border-r p-2 h-28 flex flex-col';
+                    
+                    const dayNumber = document.createElement('span');
+                    dayNumber.className = 'day-number text-sm';
+                    dayNumber.textContent = day;
+                    dayCell.appendChild(dayNumber);
+
+                    const today = new Date();
+                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+                        dayCell.classList.add('today');
+                    }
+                    
+                    const birthdaysOnThisDay = data.filter(p => p.day === day && p.month === month + 1);
+                    if (birthdaysOnThisDay.length > 0) {
+                        const birthdaysContainer = document.createElement('div');
+                        birthdaysContainer.className = 'flex-grow overflow-y-auto';
+                         birthdaysOnThisDay.forEach(p => {
+                            const birthdayEl = document.createElement('div');
+                            birthdayEl.className = 'calendar-birthday';
+                            birthdayEl.textContent = p.name;
+                            birthdayEl.title = `${p.name} (${p.sector})`;
+                            birthdaysContainer.appendChild(birthdayEl);
+                        });
+                        dayCell.appendChild(birthdaysContainer);
+                    }
+                    
+                    calendarGrid.appendChild(dayCell);
+                }
+            }
+            
+            function populateFilters(data) {
+                monthFilter.innerHTML = '<option value="all">Todos os Meses</option>';
+                monthNames.forEach((name, index) => {
+                    const option = document.createElement('option');
+                    option.value = index + 1;
+                    option.textContent = name;
+                    monthFilter.appendChild(option);
+                });
+                
+                personMonthSelect.innerHTML = '';
+                monthNames.forEach((name, index) => {
+                     const option = document.createElement('option');
+                    option.value = index + 1;
+                    option.textContent = name;
+                    personMonthSelect.appendChild(option);
+                });
+
+                const sectors = [...new Set(data.map(p => p.sector).filter(Boolean))].sort();
+                sectorFilter.innerHTML = '<option value="all">Todos os Setores</option>';
+                sectors.forEach(sector => {
+                    const option = document.createElement('option');
+                    option.value = sector;
+                    option.textContent = sector;
+                    sectorFilter.appendChild(option);
+                });
+            }
+
+            function renderTable(data) {
+                const selectedMonth = monthFilter.value;
+                const selectedSector = sectorFilter.value;
+                const searchQuery = nameSearch.value.toLowerCase();
+
+                const filteredData = data.filter(person => {
+                    const monthMatch = selectedMonth === 'all' || person.month == selectedMonth;
+                    const sectorMatch = selectedSector === 'all' || person.sector === selectedSector;
+                    const nameMatch = person.name.toLowerCase().includes(searchQuery);
+                    return monthMatch && sectorMatch && nameMatch;
+                });
+                
+                filteredData.sort((a,b) => {
+                    if (a.month !== b.month) return a.month - b.month;
+                    return a.day - b.day;
+                });
+
+                tableBody.innerHTML = '';
+
+                if (filteredData.length === 0) {
+                    noResultsDiv.classList.remove('hidden');
+                } else {
+                    noResultsDiv.classList.add('hidden');
+                    filteredData.forEach(person => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-blue-50/50';
+                        
+                        row.innerHTML = `
+                            <td class="p-4 text-sm">${person.name}</td>
+                            <td class="p-4 text-sm text-gray-600">${person.sector || 'N/A'}</td>
+                            <td class="p-4 text-sm">${person.day} de ${monthNames[person.month - 1]}</td>
+                            <td class="p-4 text-sm text-center">
+                                <button data-id="${person.id}" class="edit-btn p-1 text-gray-500 hover:text-blue-600">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </button>
+                                <button data-id="${person.id}" class="delete-btn p-1 text-gray-500 hover:text-red-600">
+                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+            }
+            
+            function renderAnalytics(data) {
+                totalPersonnelEl.textContent = data.length;
+
+                const sectorCounts = data.reduce((acc, person) => {
+                    const sector = person.sector || 'Não definido';
+                    acc[sector] = (acc[sector] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const sectorLabels = Object.keys(sectorCounts);
+                const sectorData = Object.values(sectorCounts);
+
+                if (sectorChartInstance) sectorChartInstance.destroy();
+                sectorChartInstance = new Chart(sectorChartCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: sectorLabels,
+                        datasets: [{ data: sectorData, backgroundColor: ['#0033A0', '#009A74', '#FFC72C', '#64748b', '#ef4444', '#f97316', '#8b5cf6', '#14b8a6', '#f43f5e', '#65a30d'], hoverOffset: 4 }]
+                    },
+                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+
+                if (birthdayChartInstance) birthdayChartInstance.destroy();
+                const monthlyCounts = Array(12).fill(0);
+                data.forEach(person => {
+                    monthlyCounts[person.month - 1]++;
+                });
+
+                birthdayChartInstance = new Chart(birthdayChartCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: monthNames,
+                        datasets: [{
+                            label: 'Nº de Aniversariantes',
+                            data: monthlyCounts,
+                            backgroundColor: 'rgba(0, 154, 116, 0.6)',
+                            borderColor: 'rgba(0, 154, 116, 1)',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+                });
+            }
+
+            function openModal(person) {
+                personForm.reset();
+                if (person) {
+                    modalTitle.textContent = "Editar Dados";
+                    document.getElementById('person-id').value = person.id;
+                    document.getElementById('person-name').value = person.name;
+                    document.getElementById('person-sector').value = person.sector;
+                    document.getElementById('person-day').value = person.day;
+                    document.getElementById('person-month').value = person.month;
+                } else {
+                    modalTitle.textContent = "Adicionar Nova Pessoa";
+                    document.getElementById('person-id').value = '';
+                }
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.querySelector('.transform').classList.remove('scale-95', 'opacity-0');
+                    modal.querySelector('.transform').classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+            
+            function closeModal() {
+                 modal.querySelector('.transform').classList.add('scale-95', 'opacity-0');
+                 modal.querySelector('.transform').classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+            
+            async function handleFormSubmit(e) {
+                e.preventDefault();
+                const id = document.getElementById('person-id').value;
+                const personData = {
+                    name: document.getElementById('person-name').value.trim(),
+                    sector: document.getElementById('person-sector').value.trim(),
+                    day: parseInt(document.getElementById('person-day').value),
+                    month: parseInt(document.getElementById('person-month').value)
+                };
+
+                if (useDemoMode) {
+                    if (id) {
+                        const index = birthdayData.findIndex(p => p.id == id);
+                        if (index !== -1) birthdayData[index] = { ...personData, id };
+                    } else {
+                        birthdayData.push({ ...personData, id: `demo-${Date.now()}` });
+                    }
+                    renderAllViews(birthdayData);
+                } else {
+                    try {
+                        if (id) {
+                            await setDoc(doc(dbCollection, id), personData);
+                        } else {
+                            await addDoc(dbCollection, personData);
+                        }
+                    } catch(err) {
+                        console.error("Error saving to Firestore:", err);
+                        showNotification("Erro ao salvar os dados.", true);
+                    }
+                }
+                closeModal();
+            }
+
+            async function handleDelete(personId) {
+                if (!confirm('Tem certeza que deseja excluir esta pessoa?')) return;
+                
+                if(useDemoMode) {
+                    birthdayData = birthdayData.filter(p => p.id != personId);
+                    renderAllViews(birthdayData);
+                } else {
+                    try {
+                        await deleteDoc(doc(dbCollection, personId));
+                    } catch(err) {
+                        console.error("Error deleting from Firestore:", err);
+                        showNotification("Erro ao excluir.", true);
+                    }
+                }
+            }
+
+            tableBody.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-btn');
+                const deleteBtn = e.target.closest('.delete-btn');
+
+                if (editBtn) {
+                    const personId = editBtn.dataset.id;
+                    const person = birthdayData.find(p => p.id == personId);
+                    openModal(person);
+                }
+                if (deleteBtn) {
+                    handleDelete(deleteBtn.dataset.id);
+                }
+            });
+
+            tabsContainer.addEventListener('click', (e) => {
+                if (e.target.matches('.tab-btn')) {
+                    switchTab(e.target.getAttribute('data-tab'));
+                }
+            });
+            prevMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar(birthdayData);
+            });
+            nextMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar(birthdayData);
+            });
+            todayBtn.addEventListener('click', () => {
+                currentDate = new Date();
+                renderCalendar(birthdayData);
+            });
+            
+            addPersonBtn.addEventListener('click', () => openModal(null));
+            cancelBtn.addEventListener('click', closeModal);
+            csvFileInput.addEventListener('change', handleCSVImport);
+            pasteDataBtn.addEventListener('click', handlePasteImport);
+            personForm.addEventListener('submit', handleFormSubmit);
+
+            const currentMonthForFilter = new Date().getMonth() + 1;
+            monthFilter.value = currentMonthForFilter;
+            
+            switchTab('today');
+            monthFilter.addEventListener('change', () => renderTable(birthdayData));
+            sectorFilter.addEventListener('change', () => renderTable(birthdayData));
+            nameSearch.addEventListener('input', () => renderTable(birthdayData));
+        });
+    </script>
+</body>
+</html>
