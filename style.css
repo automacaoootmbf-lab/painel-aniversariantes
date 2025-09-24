@@ -1,0 +1,65 @@
+/* style.css */
+:root {
+    --spacing: 1rem;
+}
+
+body {
+    background-color: #f4f5f7;
+}
+
+.title {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--pico-h1-color);
+}
+
+#birthday-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--spacing);
+}
+
+.card {
+    background-color: #ffffff;
+    border-radius: var(--pico-border-radius);
+    box-shadow: var(--pico-card-box-shadow);
+    padding: var(--spacing);
+    text-align: center;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.card-content.name {
+    margin-bottom: 0.25rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.card-content.role {
+    color: var(--pico-muted-color);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+}
+
+.card-content.date {
+    font-weight: bold;
+    color: var(--pico-primary);
+}
+
+.error,.no-birthdays {
+    text-align: center;
+    grid-column: 1 / -1; /* Ocupa todas as colunas */
+    padding: 2rem;
+    color: var(--pico-muted-color);
+}
+
+/* Animação de fade-in */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
