@@ -1,29 +1,40 @@
-#.github/workflows/deploy-firebase.yml
+name: Deploy to Firebase Hosting
 
-name: Deploy to Firebase Hosting on Push to Main
-
-# Aciona o fluxo de trabalho apenas em eventos de push para a branch 'main'
 on:
   push:
     branches:
-      - main
+      - main   # ou a branch que você usa (ex: master)
 
 jobs:
   build_and_deploy:
-    # Usa a versão mais recente do Ubuntu como ambiente de execução
     runs-on: ubuntu-latest
     steps:
-      # Passo 1: Faz o checkout do código do repositório para que o fluxo de trabalho possa acessá-lo
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # Passo 2: Implanta o código no Firebase Hosting
-      - name: Deploy to Firebase
-        uses: FirebaseExtended/action-hosting-deploy@v0
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          # Injeta a chave da conta de serviço a partir dos GitHub Secrets para autenticação
-          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
-          # Especifica o ID do projeto Firebase de destino para evitar ambiguidade
-          projectId: 'aniversariantes-automation'
-          # Implanta no canal 'live', tornando-o a versão de produção
-          channelId: live
+          node-version: '18'
+
+      - name: Create firebase-config.js
+        env:
+          FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}  # ver instruções abaixo
+        run: |
+          mkdir -p public
+          echo "window.__firebase_config = ${FIREBASE_CONFIG};" > public/firebase-config.js
+          # (se seu index espera uma string JSON ou var diferente, ajuste o conteúdo aqui)
+
+      - name: Copy index.html to public (if needed)
+        run: |
+          # se seu index.html estiver na raiz do repo, mova para public para o hosting
+          if [ -f index.html ]; then cp index.html public/index.html; fi
+
+      - name: Deploy to Firebase Hosting
+        uses: w9jds/firebase-action@v1.8.0
+        with:
+          args: deploy --only hosting
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          PROJECT_ID: aniversariantes-automationn
+
