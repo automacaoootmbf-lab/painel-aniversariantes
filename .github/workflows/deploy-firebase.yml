@@ -3,32 +3,40 @@ name: Deploy to Firebase Hosting
 on:
   push:
     branches:
-      - main   # ou a branch que você usa (ex: master)
+      - main   # ajuste se você usa outra branch
 
 jobs:
-  build_and_deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Create firebase-config.js
-        env:
-          FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}  # ver instruções abaixo
+      - name: Ensure public/ exists and copy index.html if in repo root
         run: |
           mkdir -p public
-          echo "window.__firebase_config = ${FIREBASE_CONFIG};" > public/firebase-config.js
-          # (se seu index espera uma string JSON ou var diferente, ajuste o conteúdo aqui)
+          # Se você já colocou index.html dentro de public, o cp não sobrescreve
+          if [ -f index.html ] && [ ! -f public/index.html ]; then
+            cp index.html public/index.html
+          fi
+          # Para evitar upload acidental do firebase-config.js, adiciona ao .gitignore temporariamente (LOCAL)
+          echo "public/firebase-config.js" >> .gitignore || true
 
-      - name: Copy index.html to public (if needed)
+      - name: Create firebase-config.js
+        env:
+          FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
         run: |
-          # se seu index.html estiver na raiz do repo, mova para public para o hosting
-          if [ -f index.html ]; then cp index.html public/index.html; fi
+          mkdir -p public
+          printf 'window.__firebase_config = %s;' "${FIREBASE_CONFIG}" > public/firebase-config.js
+          echo "Created public/firebase-config.js (from secret)."
+
+      - name: Show public files (debug)
+        run: ls -la public || true
 
       - name: Deploy to Firebase Hosting
         uses: w9jds/firebase-action@v1.8.0
@@ -36,5 +44,5 @@ jobs:
           args: deploy --only hosting
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          PROJECT_ID: aniversariantes-automationn
+          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT }}
 
