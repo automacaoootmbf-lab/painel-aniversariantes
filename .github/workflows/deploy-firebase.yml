@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting (robusto)
+name: Deploy to Firebase Hosting (robusto - Node 20)
 
 on:
   push:
@@ -11,15 +11,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js (v20)
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'   # <-- atualizado para Node 20 (compatível com Firebase CLI v14+)
 
       - name: Ensure public exists and copy index.html
         run: |
           mkdir -p public
-          if [ -f index.html ] && [ ! -f public/index.html ]; then cp index.html public/index.html; fi
+          if [ -f index.html ] && [ ! -f public/index.html ]; then
+            cp index.html public/index.html
+          fi
 
       - name: Create firebase-config.js (from FIREBASE_CONFIG)
         env:
@@ -35,14 +37,15 @@ jobs:
           credentials_json: '${{ secrets.GCP_SA_KEY }}'
 
       - name: Install Firebase CLI
-        run: npm install -g firebase-tools@latest
+        run: |
+          npm install -g firebase-tools@latest
+          firebase --version
 
       - name: Show public files (debug)
         run: ls -la public || true
 
       - name: Deploy to Firebase Hosting
         run: |
+          # opcional: lista projetos visíveis para depuração
           firebase projects:list --json || true
           firebase deploy --project ${{ secrets.FIREBASE_PROJECT }} --only hosting
-
-
