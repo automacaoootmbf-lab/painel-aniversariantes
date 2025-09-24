@@ -1,48 +1,48 @@
-name: Deploy to Firebase Hosting
+name: Deploy to Firebase Hosting (robusto)
 
 on:
   push:
-    branches:
-      - main   # ajuste se você usa outra branch
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Ensure public/ exists and copy index.html if in repo root
+      - name: Ensure public exists and copy index.html
         run: |
           mkdir -p public
-          # Se você já colocou index.html dentro de public, o cp não sobrescreve
-          if [ -f index.html ] && [ ! -f public/index.html ]; then
-            cp index.html public/index.html
-          fi
-          # Para evitar upload acidental do firebase-config.js, adiciona ao .gitignore temporariamente (LOCAL)
-          echo "public/firebase-config.js" >> .gitignore || true
+          if [ -f index.html ] && [ ! -f public/index.html ]; then cp index.html public/index.html; fi
 
-      - name: Create firebase-config.js
+      - name: Create firebase-config.js (from FIREBASE_CONFIG)
         env:
           FIREBASE_CONFIG: ${{ secrets.FIREBASE_CONFIG }}
         run: |
           mkdir -p public
           printf 'window.__firebase_config = %s;' "${FIREBASE_CONFIG}" > public/firebase-config.js
-          echo "Created public/firebase-config.js (from secret)."
+          echo "Created public/firebase-config.js"
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GCP_SA_KEY }}'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@latest
 
       - name: Show public files (debug)
         run: ls -la public || true
 
       - name: Deploy to Firebase Hosting
-        uses: w9jds/firebase-action@v1.8.0
-        with:
-          args: deploy --only hosting
-        env:
-          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-          PROJECT_ID: ${{ secrets.FIREBASE_PROJECT }}
+        run: |
+          firebase projects:list --json || true
+          firebase deploy --project ${{ secrets.FIREBASE_PROJECT }} --only hosting
+
 
