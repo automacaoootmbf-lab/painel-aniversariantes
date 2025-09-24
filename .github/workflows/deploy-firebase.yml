@@ -14,7 +14,7 @@ jobs:
       - name: Setup Node.js (v20)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'   # <-- atualizado para Node 20 (compatível com Firebase CLI v14+)
+          node-version: '20'
 
       - name: Ensure public exists and copy index.html
         run: |
@@ -31,21 +31,13 @@ jobs:
           printf 'window.__firebase_config = %s;' "${FIREBASE_CONFIG}" > public/firebase-config.js
           echo "Created public/firebase-config.js"
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: '${{ secrets.GCP_SA_KEY }}'
-
-      - name: Install Firebase CLI
-        run: |
-          npm install -g firebase-tools@latest
-          firebase --version
-
-      - name: Show public files (debug)
-        run: ls -la public || true
-
+      # --- AQUI ESTÁ A MUDANÇA PRINCIPAL ---
       - name: Deploy to Firebase Hosting
-        run: |
-          # opcional: lista projetos visíveis para depuração
-          firebase projects:list --json || true
-          firebase deploy --project ${{ secrets.FIREBASE_PROJECT }} --only hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0 # Use a action oficial de deploy do Firebase
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}' # Necessário para interações com o GitHub, como canais de preview
+          firebaseServiceAccount: '${{ secrets.GCP_SA_KEY }}' # O segredo com sua chave JSON da conta de serviço
+          projectId: 'aniversariantes-automation' # Seu Project ID diretamente aqui
+          channelId: live # ou outro canal que você queira, como 'staging'
+          # target: your-hosting-target-name # Use se você configurou múltiplos sites de Hosting no seu firebase.json
+          # entryPoint: ./public # Se seu conteúdo a ser deployed não estiver na raiz do repo, indique aqui
