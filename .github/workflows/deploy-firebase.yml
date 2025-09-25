@@ -1,6 +1,6 @@
 name: Deploy to Firebase Hosting (robusto - Node 20)
 
-on:
+on: 
   push:
     branches: [ main ]
  
