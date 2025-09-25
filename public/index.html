@@ -28,7 +28,7 @@
       --bg-page: #ffffff;
       --card-bg: #ffffff;
       --soft-border: #e6eef6;
-      --glass: rgba(255,255,255,0.6);
+      --glass: rgba(255,255,255,0.6 );
       --shadow-1: 0 6px 18px rgba(11, 22, 39, 0.06);
       --radius: 10px;
     }
@@ -251,7 +251,7 @@
                         <div>
                             <h3 class="font-semibold text-gray-800">Colar dados de uma planilha</h3>
                              <p class="text-sm text-gray-500 mt-1 mb-3">Copie as colunas (Nome, Setor, Data) e cole abaixo.</p>
-                            <textarea id="paste-data-input" rows="4" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm" placeholder="João da Silva	TI	22/09"></textarea>
+                            <textarea id="paste-data-input" rows="4" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm" placeholder="João da Silva\tTI\t22/09"></textarea>
                             <button id="paste-data-btn" class="mt-2 px-4 py-2 w-full text-sm font-semibold text-white rounded-lg secondary">Importar Dados Colados</button>
                         </div>
                     </div>
@@ -305,16 +305,16 @@
             <form id="auth-form">
                 <div class="space-y-4">
                     <div>
-                        <label for="auth-user" class="block text-sm font-medium text-gray-700">Usuário</label>
-                        <input type="text" id="auth-user" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
+                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" id="email" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
                     </div>
                     <div>
-                        <label for="auth-pass" class="block text-sm font-medium text-gray-700">Senha</label>
-                        <input type="password" id="auth-pass" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
+                        <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
+                        <input type="password" id="password" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
                     </div>
-                    <p id="auth-error" class="text-sm text-red-600 hidden">Usuário ou senha inválidos.</p>
                 </div>
-                <div class="flex justify-end gap-4 mt-8">
+                <div id="auth-error" class="mt-4 text-red-600 text-sm"></div>
+                <div class="flex justify-end gap-4 mt-6">
                     <button type="button" id="auth-cancel-btn" class="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Cancelar</button>
                     <button type="submit" class="px-4 py-2 text-sm font-semibold text-white rounded-lg primary">Entrar</button>
                 </div>
@@ -322,503 +322,232 @@
         </div>
     </div>
 
-    <div id="notification-toast" class="fixed bottom-5 right-5 bg-green-500 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10"></div>
+    <div id="notification-toast" class="fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10 transition-all duration-300 ease-out-cubic"></div>
 
-    <!-- =============== MAIN SCRIPT =============== -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener("DOMContentLoaded", ( ) => {
+            // Variáveis globais
+            let db, auth, dbCollection, currentUser;
             let birthdayData = [];
-            const demoBirthdayData = [
-                { id: 'demo-1', name: 'Maria Silva (Demo)', sector: 'Comercial', day: new Date().getDate(), month: new Date().getMonth() + 1 },
-                { id: 'demo-2', name: 'João Souza (Demo)', sector: 'TI', day: new Date().getDate(), month: new Date().getMonth() + 1 }
-            ];
-            
-            const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-            let currentDate = new Date(); 
-            let dbCollection = null;
+            let currentDate = new Date();
+            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             let useDemoMode = false;
+            let authUnsubscribe = null; // Para o listener de autenticação
+            let dataUnsubscribe = null; // Para o listener do onSnapshot
             let isAdmin = false;
-            let birthdayChartInstance;
-            let sectorChartInstance;
+            let birthdayChartInstance, sectorChartInstance;
 
-            const authBtn = document.getElementById('auth-btn');
-            const authModal = document.getElementById('auth-modal');
-            const authForm = document.getElementById('auth-form');
-            const authCancelBtn = document.getElementById('auth-cancel-btn');
-            const authError = document.getElementById('auth-error');
+            // Mapeamento de Elementos DOM
+            const authBtn = document.getElementById("auth-btn");
+            const authModal = document.getElementById("auth-modal");
+            const authForm = document.getElementById("auth-form");
+            const authCancelBtn = document.getElementById("auth-cancel-btn");
+            const authError = document.getElementById("auth-error");
+            const tabsContainer = document.getElementById("tabs-container");
+            const tabPanels = document.querySelectorAll(".tab-panel");
+            const monthFilter = document.getElementById("month-filter");
+            const sectorFilter = document.getElementById("sector-filter");
+            const nameSearch = document.getElementById("name-search");
+            const tableBody = document.getElementById("birthday-table-body");
+            const noResultsDiv = document.getElementById("no-results");
+            const birthdayChartCanvas = document.getElementById("birthday-chart");
+            const sectorChartCanvas = document.getElementById("sector-chart");
+            const totalPersonnelEl = document.getElementById("total-personnel");
+            const calendarGrid = document.getElementById("calendar-grid");
+            const monthYearHeader = document.getElementById("calendar-month-year");
+            const prevMonthBtn = document.getElementById("prev-month-btn");
+            const nextMonthBtn = document.getElementById("next-month-btn");
+            const todayBtn = document.getElementById("today-btn");
+            const todayPanel = document.getElementById("today-panel");
+            const modal = document.getElementById("person-modal");
+            const modalTitle = document.getElementById("modal-title");
+            const personForm = document.getElementById("person-form");
+            const cancelBtn = document.getElementById("cancel-btn");
+            const addPersonBtn = document.getElementById("add-person-btn");
+            const personMonthSelect = document.getElementById("person-month");
+            const csvFileInput = document.getElementById("csv-file-input");
+            const pasteDataInput = document.getElementById("paste-data-input");
+            const pasteDataBtn = document.getElementById("paste-data-btn");
+            const notificationToast = document.getElementById("notification-toast");
 
-            const tabsContainer = document.getElementById('tabs-container');
-            const tabPanels = document.querySelectorAll('.tab-panel');
-            const monthFilter = document.getElementById('month-filter');
-            const sectorFilter = document.getElementById('sector-filter');
-            const nameSearch = document.getElementById('name-search');
-            const tableBody = document.getElementById('birthday-table-body');
-            const noResultsDiv = document.getElementById('no-results');
-            const birthdayChartCanvas = document.getElementById('birthday-chart');
-            const sectorChartCanvas = document.getElementById('sector-chart');
-            const totalPersonnelEl = document.getElementById('total-personnel');
-            const calendarGrid = document.getElementById('calendar-grid');
-            const monthYearHeader = document.getElementById('calendar-month-year');
-            const prevMonthBtn = document.getElementById('prev-month-btn');
-            const nextMonthBtn = document.getElementById('next-month-btn');
-            const todayBtn = document.getElementById('today-btn');
-            const todayPanel = document.getElementById('today-panel');
-            const modal = document.getElementById('person-modal');
-            const modalTitle = document.getElementById('modal-title');
-            const personForm = document.getElementById('person-form');
-            const cancelBtn = document.getElementById('cancel-btn');
-            const addPersonBtn = document.getElementById('add-person-btn');
-            const personMonthSelect = document.getElementById('person-month');
-            const csvFileInput = document.getElementById('csv-file-input');
-            const pasteDataInput = document.getElementById('paste-data-input');
-            const pasteDataBtn = document.getElementById('paste-data-btn');
-            const notificationToast = document.getElementById('notification-toast');
-            
+            function initFirebase() {
+                try {
+                    const firebaseConfigRaw = (typeof window.__firebase_config !== "undefined") ? window.__firebase_config : null;
+                    if (firebaseConfigRaw) {
+                        const firebaseConfig = JSON.parse(firebaseConfigRaw);
+                        if (initializeApp) {
+                            initializeApp(firebaseConfig);
+                        }
+                        db = getFirestore();
+                        auth = getAuth();
+                        dbCollection = collection(db, "aniversariantes");
+
+                        if (authUnsubscribe) authUnsubscribe(); // Garante que não haja listeners duplicados
+
+                        authUnsubscribe = onAuthStateChanged(auth, user => {
+                            currentUser = user;
+                            isAdmin = !!user;
+                            updateAdminUI(user);
+                            loadBirthdays(); // Recarrega os dados com base no novo estado de autenticação
+                        });
+                    } else {
+                        console.warn("Firebase config not found. Running in demo mode.");
+                        useDemoMode = true;
+                        loadBirthdays();
+                    }
+                } catch (e) {
+                    console.error("Error initializing Firebase:", e);
+                    useDemoMode = true;
+                    loadBirthdays();
+                }
+            }
+
+            function updateAdminUI(user) {
+                if (user) {
+                    document.body.classList.add("admin-mode");
+                    authBtn.textContent = `🔓 ${user.email}`;
+                } else {
+                    document.body.classList.remove("admin-mode");
+                    authBtn.textContent = "🔒 Acesso Restrito";
+                }
+            }
+
             function showNotification(message, isError = false) {
                 notificationToast.textContent = message;
-                notificationToast.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
-                
+                notificationToast.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10 transition-all duration-300 ease-out-cubic ${isError ? "bg-red-500" : "bg-green-500"}`;
+                notificationToast.classList.remove("opacity-0", "translate-y-10");
+                notificationToast.classList.add("opacity-100", "translate-y-0");
                 setTimeout(() => {
-                    notificationToast.classList.remove('opacity-0', 'translate-y-10');
-                    notificationToast.classList.add('opacity-100', 'translate-y-0');
-                }, 100);
-
-                setTimeout(() => {
-                    notificationToast.classList.add('opacity-0', 'translate-y-10');
-                    notificationToast.classList.remove('opacity-100', 'translate-y-0');
-                }, 4000);
+                    notificationToast.classList.remove("opacity-100", "translate-y-0");
+                    notificationToast.classList.add("opacity-0", "translate-y-10");
+                }, 3000);
             }
-            
-            const firebaseConfigRaw = (typeof window.__firebase_config !== 'undefined') ? window.__firebase_config : null;
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-            try {
-                if (!firebaseConfigRaw) throw new Error('Firebase config is not available');
-                const firebaseConfig = (typeof firebaseConfigRaw === 'string') ? JSON.parse(firebaseConfigRaw) : firebaseConfigRaw;
-                if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-                    throw new Error('Firebase config is incomplete');
+            function loadBirthdays() {
+                if (useDemoMode) {
+                    console.log("Carregando dados de demonstração...");
+                    const demoBirthdayData = [
+                        { id: "demo-1", name: "Maria Silva (Demo)", sector: "Comercial", day: new Date().getDate(), month: new Date().getMonth() + 1 },
+                        { id: "demo-2", name: "João Santos (Demo)", sector: "TI", day: 15, month: 8 },
+                        { id: "demo-3", name: "Ana Pereira (Demo)", sector: "RH", day: 2, month: 3 }
+                    ];
+                    birthdayData = demoBirthdayData;
+                    renderAllViews(birthdayData);
+                    populateFilters(birthdayData);
+                    return;
                 }
 
-                const app = initializeApp(firebaseConfig);
-                const db = getFirestore(app);
-                const auth = getAuth(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
+                if (dataUnsubscribe) {
+                    dataUnsubscribe(); // Cancela o listener anterior para evitar duplicação
                 }
-                dbCollection = collection(db, `/artifacts/${appId}/public/data/aniversariantes`);
-            } catch (error) {
-                console.warn("Firebase initialization failed:", error);
-                showNotification("Não foi possível conectar. Modo demonstração ativado.", true);
-                useDemoMode = true;
-                birthdayData = demoBirthdayData.slice();
+
+                if (!dbCollection) {
+                    console.error("dbCollection não está inicializado. Verifique a configuração do Firebase.");
+                    showNotification("Erro: Firebase não configurado corretamente.", true);
+                    return;
+                }
+
+                console.log("Configurando listener do Firestore...");
+                const q = query(dbCollection, orderBy("month"), orderBy("day"));
+                dataUnsubscribe = onSnapshot(q, snapshot => {
+                    console.log("Dados recebidos do Firestore!");
+                    const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    birthdayData = data;
+                    renderAllViews(birthdayData);
+                    populateFilters(birthdayData);
+                }, error => {
+                    console.error("Erro ao carregar dados do Firestore:", error);
+                    showNotification("Erro de conexão com o servidor. Verifique suas permissões.", true);
+                    // Se a leitura falhar (por exemplo, por falta de permissão), limpa os dados da tela
+                    birthdayData = [];
+                    renderAllViews([]);
+                    populateFilters([]);
+                });
             }
 
             function renderAllViews(data) {
-                populateFilters(data);
-                renderTable(data);
-                renderCalendar(data);
                 renderTodaysBirthdays(data);
+                renderCalendar(data);
+                renderTable(data);
                 renderAnalytics(data);
-            }
-
-            if (!useDemoMode && dbCollection) {
-              onSnapshot(dbCollection, (snapshot) => {
-                const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                birthdayData = fetchedData;
-                renderAllViews(birthdayData);
-              }, (error) => {
-                  console.error("Error listening to Firestore:", error);
-                  showNotification("Erro de conexão. Ativando modo de demonstração.", true);
-                  useDemoMode = true;
-                  birthdayData = demoBirthdayData.slice();
-                  renderAllViews(birthdayData);
-              });
-            } else {
-              renderAllViews(birthdayData);
-            }
-            
-            function toggleAdminUI(isLoggedIn) {
-                document.body.classList.toggle('admin-mode', isLoggedIn);
-                if (isLoggedIn) {
-                    authBtn.textContent = 'Logout';
-                    authBtn.classList.remove('tertiary');
-                    authBtn.classList.add('primary');
-                } else {
-                    authBtn.textContent = '🔒 Acesso Restrito';
-                    authBtn.classList.add('tertiary');
-                    authBtn.classList.remove('primary');
-                }
-            }
-
-            function openAuthModal() {
-                authForm.reset();
-                authError.classList.add('hidden');
-                authModal.classList.remove('hidden');
-                setTimeout(() => {
-                    authModal.querySelector('.transform')?.classList?.remove('scale-95', 'opacity-0');
-                    authModal.querySelector('.transform')?.classList?.add('scale-100', 'opacity-100');
-                }, 10);
-            }
-
-            function closeAuthModal() {
-                 authModal.querySelector('.transform')?.classList?.add('scale-95', 'opacity-0');
-                 authModal.querySelector('.transform')?.classList?.remove('scale-100', 'opacity-100');
-                setTimeout(() => authModal.classList.add('hidden'), 300);
-            }
-
-            authBtn.addEventListener('click', () => {
-                if (isAdmin) {
-                    isAdmin = false;
-                    toggleAdminUI(false);
-                    showNotification("Sessão administrativa encerrada.");
-                } else {
-                    openAuthModal();
-                }
-            });
-            
-            authForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const user = document.getElementById('auth-user').value;
-                const pass = document.getElementById('auth-pass').value;
-
-                if (user === 'adm' && pass === '12345678') {
-                    isAdmin = true;
-                    toggleAdminUI(true);
-                    closeAuthModal();
-                    showNotification("Login bem-sucedido!");
-                } else {
-                    authError.classList.remove('hidden');
-                }
-            });
-
-            authCancelBtn.addEventListener('click', closeAuthModal);
-
-            /* ============= Replaced import functions (robust CSV & paste handling) ============= */
-
-            /* util: parse day/month from strings like '22/09', '22-9', '22.09' */
-            function parseDayMonth(dateStr) {
-              if (!dateStr || typeof dateStr !== 'string') return null;
-              dateStr = dateStr.trim().replace(/^\uFEFF/, '');
-              const m = dateStr.match(/(\d{1,2})[\/\.\-](\d{1,2})/);
-              if (!m) return null;
-              const day = parseInt(m[1], 10);
-              const month = parseInt(m[2], 10);
-              if (isNaN(day) || isNaN(month) || day < 1 || day > 31 || month < 1 || month > 12) return null;
-              return { day, month };
-            }
-
-            async function processImportedData(dataArray) {
-              if (!Array.isArray(dataArray) || dataArray.length === 0) {
-                showNotification("Nenhum registro válido para importar.", true);
-                return;
-              }
-
-              const normalized = dataArray.map((p, idx) => {
-                const name = (p.name || p.nome || '').toString().trim();
-                const sector = (p.sector || p.setor || '').toString().trim();
-                const parsed = parseDayMonth((p.date || p.data || `${p.day || ''}/${p.month || ''}`).toString());
-                const day = parsed ? parsed.day : (p.day ? Number(p.day) : NaN);
-                const month = parsed ? parsed.month : (p.month ? Number(p.month) : NaN);
-                return { __origIndex: idx+1, name, sector, day, month };
-              });
-
-              const existingKeys = new Set((birthdayData || []).map(d => `${(d.name||'').toLowerCase().trim()}|${Number(d.day)}|${Number(d.month)}`));
-
-              const toInsert = [];
-              const skipped = [];
-
-              normalized.forEach(row => {
-                if (!row.name || !row.day || !row.month || isNaN(row.day) || isNaN(row.month)) {
-                  skipped.push({ reason: 'invalid', row });
-                  return;
-                }
-                const key = `${row.name.toLowerCase()}|${Number(row.day)}|${Number(row.month)}`;
-                if (existingKeys.has(key)) {
-                  skipped.push({ reason: 'duplicate', row });
-                  return;
-                }
-                existingKeys.add(key);
-                toInsert.push({ name: row.name, sector: row.sector || '', day: Number(row.day), month: Number(row.month) });
-              });
-
-              let insertedCount = 0;
-              const insertPromises = [];
-              for (const item of toInsert) {
-                if (useDemoMode) {
-                  birthdayData.push({ id: `demo-${Date.now()}-${Math.random()}`, ...item });
-                  insertedCount++;
-                } else {
-                  insertPromises.push(addDoc(dbCollection, item).then(() => { insertedCount++; }).catch(err => {
-                    console.error('Insert error', err);
-                    skipped.push({ reason: 'error', row: item, error: err.message || String(err) });
-                  }));
-                }
-              }
-
-              if (!useDemoMode && insertPromises.length) {
-                try {
-                  await Promise.all(insertPromises);
-                } catch (err) {
-                  console.error('Erro ao inserir alguns documentos:', err);
-                }
-              }
-
-              if (useDemoMode) renderAllViews(birthdayData);
-              let msg = '';
-              if (insertedCount > 0) msg += `${insertedCount} registro(s) importado(s) com sucesso. `;
-              if (skipped.length > 0) {
-                msg += `${skipped.length} linha(s) ignoradas: `;
-                const reasons = skipped.reduce((acc, s) => {
-                  acc[s.reason] = (acc[s.reason] || 0) + 1;
-                  return acc;
-                }, {});
-                const parts = [];
-                if (reasons.duplicate) parts.push(`${reasons.duplicate} duplicata(s)`);
-                if (reasons.invalid) parts.push(`${reasons.invalid} inválida(s)`);
-                if (reasons.error) parts.push(`${reasons.error} com erro`);
-                msg += parts.join(', ');
-              }
-              if (!msg) msg = 'Nenhum registro novo para importar.';
-              showNotification(msg, insertedCount === 0);
-            }
-
-            function handleCSVImport(event) {
-              const file = event.target.files && event.target.files[0];
-              if (!file) return;
-
-              const reader = new FileReader();
-              reader.onload = async (e) => {
-                let text = e.target.result;
-                text = text.replace(/^\uFEFF/, '');
-                text = text.replace(/\r\n/g, '\n').trim();
-                if (!text) {
-                  showNotification('Arquivo vazio ou inválido.', true);
-                  event.target.value = '';
-                  return;
-                }
-
-                const sample = text.split('\n').slice(0, 3).join('\n');
-                const delimiters = ['\t','; ', ';', ','];
-                let chosenDelim = ',';
-                let bestCount = -1;
-                delimiters.forEach(d => {
-                  const count = (sample.split(d).length - 1);
-                  if (count > bestCount) { bestCount = count; chosenDelim = d; }
-                });
-
-                const lines = text.split('\n').filter(l => l.trim() !== '');
-                const firstCols = lines[0].split(chosenDelim).map(s => s.trim().toLowerCase());
-                const hasHeader = firstCols.some(c => /(name|nome|setor|sector|data|date|dia|day|month|mes)/.test(c));
-
-                const rows = lines.map((line, idx) => {
-                  const cols = line.split(chosenDelim).map(s => s.trim());
-                  if (hasHeader && idx === 0) return null;
-                  if (cols.length >= 3) {
-                    const last = cols[cols.length-1];
-                    const maybeDate = parseDayMonth(last);
-                    if (maybeDate) {
-                      return { name: cols[0], sector: cols[1] || '', date: last };
-                    } else if (cols.length >= 4) {
-                      return { name: cols[0], sector: cols[1] || '', day: cols[2], month: cols[3] };
-                    } else {
-                      return { name: cols[0], sector: cols[1] || '', date: cols[2] };
-                    }
-                  } else if (cols.length === 2) {
-                    return { name: cols[0], sector: '', date: cols[1] };
-                  } else {
-                    return null;
-                  }
-                }).filter(Boolean);
-
-                await processImportedData(rows);
-                event.target.value = '';
-              };
-
-              reader.onerror = (err) => {
-                console.error('Erro lendo arquivo CSV:', err);
-                showNotification('Erro ao ler o arquivo CSV.', true);
-                event.target.value = '';
-              };
-
-              reader.readAsText(file, 'UTF-8');
-            }
-
-            function handlePasteImport() {
-              const text = pasteDataInput.value || '';
-              if (!text.trim()) {
-                showNotification('Nenhum dado colado.', true);
-                return;
-              }
-
-              let normalized = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n').trim();
-              const lines = normalized.split('\n').map(l => l.trim()).filter(Boolean);
-
-              const sample = lines.slice(0,3).join('\n');
-              const delimCandidates = ['\t','; ', ';', ','];
-              let chosen = '\t';
-              let best = -1;
-              delimCandidates.forEach(d => {
-                const c = (sample.split(d).length - 1);
-                if (c > best) { best = c; chosen = d; }
-              });
-
-              const rows = lines.map(line => {
-                const cols = line.split(chosen).map(c => c.trim());
-                if (cols.length >= 3) {
-                  const last = cols[cols.length-1];
-                  const maybeDate = parseDayMonth(last);
-                  if (maybeDate) return { name: cols[0], sector: cols[1] || '', date: last };
-                  if (cols.length >= 4) return { name: cols[0], sector: cols[1] || '', day: cols[2], month: cols[3] };
-                  return { name: cols[0], sector: cols[1] || '', date: cols[2] };
-                } else if (cols.length === 2) {
-                  return { name: cols[0], sector: '', date: cols[1] };
-                } else {
-                  return null;
-                }
-              }).filter(Boolean);
-
-              pasteDataInput.value = '';
-              processImportedData(rows);
-            }
-
-            /* ============= rest of UI logic (unchanged) ============= */
-
-            function switchTab(targetTab) {
-                tabsContainer.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-                document.querySelector(`[data-tab="${targetTab}"]`).classList.add('active');
-                
-                tabPanels.forEach(panel => {
-                    if (panel.id === `${targetTab}-panel`) {
-                        panel.classList.remove('hidden');
-                    } else {
-                        panel.classList.add('hidden');
-                    }
-                });
             }
 
             function renderTodaysBirthdays(data) {
                 const today = new Date();
-                const todaysMonth = today.getMonth() + 1;
-                const todaysDay = today.getDate();
-
-                const todaysBirthdays = data.filter(p => p.day === todaysDay && p.month === todaysMonth);
+                const todaysBirthdays = data.filter(p => p.day === today.getDate() && p.month === (today.getMonth() + 1));
                 
-                todayPanel.innerHTML = ''; 
-
+                let content = 
+                    `<div class="bg-white p-4 md:p-6 rounded-2xl">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">Aniversariantes de Hoje</h2>`;
                 if (todaysBirthdays.length > 0) {
-                     const header = document.createElement('h2');
-                    header.className = 'text-2xl font-bold text-center mb-6';
-                    header.style.color = 'var(--eletro-teal)';
-                    header.innerHTML = `Parabéns aos Aniversariantes de Hoje! <span class="text-lg">(${todaysDay} de ${monthNames[todaysMonth - 1]})</span>`;
-                    todayPanel.appendChild(header);
-
-                    const grid = document.createElement('div');
-                    grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
-
+                    content += 
+                        `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">`;
                     todaysBirthdays.forEach(person => {
-                        const card = document.createElement('div');
-                        card.className = 'p-6 rounded-xl shadow-lg text-white transition-transform transform hover:scale-105';
-                        card.style.background = 'linear-gradient(135deg, var(--eletro-blue), var(--eletro-teal))';
-
-                        const nameEl = document.createElement('p');
-                        nameEl.className = 'text-xl font-bold';
-                        nameEl.textContent = person.name;
-
-                        const sectorEl = document.createElement('p');
-                        sectorEl.className = 'text-sm opacity-80 mt-1';
-                        sectorEl.textContent = person.sector;
-                        
-                        card.appendChild(nameEl);
-                        card.appendChild(sectorEl);
-                        grid.appendChild(card);
+                        content += `
+                            <div class="bg-slate-50 rounded-xl p-5 text-center shadow-sm hover:shadow-lg transition-shadow duration-300">
+                                <p class="text-lg font-semibold text-blue-800">${person.name}</p>
+                                <p class="text-sm text-gray-600">${person.sector}</p>
+                            </div>
+                        `;
                     });
-                     todayPanel.appendChild(grid);
+                    content += `</div>`;
                 } else {
-                    const noBirthdayDiv = document.createElement('div');
-                    noBirthdayDiv.className = 'text-center p-12 bg-white rounded-2xl shadow-lg';
-                    noBirthdayDiv.innerHTML = `
-                        <p class="text-xl font-semibold text-slate-700">Nenhum aniversário hoje.</p>
-                        <p class="text-slate-500 mt-2">(${todaysDay} de ${monthNames[todaysMonth - 1]})</p>
-                    `;
-                    todayPanel.appendChild(noBirthdayDiv);
+                    content += `<p class="text-center text-gray-500 py-8">Ninguém faz aniversário hoje.</p>`;
                 }
+                content += `</div>`;
+                todayPanel.innerHTML = content;
             }
 
             function renderCalendar(data) {
-                const year = currentDate.getFullYear();
-                const month = currentDate.getMonth();
-                
-                monthYearHeader.textContent = `${monthNames[month]} ${year}`;
-                calendarGrid.innerHTML = '';
+                calendarGrid.innerHTML = "";
+                monthYearHeader.textContent = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
 
-                const firstDayOfMonth = new Date(year, month, 1).getDay();
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+                const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 
-                for (let i = 0; i < firstDayOfMonth; i++) {
-                    const emptyCell = document.createElement('div');
-                    calendarGrid.appendChild(emptyCell);
+                for (let i = 0; i < firstDay; i++) {
+                    calendarGrid.innerHTML += "<div class=\"border p-2 h-24\"></div>";
                 }
 
                 for (let day = 1; day <= daysInMonth; day++) {
-                    const dayCell = document.createElement('div');
-                    dayCell.className = 'calendar-day border-t border-r p-2 h-28 flex flex-col';
-                    
-                    const dayNumber = document.createElement('span');
-                    dayNumber.className = 'day-number text-sm';
-                    dayNumber.textContent = day;
-                    dayCell.appendChild(dayNumber);
-
-                    const today = new Date();
-                    if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
-                        dayCell.classList.add('today');
-                    }
-                    
-                    const birthdaysOnThisDay = data.filter(p => p.day === day && p.month === month + 1);
-                    if (birthdaysOnThisDay.length > 0) {
-                        const birthdaysContainer = document.createElement('div');
-                        birthdaysContainer.className = 'flex-grow overflow-y-auto';
-                         birthdaysOnThisDay.forEach(p => {
-                            const birthdayEl = document.createElement('div');
-                            birthdayEl.className = 'calendar-birthday';
-                            birthdayEl.textContent = p.name;
-                            birthdayEl.title = `${p.name} (${p.sector})`;
-                            birthdaysContainer.appendChild(birthdayEl);
+                    const birthdaysOnDay = data.filter(p => p.day === day && p.month === (currentDate.getMonth() + 1));
+                    let cellContent = `<div class=\"font-bold\">${day}</div>`;
+                    if (birthdaysOnDay.length > 0) {
+                        cellContent += "<div class=\"text-xs mt-1\">";
+                        birthdaysOnDay.forEach(p => {
+                            cellContent += `<p class=\"truncate text-blue-700\">${p.name}</p>`;
                         });
-                        dayCell.appendChild(birthdaysContainer);
+                        cellContent += "</div>";
                     }
-                    
-                    calendarGrid.appendChild(dayCell);
+                    calendarGrid.innerHTML += `<div class=\"border p-2 h-24 overflow-hidden\">${cellContent}</div>`;
                 }
             }
 
             function populateFilters(data) {
-                monthFilter.innerHTML = '<option value="all">Todos os Meses</option>';
+                monthFilter.innerHTML = "<option value=\"all\">Todos os Meses</option>";
                 monthNames.forEach((name, index) => {
-                    const option = document.createElement('option');
+                    const option = document.createElement("option");
                     option.value = index + 1;
                     option.textContent = name;
                     monthFilter.appendChild(option);
                 });
                 
-                personMonthSelect.innerHTML = '';
+                personMonthSelect.innerHTML = "";
                 monthNames.forEach((name, index) => {
-                     const option = document.createElement('option');
+                     const option = document.createElement("option");
                     option.value = index + 1;
                     option.textContent = name;
                     personMonthSelect.appendChild(option);
                 });
 
                 const sectors = [...new Set(data.map(p => p.sector).filter(Boolean))].sort();
-                sectorFilter.innerHTML = '<option value="all">Todos os Setores</option>';
+                sectorFilter.innerHTML = "<option value=\"all\">Todos os Setores</option>";
                 sectors.forEach(sector => {
-                    const option = document.createElement('option');
+                    const option = document.createElement("option");
                     option.value = sector;
                     option.textContent = sector;
                     sectorFilter.appendChild(option);
@@ -831,8 +560,8 @@
                 const searchQuery = nameSearch.value.toLowerCase();
 
                 const filteredData = data.filter(person => {
-                    const monthMatch = selectedMonth === 'all' || person.month == selectedMonth;
-                    const sectorMatch = selectedSector === 'all' || person.sector === selectedSector;
+                    const monthMatch = selectedMonth === "all" || person.month == selectedMonth;
+                    const sectorMatch = selectedSector === "all" || person.sector === selectedSector;
                     const nameMatch = person.name.toLowerCase().includes(searchQuery);
                     return monthMatch && sectorMatch && nameMatch;
                 });
@@ -842,19 +571,19 @@
                     return a.day - b.day;
                 });
 
-                tableBody.innerHTML = '';
+                tableBody.innerHTML = "";
 
                 if (filteredData.length === 0) {
-                    noResultsDiv.classList.remove('hidden');
+                    noResultsDiv.classList.remove("hidden");
                 } else {
-                    noResultsDiv.classList.add('hidden');
+                    noResultsDiv.classList.add("hidden");
                     filteredData.forEach(person => {
-                        const row = document.createElement('tr');
-                        row.className = 'hover:bg-blue-50/50';
+                        const row = document.createElement("tr");
+                        row.className = "hover:bg-blue-50/50";
                         
                         row.innerHTML = `
                             <td class="p-4 text-sm">${person.name}</td>
-                            <td class="p-4 text-sm text-gray-600">${person.sector || 'N/A'}</td>
+                            <td class="p-4 text-sm text-gray-600">${person.sector || "N/A"}</td>
                             <td class="p-4 text-sm">${person.day} de ${monthNames[person.month - 1]}</td>
                             <td class="p-4 text-sm text-center admin-only-table-cell">
                                 <button data-id="${person.id}" class="edit-btn p-1 text-gray-500 hover:text-blue-600">
@@ -874,7 +603,7 @@
                 totalPersonnelEl.textContent = data.length;
 
                 const sectorCounts = data.reduce((acc, person) => {
-                    const sector = person.sector || 'Não definido';
+                    const sector = person.sector || "Não definido";
                     acc[sector] = (acc[sector] || 0) + 1;
                     return acc;
                 }, {});
@@ -884,12 +613,12 @@
 
                 if (sectorChartInstance) sectorChartInstance.destroy();
                 sectorChartInstance = new Chart(sectorChartCanvas, {
-                    type: 'doughnut',
+                    type: "doughnut",
                     data: {
                         labels: sectorLabels,
-                        datasets: [{ data: sectorData, backgroundColor: ['#0033A0', '#009A74', '#FFC72C', '#64748b', '#ef4444', '#f97316', '#8b5cf6', '#14b8a6', '#f43f5e', '#65a30d'], hoverOffset: 4 }]
+                        datasets: [{ data: sectorData, backgroundColor: ["#0033A0", "#009A74", "#FFC72C", "#64748b", "#ef4444", "#f97316", "#8b5cf6", "#14b8a6", "#f43f5e", "#65a30d"], hoverOffset: 4 }]
                     },
-                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: "right" } } }
                 });
 
                 if (birthdayChartInstance) birthdayChartInstance.destroy();
@@ -899,102 +628,150 @@
                 });
 
                 birthdayChartInstance = new Chart(birthdayChartCanvas, {
-                    type: 'bar',
+                    type: "bar",
                     data: {
                         labels: monthNames,
                         datasets: [{
-                            label: 'Nº de Aniversariantes',
+                            label: "Aniversariantes por Mês",
                             data: monthlyCounts,
-                            backgroundColor: 'rgba(0, 154, 116, 0.6)',
-                            borderColor: 'rgba(0, 154, 116, 1)',
-                            borderWidth: 1,
-                            borderRadius: 5,
+                            backgroundColor: "rgba(0, 51, 102, 0.7)",
+                            borderColor: "rgba(0, 51, 102, 1)",
+                            borderWidth: 1
                         }]
                     },
-                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false } } }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                        plugins: { legend: { display: false } }
+                    }
                 });
+            }
+
+            function switchTab(tabId) {
+                tabPanels.forEach(panel => panel.classList.add("hidden"));
+                document.getElementById(`${tabId}-panel`).classList.remove("hidden");
+                
+                tabsContainer.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+                tabsContainer.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
             }
 
             function openModal(person) {
                 personForm.reset();
                 if (person) {
-                    modalTitle.textContent = "Editar Dados";
-                    document.getElementById('person-id').value = person.id;
-                    document.getElementById('person-name').value = person.name;
-                    document.getElementById('person-sector').value = person.sector;
-                    document.getElementById('person-day').value = person.day;
-                    document.getElementById('person-month').value = person.month;
+                    modalTitle.textContent = "Editar Aniversariante";
+                    document.getElementById("person-id").value = person.id;
+                    document.getElementById("person-name").value = person.name;
+                    document.getElementById("person-sector").value = person.sector;
+                    document.getElementById("person-day").value = person.day;
+                    document.getElementById("person-month").value = person.month;
                 } else {
-                    modalTitle.textContent = "Adicionar Nova Pessoa";
-                    document.getElementById('person-id').value = '';
+                    modalTitle.textContent = "Adicionar Aniversariante";
+                    document.getElementById("person-id").value = "";
                 }
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    modal.querySelector('.transform')?.classList?.remove('scale-95', 'opacity-0');
-                    modal.querySelector('.transform')?.classList?.add('scale-100', 'opacity-100');
-                }, 10);
+                modal.classList.remove("hidden");
+                setTimeout(() => modal.querySelector(".transform").classList.remove("scale-95", "opacity-0"), 50);
             }
 
             function closeModal() {
-                 modal.querySelector('.transform')?.classList?.add('scale-95', 'opacity-0');
-                 modal.querySelector('.transform')?.classList?.remove('scale-100', 'opacity-100');
-                setTimeout(() => modal.classList.add('hidden'), 300);
+                modal.querySelector(".transform").classList.add("scale-95", "opacity-0");
+                setTimeout(() => modal.classList.add("hidden"), 300);
             }
 
             async function handleFormSubmit(e) {
                 e.preventDefault();
-                const id = document.getElementById('person-id').value;
+                const personId = document.getElementById("person-id").value;
                 const personData = {
-                    name: document.getElementById('person-name').value.trim(),
-                    sector: document.getElementById('person-sector').value.trim(),
-                    day: parseInt(document.getElementById('person-day').value),
-                    month: parseInt(document.getElementById('person-month').value)
+                    name: document.getElementById("person-name").value,
+                    sector: document.getElementById("person-sector").value,
+                    day: parseInt(document.getElementById("person-day").value),
+                    month: parseInt(document.getElementById("person-month").value)
                 };
 
                 if (useDemoMode) {
-                    if (id) {
-                        const index = birthdayData.findIndex(p => p.id == id);
-                        if (index !== -1) birthdayData[index] = { ...personData, id };
-                    } else {
-                        birthdayData.push({ ...personData, id: `demo-${Date.now()}` });
-                    }
-                    renderAllViews(birthdayData);
-                } else {
-                    try {
-                        if (id) {
-                            await setDoc(doc(dbCollection, id), personData);
-                        } else {
-                            await addDoc(dbCollection, personData);
-                        }
-                    } catch(err) {
-                        console.error("Error saving to Firestore:", err);
-                        showNotification("Erro ao salvar os dados.", true);
-                    }
+                    showNotification("Operação não disponível no modo de demonstração.", true);
+                    closeModal();
+                    return;
                 }
-                closeModal();
+
+                try {
+                    if (personId) {
+                        await setDoc(doc(dbCollection, personId), personData);
+                        showNotification("Aniversariante atualizado com sucesso!");
+                    } else {
+                        await addDoc(dbCollection, personData);
+                        showNotification("Aniversariante adicionado com sucesso!");
+                    }
+                    closeModal();
+                } catch (err) {
+                    console.error("Erro ao salvar no Firestore:", err);
+                    showNotification("Erro ao salvar. Verifique suas permissões e conexão.", true);
+                }
             }
 
             async function handleDelete(personId) {
-                if (!confirm('Tem certeza que deseja excluir esta pessoa?')) return;
-                
-                if(useDemoMode) {
-                    birthdayData = birthdayData.filter(p => p.id != personId);
-                    renderAllViews(birthdayData);
-                } else {
-                    try {
-                        await deleteDoc(doc(dbCollection, personId));
-                    } catch(err) {
-                        console.error("Error deleting from Firestore:", err);
-                        showNotification("Erro ao excluir.", true);
-                    }
+                if (!confirm("Tem certeza que deseja excluir este registro?")) return;
+
+                if (useDemoMode) {
+                    showNotification("Operação não disponível no modo de demonstração.", true);
+                    return;
+                }
+
+                try {
+                    await deleteDoc(doc(dbCollection, personId));
+                    showNotification("Registro excluído com sucesso!");
+                } catch (err) {
+                    console.error("Error deleting from Firestore:", err);
+                    showNotification("Erro ao excluir. Verifique suas permissões e conexão.", true);
                 }
             }
 
-            tableBody.addEventListener('click', (e) => {
-                const editBtn = e.target.closest('.edit-btn');
-                const deleteBtn = e.target.closest('.delete-btn');
+            function handleAuth(e) {
+                e.preventDefault();
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
 
-                if (!isAdmin) return;
+                signInWithEmailAndPassword(auth, email, password)
+                    .then(userCredential => {
+                        authModal.classList.add("hidden");
+                        authForm.reset();
+                        authError.textContent = ""; // Limpa qualquer erro anterior
+                    })
+                    .catch(error => {
+                        authError.textContent = "Email ou senha inválidos.";
+                        console.error("Erro de autenticação:", error);
+                    });
+            }
+
+            function handleSignOut() {
+                signOut(auth).catch(error => console.error("Erro ao fazer logout:", error));
+            }
+
+            // Event Listeners
+            authBtn.addEventListener("click", () => {
+                if (currentUser) {
+                    if (confirm("Deseja sair do modo de administração?")) {
+                        handleSignOut();
+                    }
+                } else {
+                    authModal.classList.remove("hidden");
+                    setTimeout(() => authModal.querySelector(".transform").classList.remove("scale-95", "opacity-0"), 50);
+                }
+            });
+
+            authCancelBtn.addEventListener("click", () => {
+                authModal.querySelector(".transform").classList.add("scale-95", "opacity-0");
+                setTimeout(() => authModal.classList.add("hidden"), 300);
+                authError.textContent = ""; // Limpa qualquer erro ao cancelar
+            });
+
+            authForm.addEventListener("submit", handleAuth);
+
+            tableBody.addEventListener("click", (e) => {
+                const editBtn = e.target.closest(".edit-btn");
+                const deleteBtn = e.target.closest(".delete-btn");
+
+                if (!isAdmin) return; // Ações de edição/exclusão só para admin
 
                 if (editBtn) {
                     const personId = editBtn.dataset.id;
@@ -1006,45 +783,46 @@
                 }
             });
 
-            tabsContainer.addEventListener('click', (e) => {
-                if (e.target.matches('.tab-btn')) {
-                    switchTab(e.target.getAttribute('data-tab'));
+            tabsContainer.addEventListener("click", (e) => {
+                if (e.target.matches(".tab-btn")) {
+                    switchTab(e.target.getAttribute("data-tab"));
                 }
             });
-            prevMonthBtn.addEventListener('click', () => {
+            prevMonthBtn.addEventListener("click", () => {
                 currentDate.setMonth(currentDate.getMonth() - 1);
                 renderCalendar(birthdayData);
             });
-            nextMonthBtn.addEventListener('click', () => {
+            nextMonthBtn.addEventListener("click", () => {
                 currentDate.setMonth(currentDate.getMonth() + 1);
                 renderCalendar(birthdayData);
             });
-            todayBtn.addEventListener('click', () => {
+            todayBtn.addEventListener("click", () => {
                 currentDate = new Date();
                 renderCalendar(birthdayData);
             });
             
-            addPersonBtn.addEventListener('click', () => openModal(null));
-            cancelBtn.addEventListener('click', closeModal);
-            csvFileInput.addEventListener('change', handleCSVImport);
-            pasteDataBtn.addEventListener('click', handlePasteImport);
-            personForm.addEventListener('submit', handleFormSubmit);
+            addPersonBtn.addEventListener("click", () => openModal(null));
+            cancelBtn.addEventListener("click", closeModal);
+            // csvFileInput.addEventListener("change", handleCSVImport);
+            // pasteDataBtn.addEventListener("click", handlePasteImport);
+            personForm.addEventListener("submit", handleFormSubmit);
 
+            // Inicialização
+            initFirebase();
             const currentMonthForFilter = new Date().getMonth() + 1;
             monthFilter.value = currentMonthForFilter;
-            
-            switchTab('today');
-            monthFilter.addEventListener('change', () => renderTable(birthdayData));
-            sectorFilter.addEventListener('change', () => renderTable(birthdayData));
-            nameSearch.addEventListener('input', () => renderTable(birthdayData));
+            switchTab("today");
+            monthFilter.addEventListener("change", () => renderTable(birthdayData));
+            sectorFilter.addEventListener("change", () => renderTable(birthdayData));
+            nameSearch.addEventListener("input", () => renderTable(birthdayData));
         });
     </script>
 
     <!-- if embedded in iframe, make it look native -->
     <script>
       if (window.self !== window.top) {
-        document.documentElement.classList.add('embed-mode');
-        document.body.style.minHeight = '680px';
+        document.documentElement.classList.add("embed-mode");
+        document.body.style.minHeight = "680px";
       }
     </script>
 </body>
