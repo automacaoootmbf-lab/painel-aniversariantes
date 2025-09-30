@@ -5,20 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Painel de Aniversariantes</title>
 
-    <!-- Tailwind & Chart.js (CDNs usados no seu projeto) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
  
-    <!-- Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Firebase config injected at deploy time -->
     <script src="/firebase-config.js"></script>
 
-    <!-- ============================
-         CSS atualizado para SharePoint
-         Substitui o bloco de estilos anterior
-         ============================ -->
     <style>
     :root{
       --sp-blue: #0072C6;
@@ -107,9 +100,12 @@
     .modal-overlay { background: rgba(2,6,23,0.45); }
     .modal-overlay .shadow-2xl { box-shadow: 0 20px 50px rgba(4,6,15,0.18); border-radius:12px; }
 
-    .admin-only { display: none; }
-    body.admin-mode .admin-only { display: block; }
-    body.admin-mode .admin-only-table-cell { display: table-cell; }
+    .admin-only { display: none !important; }
+    body.admin-mode .admin-only { display: block !important; }
+    
+    .admin-only-table-cell { display: none !important; }
+    body.admin-mode .admin-only-table-cell { display: table-cell !important; }
+    
 
     @media (max-width: 900px) {
       .container { padding: 18px; max-width: 100%; }
@@ -298,7 +294,7 @@
             </form>
         </div>
     </div>
-
+    
     <div id="auth-modal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm transform transition-all scale-95 opacity-0">
             <h2 class="text-2xl font-bold text-slate-800 mb-6">Acesso Restrito</h2>
@@ -326,22 +322,22 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         document.addEventListener("DOMContentLoaded", ( ) => {
-            // Variáveis globais
+            // === VARIÁVEIS GLOBAIS ===
             let db, auth, dbCollection, currentUser;
             let birthdayData = [];
             let currentDate = new Date();
             const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
             let useDemoMode = false;
-            let authUnsubscribe = null; // Para o listener de autenticação
-            let dataUnsubscribe = null; // Para o listener do onSnapshot
+            let authUnsubscribe = null;
+            let dataUnsubscribe = null;
             let isAdmin = false;
             let birthdayChartInstance, sectorChartInstance;
 
-            // Mapeamento de Elementos DOM
+            // === MAPEAMENTO DE ELEMENTOS DOM ===
             const authBtn = document.getElementById("auth-btn");
             const authModal = document.getElementById("auth-modal");
             const authForm = document.getElementById("auth-form");
@@ -374,130 +370,129 @@
             const pasteDataBtn = document.getElementById("paste-data-btn");
             const notificationToast = document.getElementById("notification-toast");
 
-            /* ========== AUTENTICAÇÃO + ADMIN CHECK (substituições aplicadas) ========== */
+            /* ========================================================================= */
+            /* INÍCIO DO BLOCO DE AUTENTICAÇÃO E SEGURANÇA                               */
+            /* ========================================================================= */
 
+            // Responsável por verificar as permissões (claims) do usuário e atualizar a UI
             async function checkAdminAndApplyUI(user) {
-              if (!user) {
-                isAdmin = false;
-                updateAdminUI(null);
-                return;
-              }
-              try {
-                // tenta forçar refresh do token para garantir claims atualizadas (melhora consistência após setCustomUserClaims)
-                try {
-                  if (user.getIdToken) await user.getIdToken(true);
-                } catch (e) {
-                  // se não suportar, ignora
+                if (!user) {
+                    isAdmin = false;
+                    updateAdminUI(null);
+                    return;
                 }
-                // usa getIdTokenResult para ler claims
-                const idTokenResult = await getIdTokenResult(user);
-                isAdmin = !!(idTokenResult && idTokenResult.claims && idTokenResult.claims.admin === true);
-              } catch (err) {
-                console.error('Erro ao recuperar idTokenResult:', err);
-                isAdmin = false;
-              }
-              updateAdminUI(user);
-              if (!isAdmin) {
-                showNotification('Conta autenticada — sem permissão de edição.', true);
-              } else {
-                showNotification('Acesso administrativo concedido.');
-              }
+
+                try {
+                    const idTokenResult = await user.getIdTokenResult(true);
+                    isAdmin = idTokenResult?.claims?.admin === true;
+                } catch (err) {
+                    console.error('Erro ao verificar permissões de admin:', err);
+                    isAdmin = false;
+                }
+                
+                updateAdminUI(user);
+
+                if (isAdmin) {
+                    showNotification('Acesso administrativo concedido.');
+                } else {
+                    showNotification('Autenticado. Permissões de edição não disponíveis.', true);
+                }
             }
 
+            // Atualiza a interface com base no status de admin (isAdmin)
             function updateAdminUI(user) {
-              if (user && isAdmin) {
-                document.body.classList.add('admin-mode');
-                authBtn.textContent = `🔓 ${user.email}`;
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
-                document.querySelectorAll('.admin-only-table-cell').forEach(el => el.style.display = 'table-cell');
-              } else if (user && !isAdmin) {
-                document.body.classList.remove('admin-mode');
-                authBtn.textContent = `🔒 ${user.email}`;
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.admin-only-table-cell').forEach(el => el.style.display = 'none');
-              } else {
-                document.body.classList.remove('admin-mode');
-                authBtn.textContent = '🔒 Acesso Restrito';
-                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
-                document.querySelectorAll('.admin-only-table-cell').forEach(el => el.style.display = 'none');
-              }
+                if (user && isAdmin) {
+                    document.body.classList.add("admin-mode");
+                    authBtn.textContent = `🔓 ${user.email}`;
+                } else if (user && !isAdmin) {
+                    document.body.classList.remove("admin-mode");
+                    authBtn.textContent = `🔒 ${user.email}`;
+                } else {
+                    document.body.classList.remove("admin-mode");
+                    authBtn.textContent = "🔒 Acesso Restrito";
+                }
             }
 
+            // Inicializa o Firebase e o listener de autenticação
             function initFirebase() {
                 try {
                     const firebaseConfigRaw = (typeof window.__firebase_config !== "undefined") ? window.__firebase_config : null;
                     if (firebaseConfigRaw) {
                         const firebaseConfig = JSON.parse(firebaseConfigRaw);
-                        if (initializeApp) {
-                            initializeApp(firebaseConfig);
-                        }
+                        initializeApp(firebaseConfig);
+                        
                         db = getFirestore();
                         auth = getAuth();
                         dbCollection = collection(db, "aniversariantes");
 
-                        // remove listener anterior se existir
-                        if (authUnsubscribe) authUnsubscribe();
+                        if (authUnsubscribe) authUnsubscribe(); 
 
-                        // listener de auth: sempre que mudar o estado, checamos claims e recarregamos dados
                         authUnsubscribe = onAuthStateChanged(auth, async (user) => {
                             currentUser = user;
-                            // inicialmente considera não-admin até checar claims
-                            isAdmin = false;
-                            if (user) {
-                              // checa claims e atualiza UI
-                              await checkAdminAndApplyUI(user);
-                            } else {
-                              updateAdminUI(null);
-                            }
-                            loadBirthdays(); // recarrega dados (com base no novo estado)
+                            await checkAdminAndApplyUI(user);
+                            loadBirthdays();
                         });
                     } else {
                         console.warn("Firebase config not found. Running in demo mode.");
                         useDemoMode = true;
+                        updateAdminUI(null);
                         loadBirthdays();
                     }
                 } catch (e) {
                     console.error("Error initializing Firebase:", e);
                     useDemoMode = true;
+                    updateAdminUI(null);
                     loadBirthdays();
                 }
             }
 
-            function handleAuth(e) {
+            // Lida com o submit do formulário de login com feedback visual
+            async function handleAuth(e) {
                 e.preventDefault();
-                const email = document.getElementById("email").value;
-                const password = document.getElementById("password").value;
-
+                const emailInput = document.getElementById("email");
+                const passwordInput = document.getElementById("password");
+                const submitBtn = authForm.querySelector('button[type="submit"]');
+                
                 authError.textContent = "";
+                const originalBtnText = submitBtn.textContent;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Verificando...';
 
-                signInWithEmailAndPassword(auth, email, password)
-                    .then(async (userCredential) => {
-                        await checkAdminAndApplyUI(userCredential.user);
-                        authModal.classList.add("hidden");
-                        authForm.reset();
-                        authError.textContent = "";
-                    })
-                    .catch(error => {
+                try {
+                    await signInWithEmailAndPassword(auth, emailInput.value, passwordInput.value);
+                    authModal.querySelector(".transform").classList.add("scale-95", "opacity-0");
+                    setTimeout(() => authModal.classList.add("hidden"), 300);
+                    authForm.reset();
+
+                } catch (error) {
+                    console.error("Erro de autenticação:", error.code, error.message);
+                    if (error.code === 'auth/invalid-credential' || 
+                        error.code === 'auth/wrong-password' || 
+                        error.code === 'auth/user-not-found' ||
+                        error.code === 'auth/invalid-email') {
                         authError.textContent = "Email ou senha inválidos.";
-                        console.error("Erro de autenticação:", error);
-                    });
+                    } else {
+                        authError.textContent = "Falha na comunicação. Verifique sua conexão.";
+                    }
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalBtnText;
+                }
             }
-
+            
+            // Lida com o logout do usuário
             function handleSignOut() {
-                signOut(auth)
-                  .then(() => {
-                    isAdmin = false;
-                    currentUser = null;
-                    updateAdminUI(null);
-                    showNotification('Sessão encerrada.');
-                  })
-                  .catch(error => {
+                signOut(auth).then(() => {
+                    showNotification('Sessão encerrada com sucesso.');
+                }).catch(error => {
                     console.error("Erro ao fazer logout:", error);
-                    showNotification('Erro ao sair. Tente novamente.', true);
-                  });
+                    showNotification('Erro ao encerrar a sessão.', true);
+                });
             }
 
-            /* ========== Fim autenticação/admin-check ========== */
+            /* ========================================================================= */
+            /* FIM DO BLOCO DE AUTENTICAÇÃO E SEGURANÇA                                  */
+            /* ========================================================================= */
 
             function showNotification(message, isError = false) {
                 notificationToast.textContent = message;
@@ -512,7 +507,6 @@
 
             function loadBirthdays() {
                 if (useDemoMode) {
-                    console.log("Carregando dados de demonstração...");
                     const demoBirthdayData = [
                         { id: "demo-1", name: "Maria Silva (Demo)", sector: "Comercial", day: new Date().getDate(), month: new Date().getMonth() + 1 },
                         { id: "demo-2", name: "João Santos (Demo)", sector: "TI", day: 15, month: 8 },
@@ -525,27 +519,23 @@
                 }
 
                 if (dataUnsubscribe) {
-                    dataUnsubscribe(); // Cancela o listener anterior para evitar duplicação
+                    dataUnsubscribe();
                 }
 
                 if (!dbCollection) {
-                    console.error("dbCollection não está inicializado. Verifique a configuração do Firebase.");
-                    showNotification("Erro: Firebase não configurado corretamente.", true);
+                    console.error("dbCollection não está inicializado.");
                     return;
                 }
 
-                console.log("Configurando listener do Firestore...");
                 const q = query(dbCollection, orderBy("month"), orderBy("day"));
                 dataUnsubscribe = onSnapshot(q, snapshot => {
-                    console.log("Dados recebidos do Firestore!");
                     const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     birthdayData = data;
                     renderAllViews(birthdayData);
                     populateFilters(birthdayData);
                 }, error => {
                     console.error("Erro ao carregar dados do Firestore:", error);
-                    showNotification("Erro de conexão com o servidor. Verifique suas permissões.", true);
-                    // Se a leitura falhar (por exemplo, por falta de permissão), limpa os dados da tela
+                    showNotification("Erro de conexão. Verifique suas permissões de leitura no Firestore.", true);
                     birthdayData = [];
                     renderAllViews([]);
                     populateFilters([]);
@@ -563,12 +553,9 @@
                 const today = new Date();
                 const todaysBirthdays = data.filter(p => p.day === today.getDate() && p.month === (today.getMonth() + 1));
                 
-                let content = 
-                    `<div class="bg-white p-4 md:p-6 rounded-2xl">
-                        <h2 class="text-2xl font-bold text-slate-800 mb-4">Aniversariantes de Hoje</h2>`;
+                let content = `<div class="bg-white p-4 md:p-6 rounded-2xl"><h2 class="text-2xl font-bold text-slate-800 mb-4">Aniversariantes de Hoje</h2>`;
                 if (todaysBirthdays.length > 0) {
-                    content += 
-                        `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">`;
+                    content += `<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">`;
                     todaysBirthdays.forEach(person => {
                         content += `
                             <div class="bg-slate-50 rounded-xl p-5 text-center shadow-sm hover:shadow-lg transition-shadow duration-300">
@@ -593,24 +580,25 @@
                 const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 
                 for (let i = 0; i < firstDay; i++) {
-                    calendarGrid.innerHTML += "<div class=\"border p-2 h-24\"></div>";
+                    calendarGrid.innerHTML += `<div class="border p-2 h-24"></div>`;
                 }
 
                 for (let day = 1; day <= daysInMonth; day++) {
                     const birthdaysOnDay = data.filter(p => p.day === day && p.month === (currentDate.getMonth() + 1));
-                    let cellContent = `<div class=\"font-bold\">${day}</div>`;
+                    let cellContent = `<div class="font-bold">${day}</div>`;
                     if (birthdaysOnDay.length > 0) {
-                        cellContent += "<div class=\"text-xs mt-1\">";
+                        cellContent += `<div class="text-xs mt-1">`;
                         birthdaysOnDay.forEach(p => {
-                            cellContent += `<p class=\"truncate text-blue-700\">${p.name}</p>`;
+                            cellContent += `<p class="truncate text-blue-700">${p.name}</p>`;
                         });
                         cellContent += "</div>";
                     }
-                    calendarGrid.innerHTML += `<div class=\"border p-2 h-24 overflow-hidden\">${cellContent}</div>`;
+                    calendarGrid.innerHTML += `<div class="border p-2 h-24 overflow-hidden">${cellContent}</div>`;
                 }
             }
 
             function populateFilters(data) {
+                const currentMonthValue = monthFilter.value;
                 monthFilter.innerHTML = "<option value=\"all\">Todos os Meses</option>";
                 monthNames.forEach((name, index) => {
                     const option = document.createElement("option");
@@ -618,6 +606,7 @@
                     option.textContent = name;
                     monthFilter.appendChild(option);
                 });
+                monthFilter.value = currentMonthValue;
                 
                 personMonthSelect.innerHTML = "";
                 monthNames.forEach((name, index) => {
@@ -809,7 +798,7 @@
                 }
             }
 
-            // Event Listeners
+            // === EVENT LISTENERS (gatilhos de ações) ===
             authBtn.addEventListener("click", () => {
                 if (currentUser) {
                     if (confirm("Deseja sair do modo de administração?")) {
@@ -824,22 +813,19 @@
             authCancelBtn.addEventListener("click", () => {
                 authModal.querySelector(".transform").classList.add("scale-95", "opacity-0");
                 setTimeout(() => authModal.classList.add("hidden"), 300);
-                authError.textContent = ""; // Limpa qualquer erro ao cancelar
+                authError.textContent = "";
             });
 
             authForm.addEventListener("submit", handleAuth);
 
             tableBody.addEventListener("click", (e) => {
+                if (!isAdmin) return;
                 const editBtn = e.target.closest(".edit-btn");
-                const deleteBtn = e.target.closest(".delete-btn");
-
-                if (!isAdmin) return; // Ações de edição/exclusão só para admin
-
                 if (editBtn) {
-                    const personId = editBtn.dataset.id;
-                    const person = birthdayData.find(p => p.id == personId);
+                    const person = birthdayData.find(p => p.id == editBtn.dataset.id);
                     openModal(person);
                 }
+                const deleteBtn = e.target.closest(".delete-btn");
                 if (deleteBtn) {
                     handleDelete(deleteBtn.dataset.id);
                 }
@@ -865,14 +851,10 @@
             
             addPersonBtn.addEventListener("click", () => openModal(null));
             cancelBtn.addEventListener("click", closeModal);
-            // csvFileInput.addEventListener("change", handleCSVImport);
-            // pasteDataBtn.addEventListener("click", handlePasteImport);
             personForm.addEventListener("submit", handleFormSubmit);
 
-            // Inicialização
+            // === INICIALIZAÇÃO ===
             initFirebase();
-            const currentMonthForFilter = new Date().getMonth() + 1;
-            monthFilter.value = currentMonthForFilter;
             switchTab("today");
             monthFilter.addEventListener("change", () => renderTable(birthdayData));
             sectorFilter.addEventListener("change", () => renderTable(birthdayData));
@@ -880,7 +862,6 @@
         });
     </script>
 
-    <!-- if embedded in iframe, make it look native -->
     <script>
       if (window.self !== window.top) {
         document.documentElement.classList.add("embed-mode");
@@ -889,4 +870,3 @@
     </script>
 </body>
 </html>
-
