@@ -298,7 +298,7 @@
             </form>
         </div>
     </div>
-    
+
     <div id="auth-modal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-sm transform transition-all scale-95 opacity-0">
             <h2 class="text-2xl font-bold text-slate-800 mb-6">Acesso Restrito</h2>
@@ -326,7 +326,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         document.addEventListener("DOMContentLoaded", ( ) => {
@@ -374,6 +374,55 @@
             const pasteDataBtn = document.getElementById("paste-data-btn");
             const notificationToast = document.getElementById("notification-toast");
 
+            /* ========== AUTENTICAÇÃO + ADMIN CHECK (substituições aplicadas) ========== */
+
+            async function checkAdminAndApplyUI(user) {
+              if (!user) {
+                isAdmin = false;
+                updateAdminUI(null);
+                return;
+              }
+              try {
+                // tenta forçar refresh do token para garantir claims atualizadas (melhora consistência após setCustomUserClaims)
+                try {
+                  if (user.getIdToken) await user.getIdToken(true);
+                } catch (e) {
+                  // se não suportar, ignora
+                }
+                // usa getIdTokenResult para ler claims
+                const idTokenResult = await getIdTokenResult(user);
+                isAdmin = !!(idTokenResult && idTokenResult.claims && idTokenResult.claims.admin === true);
+              } catch (err) {
+                console.error('Erro ao recuperar idTokenResult:', err);
+                isAdmin = false;
+              }
+              updateAdminUI(user);
+              if (!isAdmin) {
+                showNotification('Conta autenticada — sem permissão de edição.', true);
+              } else {
+                showNotification('Acesso administrativo concedido.');
+              }
+            }
+
+            function updateAdminUI(user) {
+              if (user && isAdmin) {
+                document.body.classList.add('admin-mode');
+                authBtn.textContent = `🔓 ${user.email}`;
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+                document.querySelectorAll('.admin-only-table-cell').forEach(el => el.style.display = 'table-cell');
+              } else if (user && !isAdmin) {
+                document.body.classList.remove('admin-mode');
+                authBtn.textContent = `🔒 ${user.email}`;
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.admin-only-table-cell').forEach(el => el.style.display = 'none');
+              } else {
+                document.body.classList.remove('admin-mode');
+                authBtn.textContent = '🔒 Acesso Restrito';
+                document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+                document.querySelectorAll('.admin-only-table-cell').forEach(el => el.style.display = 'none');
+              }
+            }
+
             function initFirebase() {
                 try {
                     const firebaseConfigRaw = (typeof window.__firebase_config !== "undefined") ? window.__firebase_config : null;
@@ -386,13 +435,21 @@
                         auth = getAuth();
                         dbCollection = collection(db, "aniversariantes");
 
-                        if (authUnsubscribe) authUnsubscribe(); // Garante que não haja listeners duplicados
+                        // remove listener anterior se existir
+                        if (authUnsubscribe) authUnsubscribe();
 
-                        authUnsubscribe = onAuthStateChanged(auth, user => {
+                        // listener de auth: sempre que mudar o estado, checamos claims e recarregamos dados
+                        authUnsubscribe = onAuthStateChanged(auth, async (user) => {
                             currentUser = user;
-                            isAdmin = !!user;
-                            updateAdminUI(user);
-                            loadBirthdays(); // Recarrega os dados com base no novo estado de autenticação
+                            // inicialmente considera não-admin até checar claims
+                            isAdmin = false;
+                            if (user) {
+                              // checa claims e atualiza UI
+                              await checkAdminAndApplyUI(user);
+                            } else {
+                              updateAdminUI(null);
+                            }
+                            loadBirthdays(); // recarrega dados (com base no novo estado)
                         });
                     } else {
                         console.warn("Firebase config not found. Running in demo mode.");
@@ -406,15 +463,41 @@
                 }
             }
 
-            function updateAdminUI(user) {
-                if (user) {
-                    document.body.classList.add("admin-mode");
-                    authBtn.textContent = `🔓 ${user.email}`;
-                } else {
-                    document.body.classList.remove("admin-mode");
-                    authBtn.textContent = "🔒 Acesso Restrito";
-                }
+            function handleAuth(e) {
+                e.preventDefault();
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
+
+                authError.textContent = "";
+
+                signInWithEmailAndPassword(auth, email, password)
+                    .then(async (userCredential) => {
+                        await checkAdminAndApplyUI(userCredential.user);
+                        authModal.classList.add("hidden");
+                        authForm.reset();
+                        authError.textContent = "";
+                    })
+                    .catch(error => {
+                        authError.textContent = "Email ou senha inválidos.";
+                        console.error("Erro de autenticação:", error);
+                    });
             }
+
+            function handleSignOut() {
+                signOut(auth)
+                  .then(() => {
+                    isAdmin = false;
+                    currentUser = null;
+                    updateAdminUI(null);
+                    showNotification('Sessão encerrada.');
+                  })
+                  .catch(error => {
+                    console.error("Erro ao fazer logout:", error);
+                    showNotification('Erro ao sair. Tente novamente.', true);
+                  });
+            }
+
+            /* ========== Fim autenticação/admin-check ========== */
 
             function showNotification(message, isError = false) {
                 notificationToast.textContent = message;
@@ -726,27 +809,6 @@
                 }
             }
 
-            function handleAuth(e) {
-                e.preventDefault();
-                const email = document.getElementById("email").value;
-                const password = document.getElementById("password").value;
-
-                signInWithEmailAndPassword(auth, email, password)
-                    .then(userCredential => {
-                        authModal.classList.add("hidden");
-                        authForm.reset();
-                        authError.textContent = ""; // Limpa qualquer erro anterior
-                    })
-                    .catch(error => {
-                        authError.textContent = "Email ou senha inválidos.";
-                        console.error("Erro de autenticação:", error);
-                    });
-            }
-
-            function handleSignOut() {
-                signOut(auth).catch(error => console.error("Erro ao fazer logout:", error));
-            }
-
             // Event Listeners
             authBtn.addEventListener("click", () => {
                 if (currentUser) {
@@ -827,3 +889,4 @@
     </script>
 </body>
 </html>
+
