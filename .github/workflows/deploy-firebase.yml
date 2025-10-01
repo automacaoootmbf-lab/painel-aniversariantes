@@ -1,4 +1,4 @@
-name: Deploy to Firebase Hosting (robusto - Node 20)
+name: Deploy to Firebase Hosting (robusto - Node 20) 
 
 on: 
   push:
