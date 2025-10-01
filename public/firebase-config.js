@@ -1,5 +1,5 @@
 window.__firebase_config = JSON.stringify({
-  apiKey: "AIzaSyBbxc1oFJjdbOnPGyts6SoamCvKGADvZHk",
+  apiKey: "FIREBASE_CONFIG",
   authDomain: "aniversariantes-automation.firebaseapp.com",
   projectId: "aniversariantes-automation",
   storageBucket: "aniversariantes-automation.appspot.com", 
