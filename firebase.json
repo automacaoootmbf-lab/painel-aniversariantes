@@ -18,10 +18,15 @@
         "headers": [
           {
             "key": "Content-Security-Policy",
-            "value": "frame-ancestors 'self' https://eletrobras.sharepoint.com"
+            "value": "default-src 'self' https://aniversariantes-automation.web.app; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://lh3.googleusercontent.com; connect-src 'self' https://firestore.googleapis.com https://www.googleapis.com https://identitytoolkit.googleapis.com; frame-ancestors 'self' https://eletrobras.sharepoint.com https://*.sharepoint.com;"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "ALLOW-FROM https://eletrobras.sharepoint.com"
           }
         ]
       }
     ]
   }
 }
+
