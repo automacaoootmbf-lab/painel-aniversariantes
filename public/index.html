@@ -40,7 +40,7 @@
         thead th { background: rgba(6,34,63,0.03); color: #334155; font-weight:700; padding:14px; position:sticky; top:0; z-index:3; }
         tbody td { padding:12px 14px; border-top: 1px solid rgba(15,23,42,0.04); color:#0f172a; }
         button { font-family:inherit; cursor:pointer; }
-        .primary { background: var(--eletro-blue); color:#fff; border-radius:10px; padding:10px 12px; border: none; box-shadow:none; transition: background-color .2s; }
+        .primary { background: var(--eletro-blue); color:#fff; border-radius:10px; padding:10px 12px; border: none; box-shadow:none; transition: background-color .2s; display:inline-block; text-decoration:none; }
         .primary:hover { background: #004488; }
         .secondary { background: var(--eletro-teal); color:#fff; border-radius:10px; padding:10px 12px; border:none; }
         .tertiary { background: #f1f5f9; color:#475569; font-weight:600; border-radius:10px; padding:10px 12px; border:none; }
@@ -53,9 +53,49 @@
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #78716c; }
+
+        /* Banner para iframe embed */
+        .embed-admin-banner {
+          display:flex;
+          gap:12px;
+          align-items:center;
+          justify-content:center;
+          padding:12px;
+          background: linear-gradient(90deg,#ffffff,#fbfdff);
+          border-bottom: 1px solid var(--soft-border);
+          font-size:14px;
+        }
+        .embed-admin-banner .hint { color:var(--muted); font-size:13px; }
     </style>
 </head>
 <body class="text-gray-800">
+
+    <!-- Banner / CTA para abrir área administrativa em nova aba quando embutido (iframe) -->
+    <script>
+      (function(){
+        try {
+          if (window.self !== window.top) {
+            // Link absoluto para o hosting (substitua se for outro domínio)
+            const adminUrl = "https://aniversariantes-automation.web.app/?admin=1";
+
+            const banner = document.createElement('div');
+            banner.className = 'embed-admin-banner';
+            banner.innerHTML = `
+              <a class="primary" href="${adminUrl}" target="_blank" rel="noopener noreferrer">🔒 Abrir área administrativa (nova aba)</a>
+              <span class="hint">(Para editar, abra em nova aba — evita erros de autenticação ao usar iframe)</span>
+            `;
+            // inserir antes do primeiro elemento do body para ficar visível no topo
+            document.addEventListener('DOMContentLoaded', () => {
+              if (document.body.firstChild) document.body.insertBefore(banner, document.body.firstChild);
+              else document.body.appendChild(banner);
+            });
+          }
+        } catch (e) {
+          // se houver qualquer erro, não trava a página
+          console.warn('embed banner init failed', e);
+        }
+      })();
+    </script>
 
     <div class="container">
         <header>
@@ -518,7 +558,21 @@
             /* === BLOCO DE LISTENERS DE EVENTOS === */
             /* ================================== */
 
-            authBtn.addEventListener("click", () => currentUser ? (confirm("Deseja realmente sair?") && handleSignOut()) : openModal(authModal));
+            // Auth button behavior: if embedded (iframe) and not logged in, open admin page in new tab (avoid cookie/auth issues)
+            authBtn.addEventListener("click", () => {
+                if (window.self !== window.top && !currentUser) {
+                    // open hosted site in new tab so Firebase auth can work in top-level context
+                    window.open("https://aniversariantes-automation.web.app/?admin=1", "_blank", "noopener");
+                    return;
+                }
+                // fallback to default behavior
+                if (currentUser) {
+                    if (confirm("Deseja realmente sair?")) handleSignOut();
+                } else {
+                    openModal(authModal);
+                }
+            });
+
             authForm.addEventListener("submit", handleAuth);
             authCancelBtn.addEventListener("click", () => closeModal(authModal));
             tabsContainer.addEventListener("click", (e) => {
