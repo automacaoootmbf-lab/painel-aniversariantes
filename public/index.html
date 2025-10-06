@@ -137,15 +137,6 @@
       display: table-cell !important
     }
 
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(2, 6, 23, 0.45)
-    }
-
     .hidden {
       display: none !important
     }
@@ -185,12 +176,11 @@
       <button data-tab="today" class="tab-btn">🎂 Aniversariantes do Dia</button>
       <button data-tab="calendar" class="tab-btn">🗓️ Calendário</button>
       <button data-tab="list" class="tab-btn">📋 Lista Completa</button>
-      <button data-tab="chart" class="tab-btn">📊 Análises & Gestão</button>
+      <button data-tab="chart" class="tab-btn admin-only">📊 Análises & Gestão</button>
     </div>
 
     <main id="tab-panels-container">
       <div id="today-panel" class="tab-panel"></div>
-
       <div id="calendar-panel" class="tab-panel hidden">
         <div class="bg-white p-4 rounded-lg">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
@@ -204,7 +194,6 @@
           <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
         </div>
       </div>
-
       <div id="list-panel" class="tab-panel hidden">
         <div class="bg-white p-4 rounded-lg">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
@@ -227,8 +216,7 @@
           </div>
         </div>
       </div>
-
-      <div id="chart-panel" class="tab-panel hidden">
+      <div id="chart-panel" class="tab-panel hidden admin-only">
         <div class="bg-white p-4 rounded-lg">
           <h2 style="margin:0 0 12px 0">Análises</h2>
           <div style="display:flex; gap:12px; align-items:center">
@@ -247,33 +235,12 @@
   <div id="notification-toast"></div>
 
   <script type="module">
-    import {
-      initializeApp
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      signInWithEmailAndPassword,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      orderBy,
-      onSnapshot,
-      getDocs,
-      addDoc,
-      setDoc,
-      doc,
-      deleteDoc,
-      writeBatch
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, query, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', () => {
-      console.log("APP: DOMContentLoaded");
-
-      // Referências do DOM
+      // --- ELEMENTOS DO DOM ---
       const authBtn = document.getElementById('auth-btn');
       const tabsContainer = document.getElementById('tabs-container');
       const todayPanel = document.getElementById('today-panel');
@@ -285,13 +252,14 @@
       const noResults = document.getElementById('no-results');
       const notificationToast = document.getElementById('notification-toast');
 
+      // --- VARIÁVEIS DE ESTADO ---
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-      let db, auth, dbCollection, dataUnsub = null,
-        authUnsub = null;
+      let db, auth, dbCollection, dataUnsub = null, authUnsub = null;
       let birthdayData = [];
       let currentDate = new Date();
       let isAdmin = false;
 
+      // --- FUNÇÕES UTILITÁRIAS ---
       function showNotification(msg, isError = false) {
         notificationToast.textContent = msg;
         notificationToast.style.background = isError ? '#dc2626' : '#059669';
@@ -301,148 +269,113 @@
           notificationToast.style.opacity = '';
           notificationToast.style.transform = 'translateY(10px)';
         }, 3500);
-        console.log("NOTIFY:", msg);
       }
 
       function getMonthName(monthIndex) {
-        if (typeof monthIndex === 'number' && monthIndex >= 1 && monthIndex <= 12) {
-          return monthNames[monthIndex - 1];
-        }
-        return 'Mês Desconhecido';
+        return (monthIndex >= 1 && monthIndex <= 12) ? monthNames[monthIndex - 1] : 'Mês Desconhecido';
       }
 
-      function initFirebase() {
-        console.log("APP: initFirebase()");
-        try {
-          let firebaseCfg = window.__firebase_config;
-          if (!firebaseCfg) {
-            console.error("APP: window.__firebase_config não encontrado");
-            showNotification("Configuração do Firebase ausente.", true);
-            return;
-          }
-          if (typeof firebaseCfg === 'string') {
-            try {
-              firebaseCfg = JSON.parse(firebaseCfg);
-            } catch (e) {
-              console.error("APP: erro ao parsear __firebase_config string:", e);
-              showNotification("Config inválida.", true);
-              return;
-            }
-          }
+      const mapFirebaseDoc = (d) => ({
+        id: d.id,
+        name: d.name || d.nome || "",
+        sector: d.sector || d.setor || "",
+        day: Number(d.day ?? d.dia) || 0,
+        month: Number(d.month ?? d.mes) || 0,
+      });
 
-          const app = initializeApp(firebaseCfg);
+      // --- LÓGICA PRINCIPAL ---
+      function initFirebase() {
+        try {
+          if (!window.__firebase_config) {
+            return showNotification("Configuração do Firebase ausente.", true);
+          }
+          const app = initializeApp(window.__firebase_config);
           auth = getAuth(app);
           db = getFirestore(app);
           dbCollection = collection(db, 'aniversariantes');
-
-          console.log("APP: Firebase inicializado. projectId:", firebaseCfg.projectId || '(não disponível)');
           setupAuthListener();
-          probeFirestoreOnce();
+          probeFirestoreOnce(); // Carga inicial
         } catch (err) {
-          console.error("APP: erro ao inicializar Firebase:", err);
-          showNotification("Erro ao inicializar Firebase (veja console).", true);
+          console.error("Erro Crítico ao inicializar Firebase:", err);
+          showNotification("Erro fatal na inicialização (ver console).", true);
         }
       }
 
       async function probeFirestoreOnce() {
-        console.log("DB FETCH: iniciando getDocs probe (sem orderBy)...");
+        console.log("ETAPA 1: Buscando dados iniciais (getDocs)...");
         try {
-          const snap = await getDocs(collection(db, 'aniversariantes'));
-          console.log("DB FETCH: getDocs OK. docs count =", snap.size);
-          const arr = snap.docs.map(docSnap => {
-            const d = docSnap.data() || {};
-            return {
-              id: docSnap.id,
-              name: d.name || d.nome || "",
-              sector: d.sector || d.setor || "",
-              day: Number(d.day ?? d.dia) || 0,
-              month: Number(d.month ?? d.mes) || 0,
-            };
-          });
-
-          arr.sort((a, b) => {
-            if (a.month !== b.month) return (a.month || 0) - (b.month || 0);
-            return (a.day || 0) - (b.day || 0);
-          });
-
-          birthdayData = arr;
-          console.log("DB FETCH: sample docs (mapped):", birthdayData.slice(0, 10));
-          renderAll();
+          const snap = await getDocs(dbCollection);
+          console.log(`ETAPA 1: Sucesso! Encontrados ${snap.size} documentos.`);
+          if (snap.size > 0) {
+            const arr = snap.docs.map(doc => mapFirebaseDoc(doc.data()));
+            birthdayData = arr; // Define os dados pela primeira vez
+            renderAll();
+          }
         } catch (err) {
-          console.error("DB FETCH: erro em getDocs:", err.code || err.message || err);
-          showNotification("Erro ao ler o Firestore: " + (err.code || err.message || "ver console"), true);
+          console.error("ETAPA 1: Falha ao buscar dados iniciais.", err);
+          showNotification("Não foi possível carregar os dados.", true);
         } finally {
-          attachRealtimeListener();
+            // A conexão em tempo real é iniciada independentemente do resultado
+            attachRealtimeListener();
         }
       }
 
-      // NOVO CÓDIGO INSERIDO AQUI
       function attachRealtimeListener() {
-        try {
-          if (!dbCollection) {
-            console.warn("DB LISTENER: dbCollection não inicializado");
-            return;
-          }
-          const q = query(dbCollection);
-          if (dataUnsub) dataUnsub(); // unsubscribe anterior
+        console.log("ETAPA 2: Iniciando conexão em tempo real (onSnapshot)...");
+        if (dataUnsub) dataUnsub(); // Cancela listener anterior para evitar duplicação
 
-          dataUnsub = onSnapshot(q, (snapshot) => {
-            console.log("DB SNAPSHOT: recebido. size=", snapshot.size);
-            const arr = [];
-            snapshot.forEach(d => arr.push({
-              id: d.id,
-              ...d.data()
-            }));
-            if (arr.length > 0) {
-              birthdayData = arr;
-              renderAll();
-            } else {
-              console.warn("DB SNAPSHOT vazio — mantendo dados anteriores");
-            }
-          }, (error) => {
-            console.error("DB SNAPSHOT: erro (mantendo cache local):", error);
-            showNotification("Conexão em tempo real indisponível — modo leitura ativado.", true);
-            // NÃO LIMPAR birthdayData — mantém cache local
-          });
-        } catch (err) {
-          console.error("DB LISTENER: erro ao registrar onSnapshot:", err);
-        }
-      }
-
-      function setupAuthListener() {
-        if (!auth) {
-          console.warn("AUTH: auth não inicializado");
-          return;
-        }
-        if (authUnsub) authUnsub();
-
-        authUnsub = onAuthStateChanged(auth, async (user) => {
-          console.log("AUTH: onAuthStateChanged ->", user ? user.email : null);
-          if (user) {
-            try {
-              const tokenResult = await user.getIdTokenResult();
-              isAdmin = !!(tokenResult && tokenResult.claims && tokenResult.claims.admin === true);
-              console.log("AUTH: claims:", tokenResult.claims);
-              document.body.classList.toggle('admin-mode', isAdmin);
-            } catch (err) {
-              console.warn("AUTH: getIdTokenResult erro:", err);
-            }
-            authBtn.textContent = `🔓 ${user.email}`;
-          } else {
-            // NÃO limpamos birthdayData aqui: deixamos os dados carregados visíveis (leitura é pública)
-            console.log("AUTH: usuário desautenticado (mantendo dados carregados).");
-            authBtn.textContent = "🔒 Acesso Restrito";
-            isAdmin = false;
-            document.body.classList.remove('admin-mode');
-            // não executar birthdayData = []; nem renderAllPanels vazios
+        dataUnsub = onSnapshot(query(dbCollection), (snapshot) => {
+          console.log(`ETAPA 2: Snapshot recebido com ${snapshot.size} documentos.`);
+          
+          if (snapshot.metadata.hasPendingWrites) {
+             console.log("ETAPA 2: Ignorando snapshot local (hasPendingWrites).");
+             return;
           }
 
-          // Garantir o realtime listener ativa/refresh sempre (não substituir os dados por vazio)
-          attachRealtimeListener();
+          if (snapshot.empty) {
+            console.warn("ETAPA 2: Snapshot está vazio. MANTENDO OS DADOS JÁ CARREGADOS na tela para evitar o 'pisca-pisca'. Verifique as regras de segurança do Firestore se isso for inesperado.");
+            return; // NÃO limpa a tela
+          }
+          
+          const arr = snapshot.docs.map(doc => mapFirebaseDoc(doc.data()));
+          birthdayData = arr; // Atualiza com os novos dados
+          renderAll(); // Re-renderiza tudo
+          console.log("ETAPA 2: Dados da tela atualizados com sucesso via real-time.");
+
+        }, (error) => {
+          console.error("ETAPA 2: ERRO na conexão em tempo real. MANTENDO DADOS EM CACHE.", error);
+          showNotification("Erro de conexão. Exibindo últimos dados válidos.", true);
+          // Propositalmente NÃO limpamos 'birthdayData' para manter o que já estava na tela
         });
       }
 
+      function setupAuthListener() {
+        onAuthStateChanged(auth, async (user) => {
+          console.log("AUTH: Status do usuário alterado.", user ? `Logado como ${user.email}` : "Deslogado");
+          if (user) {
+            authBtn.textContent = `🔓 ${user.email}`;
+            try {
+              const tokenResult = await user.getIdTokenResult();
+              isAdmin = tokenResult.claims.admin === true;
+              console.log("AUTH: Permissões (claims) do usuário:", tokenResult.claims);
+            } catch (err) {
+              isAdmin = false;
+              console.warn("AUTH: Falha ao obter permissões de admin.", err);
+            }
+          } else {
+            authBtn.textContent = "🔒 Acesso Restrito";
+            isAdmin = false;
+          }
+          console.log(`AUTH: Modo Admin está: ${isAdmin ? 'ATIVADO' : 'DESATIVADO'}.`);
+          document.body.classList.toggle('admin-mode', isAdmin);
+        });
+      }
+
+      // --- RENDERIZAÇÃO ---
       function renderAll() {
+        console.log(`RENDER: Renderizando todos os painéis com ${birthdayData.length} registros.`);
+        // Ordena os dados antes de renderizar
+        birthdayData.sort((a,b) => (a.month - b.month) || (a.day - b.day));
         renderToday();
         renderTable();
         renderCalendar();
@@ -451,9 +384,7 @@
       function renderToday() {
         todayPanel.innerHTML = '';
         const now = new Date();
-        const day = now.getDate(),
-          month = now.getMonth() + 1;
-        const todays = birthdayData.filter(p => Number(p.day) === day && Number(p.month) === month);
+        const todays = birthdayData.filter(p => p.day === now.getDate() && p.month === (now.getMonth() + 1));
         if (todays.length === 0) {
           todayPanel.innerHTML = `<div class="bg-white p-4 rounded-lg">Nenhum aniversariante hoje.</div>`;
           return;
@@ -463,7 +394,7 @@
         todays.forEach(p => {
           const d = document.createElement('div');
           d.style.marginBottom = '10px';
-          d.innerHTML = `<strong>${p.name}</strong> — ${p.sector} <div style="font-size:12px;color:${'#6b7280'}">${p.day} de ${getMonthName(Number(p.month))}</div>`;
+          d.innerHTML = `<strong>${p.name}</strong> — ${p.sector}<div style="font-size:12px;color:var(--muted)">${p.day} de ${getMonthName(p.month)}</div>`;
           container.appendChild(d);
         });
         todayPanel.appendChild(container);
@@ -471,14 +402,12 @@
 
       function renderTable() {
         tableBody.innerHTML = '';
-        if (!birthdayData || birthdayData.length === 0) {
-          noResults.classList.remove('hidden');
-          return;
-        }
-        noResults.classList.add('hidden');
+        noResults.classList.toggle('hidden', birthdayData.length > 0);
+        if (birthdayData.length === 0) return;
+        
         birthdayData.forEach(p => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td style="padding:10px">${p.name || ''}</td><td style="padding:10px">${p.sector || ''}</td><td style="padding:10px">${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}</td>`;
+          tr.innerHTML = `<td style="padding:10px">${p.name}</td><td style="padding:10px">${p.sector}</td><td style="padding:10px">${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}</td><td class="admin-only-table-cell" style="padding:10px">...</td>`;
           tableBody.appendChild(tr);
         });
       }
@@ -486,91 +415,45 @@
       function renderCalendar() {
         calendarGrid.innerHTML = '';
         const y = currentDate.getFullYear();
-        const m = currentDate.getMonth(); // 0-based
-        calendarMonthYear.textContent = `${getMonthName(m + 1)} ${y}`;
+        const m = currentDate.getMonth();
+        calendarMonthYear.textContent = `${monthNames[m]} ${y}`;
         const firstDay = new Date(y, m, 1).getDay();
         const daysInMonth = new Date(y, m + 1, 0).getDate();
-
-        for (let i = 0; i < firstDay; i++) {
-          const div = document.createElement('div');
-          calendarGrid.appendChild(div);
-        }
-
+        
+        for (let i = 0; i < firstDay; i++) calendarGrid.insertAdjacentHTML('beforeend', '<div></div>');
+        
         for (let d = 1; d <= daysInMonth; d++) {
-          const div = document.createElement('div');
-          const hits = birthdayData.filter(p => Number(p.day) === d && Number(p.month) === (m + 1));
-          const inner = document.createElement('div');
-          inner.style.padding = '6px';
-          inner.style.border = '1px solid #eee';
-          inner.style.borderRadius = '6px';
-
-          const daySpan = document.createElement('div');
-          daySpan.textContent = d;
-          daySpan.style.fontWeight = '600';
-          inner.appendChild(daySpan);
-
-          if (hits.length) {
-            const info = document.createElement('div');
-            info.style.fontSize = '11px';
-            info.style.color = '#0ea5a3';
-            info.textContent = `${hits.length} anivers.`;
-            inner.appendChild(info);
-          }
-          div.appendChild(inner);
-          calendarGrid.appendChild(div);
+          const hits = birthdayData.filter(p => p.day === d && p.month === (m + 1));
+          const hitCount = hits.length > 0 ? `<div style="font-size:11px;color:#0ea5a3">${hits.length} anivers.</div>` : '';
+          const dayCell = `<div><div style="padding:6px;border:1px solid #eee;border-radius:6px"><div style="font-weight:600">${d}</div>${hitCount}</div></div>`;
+          calendarGrid.insertAdjacentHTML('beforeend', dayCell);
         }
       }
 
-      // Eventos
+      // --- EVENTOS DE UI ---
       authBtn.addEventListener('click', () => {
-        const userText = auth && auth.currentUser ? auth.currentUser.email : null;
-        if (userText) {
-          if (confirm("Sair da conta?")) {
-            signOut(auth).then(() => showNotification("Logout com sucesso")).catch(e => console.error(e));
-          }
-          return;
-        }
-        const email = prompt("Email para login (debug):");
-        const pass = prompt("Senha (debug):");
-        if (email && pass) {
-          signInWithEmailAndPassword(auth, email, pass)
-            .then(() => showNotification("Logado com sucesso"))
-            .catch(e => {
-              console.error("AUTH ERR:", e);
-              showNotification("Erro login: " + (e.code || e.message), true);
-            });
+        if (auth.currentUser) {
+          if (confirm("Sair da conta?")) signOut(auth);
+        } else {
+          const email = prompt("Email:");
+          const pass = prompt("Senha:");
+          if (email && pass) signInWithEmailAndPassword(auth, email, pass).catch(e => showNotification(e.code, true));
         }
       });
 
-      prevMonthBtn?.addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        renderCalendar();
-      });
-
-      nextMonthBtn?.addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        renderCalendar();
-      });
+      prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+      nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
 
       tabsContainer.addEventListener('click', (ev) => {
         if (!ev.target.matches('.tab-btn')) return;
         tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
         ev.target.classList.add('active');
-        const id = ev.target.dataset.tab;
-        document.getElementById(id + '-panel').classList.remove('hidden');
+        document.getElementById(ev.target.dataset.tab + '-panel').classList.remove('hidden');
       });
       tabsContainer.querySelector('.tab-btn')?.click();
 
-      // Iniciar
       initFirebase();
-
-      // Expor helpers de debug no objeto window
-      window.__APP = {
-        dbProbe: probeFirestoreOnce,
-        attachRealtime: attachRealtimeListener,
-        birthdayDataRef: () => birthdayData
-      };
     });
   </script>
 </body>
