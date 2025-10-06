@@ -286,7 +286,8 @@
       const notificationToast = document.getElementById('notification-toast');
 
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-      let db, auth, dbCollection, dataUnsub = null, authUnsub = null;
+      let db, auth, dbCollection, dataUnsub = null,
+        authUnsub = null;
       let birthdayData = [];
       let currentDate = new Date();
       let isAdmin = false;
@@ -352,7 +353,6 @@
             const d = docSnap.data() || {};
             return {
               id: docSnap.id,
-              // Aceita campos em inglês OU em português
               name: d.name || d.nome || "",
               sector: d.sector || d.setor || "",
               day: Number(d.day ?? d.dia) || 0,
@@ -360,7 +360,6 @@
             };
           });
 
-          // Ordenar no cliente por month, day (numérico)
           arr.sort((a, b) => {
             if (a.month !== b.month) return (a.month || 0) - (b.month || 0);
             return (a.day || 0) - (b.day || 0);
@@ -373,27 +372,62 @@
           console.error("DB FETCH: erro em getDocs:", err.code || err.message || err);
           showNotification("Erro ao ler o Firestore: " + (err.code || err.message || "ver console"), true);
         } finally {
-          // Tenta também registrar listener em realtime
           attachRealtimeListener();
         }
       }
-      
+
+      // NOVO CÓDIGO INSERIDO AQUI
       function attachRealtimeListener() {
         try {
-          if (!dbCollection) {
-            console.warn("DB LISTENER: dbCollection não inicializado");
+          if (!db) {
+            console.warn("DB LISTENER: db não inicializado");
             return;
           }
-          const q = query(dbCollection, orderBy('month'), orderBy('day'));
-          if (dataUnsub) dataUnsub();
-          dataUnsub = onSnapshot(q, (snapshot) => {
+          const colRef = collection(db, 'aniversariantes');
+
+          if (dataUnsub) {
+            console.log("DB LISTENER: removendo listener anterior.");
+            dataUnsub();
+            dataUnsub = null;
+          }
+
+          console.log("DB LISTENER: registrando onSnapshot em 'aniversariantes' ...");
+          dataUnsub = onSnapshot(colRef, (snapshot) => {
             console.log("DB SNAPSHOT: recebido. size=", snapshot.size);
-            const arr = [];
-            snapshot.forEach(d => arr.push({
+            // debug: mostrar ids e dados brutos
+            const docsRaw = snapshot.docs.map(d => ({
               id: d.id,
-              ...d.data()
+              raw: d.data()
             }));
+            console.log("DB SNAPSHOT raw docs:", docsRaw);
+
+            // mapear com fallback entre pt/en e garantir números
+            const arr = snapshot.docs.map(docSnap => {
+              const d = docSnap.data() || {};
+              return {
+                id: docSnap.id,
+                name: d.name || d.nome || "",
+                sector: d.sector || d.setor || "",
+                day: Number(d.day ?? d.dia) || 0,
+                month: Number(d.month ?? d.mes) || 0,
+                textoData: d.textoData || d.texto || ""
+              };
+            });
+
+            // ordenar
+            arr.sort((a, b) => (a.month - b.month) || (a.day - b.day));
+
+            if (arr.length === 0) {
+              console.warn("DB SNAPSHOT: snapshot vazio. Mantendo dados anteriores até investigação.");
+              // não sobrescrever birthdayData com [] imediatamente — guardamos o último conjunto
+              // Se você prefere sobrescrever, retire esta condição.
+              // birthdayData = [];
+              // renderAll();
+              return;
+            }
+
             birthdayData = arr;
+            console.log("DB SNAPSHOT: dados atualizados (mapeados)", birthdayData.slice(0, 10));
             renderAll();
           }, (error) => {
             console.error("DB SNAPSHOT: erro:", error);
@@ -403,17 +437,18 @@
           console.error("DB LISTENER: erro ao registrar onSnapshot:", err);
         }
       }
-
+      
+      // NOVO CÓDIGO INSERIDO AQUI
       function setupAuthListener() {
         if (!auth) {
           console.warn("AUTH: auth não inicializado");
           return;
         }
         if (authUnsub) authUnsub();
+
         authUnsub = onAuthStateChanged(auth, async (user) => {
           console.log("AUTH: onAuthStateChanged ->", user ? user.email : null);
           if (user) {
-            authBtn.textContent = `🔓 ${user.email}`;
             try {
               const tokenResult = await user.getIdTokenResult();
               isAdmin = !!(tokenResult && tokenResult.claims && tokenResult.claims.admin === true);
@@ -422,11 +457,17 @@
             } catch (err) {
               console.warn("AUTH: getIdTokenResult erro:", err);
             }
+            authBtn.textContent = `🔓 ${user.email}`;
           } else {
+            // NÃO limpamos birthdayData aqui: deixamos os dados carregados visíveis (leitura é pública)
+            console.log("AUTH: usuário desautenticado (mantendo dados carregados).");
             authBtn.textContent = "🔒 Acesso Restrito";
             isAdmin = false;
             document.body.classList.remove('admin-mode');
+            // não executar birthdayData = []; nem renderAllPanels vazios
           }
+
+          // Garantir o realtime listener ativa/refresh sempre (não substituir os dados por vazio)
           attachRealtimeListener();
         });
       }
@@ -479,12 +520,12 @@
         calendarMonthYear.textContent = `${getMonthName(m + 1)} ${y}`;
         const firstDay = new Date(y, m, 1).getDay();
         const daysInMonth = new Date(y, m + 1, 0).getDate();
-        
+
         for (let i = 0; i < firstDay; i++) {
           const div = document.createElement('div');
           calendarGrid.appendChild(div);
         }
-        
+
         for (let d = 1; d <= daysInMonth; d++) {
           const div = document.createElement('div');
           const hits = birthdayData.filter(p => Number(p.day) === d && Number(p.month) === (m + 1));
@@ -492,12 +533,12 @@
           inner.style.padding = '6px';
           inner.style.border = '1px solid #eee';
           inner.style.borderRadius = '6px';
-          
+
           const daySpan = document.createElement('div');
           daySpan.textContent = d;
           daySpan.style.fontWeight = '600';
           inner.appendChild(daySpan);
-          
+
           if (hits.length) {
             const info = document.createElement('div');
             info.style.fontSize = '11px';
