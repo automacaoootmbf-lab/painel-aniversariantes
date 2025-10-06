@@ -1,773 +1,764 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Painel de Aniversariantes</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel de Aniversariantes</title>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Tailwind CDN (só para estilo rápido) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Arquivo que define window.__firebase_config (deve existir em hosting) -->
+  <script src="/firebase-config.js"></script>
 
-    <script src="/firebase-config.js"></script>
-
-    <style>
-        :root{
-            --eletro-blue: #003366;
-            --eletro-teal: #009a74;
-            --muted: #6b7280;
-            --bg-page: #ffffff;
-            --card-bg: #ffffff;
-            --soft-border: #e6eef6;
-            --shadow-1: 0 6px 18px rgba(11, 22, 39, 0.06 );
-            --radius: 10px;
-        }
-        html,body{ height:100%; margin:0; padding:0; font-family: "Segoe UI", Inter, system-ui, -apple-system, "Helvetica Neue", Arial; background: var(--bg-page); color: #0f172a; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
-        .container{ max-width: 1200px; margin: 0 auto; padding: 28px 20px; }
-        header { text-align: left; display:flex; gap:18px; align-items:center; justify-content:space-between; padding-bottom:18px; border-bottom: 1px solid var(--soft-border); margin-bottom: 22px; }
-        header .title-group { display:flex; gap:18px; align-items:center; }
-        header svg { width:56px; height:56px; border-radius:8px; padding:6px; background: linear-gradient(135deg,var(--eletro-blue),var(--eletro-teal)); color:white; }
-        h1 { font-size:22px; margin:0; color:var(--eletro-blue); font-weight:600; letter-spacing: -0.2px; }
-        header p { margin:0; color:var(--muted); font-size:13px; }
-        #tabs-container { gap:8px; margin-bottom: 12px; display:flex; flex-wrap:wrap; }
-        .tab-btn { background: transparent; border: 1px solid transparent; padding:10px 14px; border-radius:8px; color: var(--muted); font-weight:600; cursor:pointer; transition: all .18s ease; }
-        .tab-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-1); }
-        .tab-btn.active { background: linear-gradient(180deg, rgba(0,114,198,0.08), rgba(0,114,198,0.02)); border: 1px solid rgba(0,114,198,0.12); color: var(--eletro-blue); }
-        .tab-panel { margin-top:12px; }
-        .bg-white { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow-1); border: 1px solid var(--soft-border); }
-        table { border-collapse: collapse; width: 100%; font-size: 14px; }
-        thead th { background: rgba(6,34,63,0.03); color: #334155; font-weight:700; padding:14px; position:sticky; top:0; z-index:3; }
-        tbody td { padding:12px 14px; border-top: 1px solid rgba(15,23,42,0.04); color:#0f172a; }
-        button { font-family:inherit; cursor:pointer; }
-        .primary { background: var(--eletro-blue); color:#fff; border-radius:10px; padding:10px 12px; border: none; box-shadow:none; transition: background-color .2s; }
-        .primary:hover { background: #004488; }
-        .secondary { background: var(--eletro-teal); color:#fff; border-radius:10px; padding:10px 12px; border:none; }
-        .tertiary { background: #f1f5f9; color:#475569; font-weight:600; border-radius:10px; padding:10px 12px; border:none; }
-        .modal-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(2,6,23,0.45); }
-        .admin-only { display: none !important; }
-        body.admin-mode .admin-only { display: block !important; }
-        .admin-only-table-cell { display: none !important; }
-        body.admin-mode .admin-only-table-cell { display: table-cell !important; }
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #78716c; }
-    </style>
+  <style>
+    :root{
+      --eletro-blue: #003366;
+      --eletro-teal: #009a74;
+      --muted: #6b7280;
+      --bg-page: #ffffff;
+      --card-bg: #ffffff;
+      --soft-border: #e6eef6;
+      --shadow-1: 0 6px 18px rgba(11,22,39,0.06);
+      --radius: 10px;
+    }
+    html,body{height:100%;margin:0;padding:0;font-family:Inter, "Segoe UI", system-ui, -apple-system, Arial;background:var(--bg-page);color:#0f172a;-webkit-font-smoothing:antialiased;}
+    .container{max-width:1200px;margin:0 auto;padding:28px 20px;}
+    header{display:flex;align-items:center;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid var(--soft-border);margin-bottom:22px}
+    .title-group{display:flex;gap:18px;align-items:center}
+    header svg{width:56px;height:56px;border-radius:8px;padding:6px;background:linear-gradient(135deg,var(--eletro-blue),var(--eletro-teal));color:white}
+    h1{font-size:22px;margin:0;color:var(--eletro-blue);font-weight:600}
+    p{margin:0;color:var(--muted);font-size:13px}
+    #tabs-container{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .tab-btn{background:transparent;border:1px solid transparent;padding:10px 14px;border-radius:8px;color:var(--muted);font-weight:600;cursor:pointer;transition:all .18s}
+    .tab-btn.active{background:linear-gradient(180deg, rgba(0,114,198,0.08), rgba(0,114,198,0.02));border:1px solid rgba(0,114,198,0.12);color:var(--eletro-blue)}
+    .bg-white{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow-1);border:1px solid var(--soft-border)}
+    .rounded-lg{border-radius:12px}
+    table{border-collapse:collapse;width:100%;font-size:14px}
+    thead th{background:rgba(6,34,63,0.03);color:#334155;font-weight:700;padding:14px;position:sticky;top:0;z-index:3}
+    tbody td{padding:12px 14px;border-top:1px solid rgba(15,23,42,0.04)}
+    button{font-family:inherit;cursor:pointer}
+    .primary{background:var(--eletro-blue);color:#fff;border-radius:10px;padding:10px 12px;border:none}
+    .secondary{background:var(--eletro-teal);color:#fff;border-radius:10px;padding:10px 12px;border:none}
+    .tertiary{background:#f1f5f9;color:#475569;font-weight:600;border-radius:10px;padding:10px 12px;border:none}
+    .modal-overlay{background:rgba(2,6,23,0.45)}
+    .modal { background:#fff;border-radius:12px;padding:24px;max-width:560px;width:100%;box-shadow:0 20px 50px rgba(4,6,15,0.18) }
+    .admin-only{display:none !important}
+    body.admin-mode .admin-only{display:block !important}
+    .admin-only-table-cell{display:none !important}
+    body.admin-mode .admin-only-table-cell{display:table-cell !important}
+    .hidden{display:none}
+    ::-webkit-scrollbar{width:8px}
+    ::-webkit-scrollbar-track{background:#f1f1f1}
+    ::-webkit-scrollbar-thumb{background:#a8a29e;border-radius:10px}
+    ::-webkit-scrollbar-thumb:hover{background:#78716c}
+  </style>
 </head>
 <body class="text-gray-800">
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-5.197-5.975M15 10a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <div>
+          <h1>Painel de Aniversariantes</h1>
+          <p class="mt-1">Celebre com a nossa equipe.</p>
+        </div>
+      </div>
 
-    <div class="container">
-        <header>
-            <div class="title-group">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-5.197-5.975M15 10a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                <div>
-                    <h1>Painel de Aniversariantes</h1>
-                    <p class="mt-1">Celebre com a nossa equipe.</p>
-                </div>
+      <div>
+        <button id="auth-btn" class="tertiary text-sm">🔒 Acesso Restrito</button>
+      </div>
+    </header>
+
+    <div id="tabs-container">
+      <button data-tab="today" class="tab-btn">🎂 Aniversariantes do Dia</button>
+      <button data-tab="calendar" class="tab-btn">🗓️ Calendário</button>
+      <button data-tab="list" class="tab-btn">📋 Lista Completa</button>
+      <button data-tab="chart" class="tab-btn">📊 Análises & Gestão</button>
+    </div>
+
+    <main id="tab-panels-container">
+      <div id="today-panel" class="tab-panel"></div>
+
+      <div id="calendar-panel" class="tab-panel hidden">
+        <div class="bg-white p-4 md:p-6 rounded-lg">
+          <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-slate-700">Calendário de Aniversários</h2>
+            <div class="flex items-center gap-2 mt-4 sm:mt-0">
+              <button id="today-btn" class="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 rounded-md">Hoje</button>
+              <button id="prev-month-btn" class="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 rounded-md">&lt;</button>
+              <h3 id="calendar-month-year" class="text-lg font-semibold text-slate-600 w-32 text-center"></h3>
+              <button id="next-month-btn" class="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 rounded-md">&gt;</button>
+            </div>
+          </div>
+          <div class="grid grid-cols-7 text-center font-semibold text-xs text-gray-500 border-b pb-2">
+            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+          </div>
+          <div id="calendar-grid" class="grid grid-cols-7 gap-0"></div>
+        </div>
+      </div>
+
+      <div id="list-panel" class="tab-panel hidden space-y-8">
+        <div class="bg-white p-4 md:p-6 rounded-lg">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="month-filter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Mês:</label>
+              <select id="month-filter" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm"><option value="all">Todos os Meses</option></select>
             </div>
             <div>
-                <button id="auth-btn" class="tertiary text-sm">🔒 Acesso Restrito</button>
+              <label for="sector-filter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Setor:</label>
+              <select id="sector-filter" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm"><option value="all">Todos os Setores</option></select>
             </div>
-        </header>
-
-        <div id="tabs-container">
-            <button data-tab="today" class="tab-btn">🎂 Aniversariantes do Dia</button>
-            <button data-tab="calendar" class="tab-btn">🗓️ Calendário</button>
-            <button data-tab="list" class="tab-btn">📋 Lista Completa</button>
-            <button data-tab="chart" class="tab-btn">📊 Análises & Gestão</button>
+            <div>
+              <label for="name-search" class="block text-sm font-medium text-gray-700 mb-1">Buscar por Nome:</label>
+              <input type="text" id="name-search" placeholder="Digite um nome..." class="w-full p-2 border border-gray-300 rounded-lg shadow-sm">
+            </div>
+          </div>
         </div>
 
-        <main id="tab-panels-container">
-            <div id="today-panel" class="tab-panel"></div>
-            <div id="calendar-panel" class="tab-panel hidden">
-                 <div class="bg-white p-4 md:p-6 rounded-lg">
-                    <div class="flex flex-col sm:flex-row justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold text-slate-700">Calendário de Aniversários</h2>
-                        <div class="flex items-center gap-2 mt-4 sm:mt-0">
-                             <button id="today-btn" class="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 rounded-md">Hoje</button>
-                            <button id="prev-month-btn" class="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 rounded-md">&lt;</button>
-                            <h3 id="calendar-month-year" class="text-lg font-semibold text-slate-600 w-32 text-center"></h3>
-                            <button id="next-month-btn" class="px-3 py-1 text-sm bg-slate-200 hover:bg-slate-300 rounded-md">&gt;</button>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-7 text-center font-semibold text-xs text-gray-500 border-b pb-2">
-                        <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
-                    </div>
-                    <div id="calendar-grid" class="grid grid-cols-7"></div>
-                </div>
-            </div>
-            <div id="list-panel" class="tab-panel hidden space-y-8">
-                 <div class="bg-white p-4 md:p-6 rounded-lg">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="month-filter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Mês:</label>
-                            <select id="month-filter" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm"><option value="all">Todos os Meses</option></select>
-                        </div>
-                        <div>
-                            <label for="sector-filter" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Setor:</label>
-                            <select id="sector-filter" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm"><option value="all">Todos os Setores</option></select>
-                        </div>
-                        <div>
-                            <label for="name-search" class="block text-sm font-medium text-gray-700 mb-1">Buscar por Nome:</label>
-                            <input type="text" id="name-search" placeholder="Digite um nome..." class="w-full p-2 border border-gray-300 rounded-lg shadow-sm">
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white p-4 md:p-6 rounded-lg">
-                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold text-slate-700">Lista de Aniversariantes</h2>
-                        <button id="add-person-btn" class="primary admin-only">+ Adicionar</button>
-                     </div>
-                     <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 sticky top-0">
-                                <tr>
-                                    <th class="p-4">Nome Completo</th><th class="p-4">Setor</th><th class="p-4">Data</th>
-                                    <th class="p-4 text-center admin-only-table-cell">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="birthday-table-body" class="divide-y divide-gray-200"></tbody>
-                        </table>
-                        <div id="no-results" class="text-center p-8 text-gray-500 hidden"><p>Nenhum resultado encontrado.</p></div>
-                    </div>
-                </div>
-            </div>
-            <div id="chart-panel" class="tab-panel hidden space-y-8">
-                <div class="bg-white p-4 md:p-6 rounded-lg">
-                    <h2 class="text-xl font-semibold text-slate-700 mb-4">Análises Quantitativas</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="md:col-span-1 bg-gray-50 p-6 rounded-xl flex flex-col justify-center items-center">
-                            <p class="text-lg text-gray-600">Total de Colaboradores</p>
-                            <p id="total-personnel" class="text-5xl font-bold" style="color: var(--eletro-blue);"></p>
-                        </div>
-                        <div class="md:col-span-2"><div class="h-64 md:h-80"><canvas id="sector-chart"></canvas></div></div>
-                    </div>
-                </div>
-                <div id="import-section" class="bg-white p-4 md:p-6 rounded-lg admin-only">
-                    <h2 class="text-xl font-semibold text-slate-700 mb-4">Importar Dados em Lote</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 class="font-semibold text-gray-800">A partir de arquivo CSV</h3>
-                            <p class="text-sm text-gray-500 mt-1 mb-3">Arquivo .csv com colunas: Nome, Setor, Data (DD/MM).</p>
-                            <label for="csv-file-input" class="cursor-pointer inline-block px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-md secondary">Selecionar Arquivo</label>
-                            <input type="file" id="csv-file-input" accept=".csv" class="hidden">
-                        </div>
-                        <div>
-                            <h3 class="font-semibold text-gray-800">Colar dados de uma planilha</h3>
-                             <p class="text-sm text-gray-500 mt-1 mb-3">Copie (Nome, Setor, Data) e cole abaixo.</p>
-                            <textarea id="paste-data-input" rows="4" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm" placeholder="João da Silva\tTI\t22/09"></textarea>
-                            <button id="paste-data-btn" class="mt-2 px-4 py-2 w-full text-sm font-semibold text-white rounded-lg secondary">Importar Dados Colados</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white p-4 md:p-6 rounded-lg">
-                    <h2 class="text-xl font-semibold text-slate-700 mb-4">Resumo Mensal de Aniversários</h2>
-                    <div><canvas id="birthday-chart"></canvas></div>
-                </div>
-            </div>
-        </main>
-    </div>
+        <div class="bg-white p-4 md:p-6 rounded-lg">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-slate-700">Lista de Aniversariantes</h2>
+            <button id="add-person-btn" class="primary admin-only">+ Adicionar</button>
+          </div>
+          <div class="overflow-x-auto max-h-[60vh] overflow-y-auto">
+            <table class="w-full text-left">
+              <thead class="bg-slate-50 sticky top-0">
+                <tr>
+                  <th class="p-4">Nome Completo</th>
+                  <th class="p-4">Setor</th>
+                  <th class="p-4">Data</th>
+                  <th class="p-4 text-center admin-only-table-cell">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="birthday-table-body" class="divide-y divide-gray-200"></tbody>
+            </table>
 
-    <div id="person-modal" class="modal-overlay hidden">
-        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-            <h2 id="modal-title" class="text-2xl font-bold text-slate-800 mb-6"></h2>
-            <form id="person-form">
-                <input type="hidden" id="person-id">
-                <div class="space-y-4">
-                    <div>
-                        <label for="person-name" class="block text-sm font-medium text-gray-700">Nome Completo</label>
-                        <input type="text" id="person-name" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
-                    </div>
-                    <div>
-                        <label for="person-sector" class="block text-sm font-medium text-gray-700">Setor</label>
-                        <input type="text" id="person-sector" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                           <label for="person-day" class="block text-sm font-medium text-gray-700">Dia</label>
-                           <input type="number" id="person-day" required min="1" max="31" class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
-                        </div>
-                         <div>
-                           <label for="person-month" class="block text-sm font-medium text-gray-700">Mês</label>
-                           <select id="person-month" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm"></select>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex justify-end gap-4 mt-8">
-                    <button type="button" id="cancel-btn" class="tertiary">Cancelar</button>
-                    <button type="submit" class="primary">Salvar</button>
-                </div>
-            </form>
+            <div id="no-results" class="text-center p-8 text-gray-500 hidden">
+              <p>Nenhum resultado encontrado.</p>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <div id="auth-modal" class="modal-overlay hidden">
-        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-sm">
-            <h2 class="text-2xl font-bold text-slate-800 mb-6">Acesso Restrito</h2>
-            <form id="auth-form">
-                <div class="space-y-4">
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="email" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
-                    </div>
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
-                        <input type="password" id="password" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
-                    </div>
-                </div>
-                <div id="auth-error" class="mt-4 text-red-600 text-sm min-h-[20px]"></div>
-                <div class="flex justify-end gap-4 mt-6">
-                    <button type="button" id="auth-cancel-btn" class="tertiary">Cancelar</button>
-                    <button type="submit" class="primary">Entrar</button>
-                </div>
-            </form>
+      <div id="chart-panel" class="tab-panel hidden space-y-8">
+        <div class="bg-white p-4 md:p-6 rounded-lg">
+          <h2 class="text-xl font-semibold text-slate-700 mb-4">Análises Quantitativas</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-1 bg-gray-50 p-6 rounded-xl flex flex-col justify-center items-center">
+              <p class="text-lg text-gray-600">Total de Colaboradores</p>
+              <p id="total-personnel" class="text-5xl font-bold" style="color:var(--eletro-blue)"></p>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-center font-semibold text-gray-700 mb-2">Colaboradores por Setor</p>
+              <div class="h-64 md:h-80"><canvas id="sector-chart"></canvas></div>
+            </div>
+          </div>
         </div>
+
+        <div id="import-section" class="bg-white p-4 md:p-6 rounded-lg admin-only">
+          <h2 class="text-xl font-semibold text-slate-700 mb-4">Importar Dados em Lote</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-semibold text-gray-800">A partir de arquivo CSV</h3>
+              <p class="text-sm text-gray-500 mt-1 mb-3">Arquivo .csv com colunas: Nome, Setor, Data (DD/MM).</p>
+              <label for="csv-file-input" class="cursor-pointer inline-block px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-md secondary">Selecionar Arquivo</label>
+              <input type="file" id="csv-file-input" accept=".csv" class="hidden">
+            </div>
+            <div>
+              <h3 class="font-semibold text-gray-800">Colar dados de uma planilha</h3>
+              <p class="text-sm text-gray-500 mt-1 mb-3">Copie (Nome, Setor, Data) e cole abaixo.</p>
+              <textarea id="paste-data-input" rows="4" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm" placeholder="João da Silva\tTI\t22/09"></textarea>
+              <button id="paste-data-btn" class="mt-2 px-4 py-2 w-full text-sm font-semibold text-white rounded-lg secondary">Importar Dados Colados</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 md:p-6 rounded-lg">
+          <h2 class="text-xl font-semibold text-slate-700 mb-4">Resumo Mensal de Aniversários</h2>
+          <div><canvas id="birthday-chart"></canvas></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Pessoa -->
+  <div id="person-modal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 hidden">
+    <div class="modal">
+      <h2 id="modal-title" class="text-2xl font-bold text-slate-800 mb-6"></h2>
+      <form id="person-form">
+        <input type="hidden" id="person-id">
+        <div class="space-y-4">
+          <div>
+            <label for="person-name" class="block text-sm font-medium text-gray-700">Nome Completo</label>
+            <input type="text" id="person-name" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
+          </div>
+          <div>
+            <label for="person-sector" class="block text-sm font-medium text-gray-700">Setor</label>
+            <input type="text" id="person-sector" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label for="person-day" class="block text-sm font-medium text-gray-700">Dia</label>
+              <input type="number" id="person-day" required min="1" max="31" class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
+            </div>
+            <div>
+              <label for="person-month" class="block text-sm font-medium text-gray-700">Mês</label>
+              <select id="person-month" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm"></select>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end gap-4 mt-8">
+          <button type="button" id="cancel-btn" class="tertiary">Cancelar</button>
+          <button type="submit" class="primary">Salvar</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <div id="notification-toast" class="fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10 transition-all duration-300"></div>
+  <!-- Modal Auth -->
+  <div id="auth-modal" class="modal-overlay fixed inset-0 flex items-center justify-center p-4 hidden">
+    <div class="modal">
+      <h2 class="text-2xl font-bold text-slate-800 mb-6">Acesso Restrito</h2>
+      <form id="auth-form">
+        <div class="space-y-4">
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input type="email" id="email" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
+          </div>
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
+            <input type="password" id="password" required class="mt-1 w-full p-2 border border-gray-300 rounded-lg shadow-sm">
+          </div>
+        </div>
+        <div id="auth-error" class="mt-4 text-red-600 text-sm min-h-[20px]"></div>
+        <div class="flex justify-end gap-4 mt-6">
+          <button type="button" id="auth-cancel-btn" class="tertiary">Cancelar</button>
+          <button type="submit" class="primary">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, getIdTokenResult } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, orderBy, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <div id="notification-toast" class="fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl opacity-0 transform translate-y-10 transition-all duration-300"></div>
 
-        document.addEventListener("DOMContentLoaded", ( ) => {
-            console.log("DOM completamente carregado e analisado.");
+  <script type="module">
+    // Importações Firebase (CDN modular v10+)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot, addDoc, doc, setDoc, deleteDoc, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-            // === VARIÁVEIS GLOBAIS ===
-            let db, auth, dbCollection, currentUser, isAdmin = false;
-            let birthdayData = [];
-            let currentDate = new Date();
-            const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-            let useDemoMode = false; // Pode ser ativado para usar dados de demonstração se o Firestore estiver vazio
-            let authUnsubscribe, dataUnsubscribe = null;
-            let birthdayChartInstance, sectorChartInstance;
+    document.addEventListener("DOMContentLoaded", () => {
+      // Globals
+      let app, auth, db, dbCollection;
+      let authUnsub = null, dataUnsub = null;
+      let isAdmin = false, currentUser = null;
+      let birthdayData = [];
+      let birthdayChartInstance = null, sectorChartInstance = null;
+      const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+      let useDemoMode = false;
 
-            // === MAPEAMENTO DE ELEMENTOS DO DOM ===
-            const authBtn = document.getElementById("auth-btn");
-            const authModal = document.getElementById("auth-modal");
-            const authForm = document.getElementById("auth-form");
-            const authCancelBtn = document.getElementById("auth-cancel-btn");
-            const authError = document.getElementById("auth-error");
-            const tabsContainer = document.getElementById("tabs-container");
-            const todayPanel = document.getElementById("today-panel");
-            const calendarPanel = document.getElementById("calendar-panel");
-            const listPanel = document.getElementById("list-panel");
-            const chartPanel = document.getElementById("chart-panel");
-            const monthFilter = document.getElementById("month-filter");
-            const sectorFilter = document.getElementById("sector-filter");
-            const nameSearch = document.getElementById("name-search");
-            const addPersonBtn = document.getElementById("add-person-btn");
-            const tableBody = document.getElementById("birthday-table-body");
-            const noResults = document.getElementById("no-results");
-            const modal = document.getElementById("person-modal");
-            const modalTitle = document.getElementById("modal-title");
-            const personForm = document.getElementById("person-form");
-            const personIdInput = document.getElementById("person-id");
-            const personNameInput = document.getElementById("person-name");
-            const personSectorInput = document.getElementById("person-sector");
-            const personDayInput = document.getElementById("person-day");
-            const personMonthSelect = document.getElementById("person-month");
-            const cancelBtn = document.getElementById("cancel-btn");
-            const notificationToast = document.getElementById("notification-toast");
-            const calendarGrid = document.getElementById("calendar-grid");
-            const calendarMonthYear = document.getElementById("calendar-month-year");
-            const prevMonthBtn = document.getElementById("prev-month-btn");
-            const nextMonthBtn = document.getElementById("next-month-btn");
-            const todayBtn = document.getElementById("today-btn");
-            const totalPersonnel = document.getElementById("total-personnel");
-            const csvFileInput = document.getElementById("csv-file-input");
-            const pasteDataInput = document.getElementById("paste-data-input");
-            const pasteDataBtn = document.getElementById("paste-data-btn");
+      // DOM elements
+      const authBtn = document.getElementById('auth-btn');
+      const authModal = document.getElementById('auth-modal');
+      const authForm = document.getElementById('auth-form');
+      const authCancelBtn = document.getElementById('auth-cancel-btn');
+      const authError = document.getElementById('auth-error');
+      const addPersonBtn = document.getElementById('add-person-btn');
+      const personModal = document.getElementById('person-modal');
+      const personForm = document.getElementById('person-form');
+      const cancelBtn = document.getElementById('cancel-btn');
+      const tableBody = document.getElementById('birthday-table-body');
+      const noResults = document.getElementById('no-results');
+      const notificationToast = document.getElementById('notification-toast');
+      const monthFilter = document.getElementById('month-filter');
+      const sectorFilter = document.getElementById('sector-filter');
+      const nameSearch = document.getElementById('name-search');
+      const calendarGrid = document.getElementById('calendar-grid');
+      const calendarMonthYear = document.getElementById('calendar-month-year');
+      const prevMonthBtn = document.getElementById('prev-month-btn');
+      const nextMonthBtn = document.getElementById('next-month-btn');
+      const todayBtn = document.getElementById('today-btn');
+      const todayPanel = document.getElementById('today-panel');
+      const totalPersonnel = document.getElementById('total-personnel');
+      const sectorChartCanvas = document.getElementById('sector-chart');
+      const birthdayChartCanvas = document.getElementById('birthday-chart');
+      const csvFileInput = document.getElementById('csv-file-input');
+      const pasteDataInput = document.getElementById('paste-data-input');
+      const pasteDataBtn = document.getElementById('paste-data-btn');
+      const tabsContainer = document.getElementById('tabs-container');
 
-            // === FUNÇÕES AUXILIARES ===
-            function showToast(message, type = "success") {
-                notificationToast.textContent = message;
-                notificationToast.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl transition-all duration-300 ${type === "success" ? "bg-green-500" : "bg-red-500"}`;
-                notificationToast.classList.add("opacity-100", "translate-y-0");
-                setTimeout(() => {
-                    notificationToast.classList.remove("opacity-100", "translate-y-0");
-                    notificationToast.classList.add("opacity-0", "translate-y-10");
-                }, 3000);
+      // safe parse of window.__firebase_config
+      function readFirebaseConfig() {
+        try {
+          if (typeof window.__firebase_config === 'string') {
+            return JSON.parse(window.__firebase_config);
+          }
+          if (typeof window.__firebase_config === 'object' && window.__firebase_config !== null) {
+            return window.__firebase_config;
+          }
+          console.warn("window.__firebase_config ausente ou inválido.");
+          return null;
+        } catch (err) {
+          console.error("Erro ao interpretar window.__firebase_config:", err);
+          return null;
+        }
+      }
+
+      function showNotification(message, isError = false) {
+        notificationToast.textContent = message;
+        notificationToast.className = `fixed bottom-5 right-5 text-white py-3 px-5 rounded-lg shadow-xl transition-all duration-300 ${isError ? 'bg-red-600' : 'bg-green-600'}`;
+        notificationToast.classList.remove('opacity-0');
+        setTimeout(() => {
+          notificationToast.classList.add('opacity-0');
+        }, 3000);
+      }
+
+      function getMonthName(monthIndex) {
+        if (typeof monthIndex === 'number' && monthIndex >= 1 && monthIndex <= 12) return monthNames[monthIndex - 1];
+        return "Mês Inválido";
+      }
+
+      // Init Firebase safely
+      function initFirebase() {
+        const firebaseConfig = readFirebaseConfig();
+        if (!firebaseConfig) {
+          // entra em demo mode — não tenta inicializar SDK (evita erros)
+          console.warn("firebaseConfig inválido — entrando em modo demonstração.");
+          useDemoMode = true;
+          renderDemoData();
+          return;
+        }
+
+        try {
+          app = initializeApp(firebaseConfig);
+          auth = getAuth(app);
+          db = getFirestore(app);
+          dbCollection = collection(db, "aniversariantes");
+          setupAuthListener();
+          console.info("Firebase inicializado.");
+        } catch (err) {
+          console.error("Erro inicializando Firebase:", err);
+          useDemoMode = true;
+          renderDemoData();
+        }
+      }
+
+      // Demo fallback data
+      function renderDemoData() {
+        birthdayData = [
+          { id: 'demo-1', name: 'Maria Silva (Demo)', sector: 'Comercial', day: new Date().getDate(), month: new Date().getMonth() + 1 },
+          { id: 'demo-2', name: 'João Santos (Demo)', sector: 'TI', day: 15, month: 8 }
+        ];
+        populateFilters(birthdayData);
+        applyFilters();
+        renderTodayBirthdays();
+        renderCalendar();
+        renderCharts();
+        showNotification("Executando em modo demo (Firebase não inicializado).", true);
+      }
+
+      // Auth listener
+      function setupAuthListener() {
+        if (!auth) return;
+        if (authUnsub) authUnsub();
+        authUnsub = onAuthStateChanged(auth, async (user) => {
+          currentUser = user;
+          if (user) {
+            authBtn.textContent = `🔓 ${user.email}`;
+            try {
+              const tokenResult = await user.getIdTokenResult(true);
+              isAdmin = !!(tokenResult && tokenResult.claims && tokenResult.claims.admin === true);
+            } catch (err) {
+              console.warn("Erro ao checar claims:", err);
+              isAdmin = false;
             }
-
-            function openModal(modalElement, data = null) {
-                modalElement.classList.remove("hidden");
-                if (modalElement === modal) {
-                    modalTitle.textContent = data ? "Editar Aniversariante" : "Adicionar Aniversariante";
-                    personIdInput.value = data ? data.id : "";
-                    personNameInput.value = data ? data.name : "";
-                    personSectorInput.value = data ? data.sector : "";
-                    personDayInput.value = data ? data.day : "";
-                    personMonthSelect.value = data ? data.month : "";
-                } else if (modalElement === authModal) {
-                    authError.textContent = "";
-                }
-            }
-
-            function closeModal(modalElement) {
-                modalElement.classList.add("hidden");
-                if (modalElement === modal) personForm.reset();
-                else if (modalElement === authModal) authForm.reset();
-            }
-
-            function getMonthName(monthIndex) {
-                console.log(`getMonthName chamado com índice: ${monthIndex}`);
-                // monthIndex é 1-baseado, monthNames é 0-baseado
-                if (monthIndex >= 1 && monthIndex <= 12) {
-                    return monthNames[monthIndex - 1];
-                } else {
-                    console.warn(`Índice de mês inválido: ${monthIndex}`);
-                    return "Mês Desconhecido";
-                }
-            }
-
-            // === FIREBASE ===
-            function initFirebase() {
-                console.log("Iniciando Firebase...");
-                try {
-                    const firebaseConfig = window.__firebase_config;
-                    if (!firebaseConfig) {
-                        console.error("Configuração do Firebase não encontrada em window.__firebase_config.");
-                        showToast("Erro: Configuração do Firebase ausente.", "error");
-                        return;
-                    }
-                    const app = initializeApp(firebaseConfig);
-                    auth = getAuth(app);
-                    db = getFirestore(app);
-                    dbCollection = collection(db, "aniversariantes");
-                    console.log("Firebase inicializado com sucesso.");
-                    setupAuthListener();
-                } catch (error) {
-                    console.error("Erro ao inicializar Firebase:", error);
-                    showToast("Erro ao inicializar Firebase.", "error");
-                }
-            }
-
-            function setupAuthListener() {
-                console.log("Configurando listener de autenticação...");
-                authUnsubscribe = onAuthStateChanged(auth, async (user) => {
-                    currentUser = user;
-                    if (user) {
-                        console.log("Usuário autenticado:", user.email);
-                        authBtn.textContent = `🔓 ${user.email}`;
-                        const idTokenResult = await user.getIdTokenResult();
-                        isAdmin = idTokenResult.claims.admin || false;
-                        console.log("Admin status:", isAdmin);
-                        document.body.classList.toggle("admin-mode", isAdmin);
-                        if (dataUnsubscribe) dataUnsubscribe(); // Desinscreve-se de dados anteriores
-                        listenForBirthdays();
-                    } else {
-                        console.log("Usuário desautenticado.");
-                        authBtn.textContent = "🔒 Acesso Restrito";
-                        isAdmin = false;
-                        document.body.classList.remove("admin-mode");
-                        birthdayData = []; // Limpa os dados se não houver usuário
-                        renderAllPanels(); // Renderiza painéis vazios ou com dados de demonstração
-                        if (dataUnsubscribe) dataUnsubscribe();
-                    }
-                });
-            }
-
-            async function handleAuth(e) {
-                e.preventDefault();
-                const email = authForm.email.value;
-                const password = authForm.password.value;
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                    closeModal(authModal);
-                    showToast("Login realizado com sucesso!");
-                } catch (error) {
-                    console.error("Erro de autenticação:", error);
-                    authError.textContent = "Email ou senha inválidos.";
-                    showToast("Erro de login.", "error");
-                }
-            }
-
-            async function handleSignOut() {
-                try {
-                    await signOut(auth);
-                    showToast("Logout realizado com sucesso!");
-                } catch (error) {
-                    console.error("Erro ao fazer logout:", error);
-                    showToast("Erro ao fazer logout.", "error");
-                }
-            }
-
-            function listenForBirthdays() {
-                console.log("Configurando listener para dados de aniversariantes...");
-                // Ordena por mês e depois por dia para a exibição correta no calendário e lista
-                const q = query(dbCollection, orderBy("month"), orderBy("day"));
-                dataUnsubscribe = onSnapshot(q, (snapshot) => {
-                    console.log("Snapshot de dados recebido.");
-                    const fetchedData = [];
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        fetchedData.push({ id: doc.id, ...data });
-                    });
-                    birthdayData = fetchedData;
-                    console.log("Dados de aniversariantes carregados:", birthdayData);
-                    processDataAndRender();
-                }, (error) => {
-                    console.error("Erro ao buscar dados de aniversariantes:", error);
-                    showToast("Erro ao carregar dados.", "error");
-                    // Em caso de erro, pode-se optar por carregar dados de demonstração
-                    if (useDemoMode) {
-                        console.log("Carregando dados de demonstração devido a erro.");
-                        birthdayData = getDemoData(); // Implementar getDemoData se necessário
-                        processDataAndRender();
-                    }
-                });
-            }
-
-            function processDataAndRender() {
-                console.log("Processando dados e renderizando painéis...");
-                populateFilters(birthdayData);
-                applyFilters(); // Aplica filtros e renderiza a tabela
-                renderTodayBirthdays();
-                renderCalendar();
-                renderCharts();
-            }
-
-            function renderAllPanels() {
-                console.log("Renderizando todos os painéis (possivelmente vazios).");
-                populateFilters([]); // Limpa filtros
-                renderTable([]); // Limpa a tabela
-                renderTodayBirthdays(); // Limpa aniversariantes do dia
-                renderCalendar(); // Limpa calendário
-                renderCharts(); // Limpa gráficos
-            }
-
-            // === RENDERIZAÇÃO DE DADOS ===
-            function renderTodayBirthdays() {
-                console.log("Renderizando aniversariantes do dia...");
-                const today = new Date();
-                const currentDay = today.getDate();
-                const currentMonth = today.getMonth() + 1; // Mês é 1-baseado
-
-                const todayBirthdays = birthdayData.filter(person => {
-                    return person.day === currentDay && person.month === currentMonth;
-                });
-
-                todayPanel.innerHTML = ""; // Limpa o painel
-
-                if (todayBirthdays.length > 0) {
-                    todayBirthdays.forEach(person => {
-                        const card = document.createElement("div");
-                        card.className = "bg-white p-4 md:p-6 rounded-lg shadow-md mb-4";
-                        card.innerHTML = `
-                            <h3 class="text-xl font-semibold text-slate-700">🎉 Feliz Aniversário, ${person.name}!</h3>
-                            <p class="text-gray-600">Setor: ${person.sector}</p>
-                            <p class="text-gray-500 text-sm">Hoje, ${person.day} de ${getMonthName(person.month)}</p>
-                        `;
-                        todayPanel.appendChild(card);
-                    });
-                    console.log(`Encontrados ${todayBirthdays.length} aniversariantes para hoje.`);
-                } else {
-                    todayPanel.innerHTML = `
-                        <div class="bg-white p-4 md:p-6 rounded-lg shadow-md text-center text-gray-500">
-                            <p>Nenhum aniversariante hoje. 😔</p>
-                        </div>
-                    `;
-                    console.log("Nenhum aniversariante encontrado para hoje.");
-                }
-            }
-
-            function renderTable(data) {
-                console.log(`Renderizando tabela com ${data.length} itens.`);
-                tableBody.innerHTML = "";
-                if (data.length === 0) {
-                    noResults.classList.remove("hidden");
-                    return;
-                }
-                noResults.classList.add("hidden");
-
-                data.forEach(person => {
-                    const row = tableBody.insertRow();
-                    row.innerHTML = `
-                        <td class="p-4">${person.name}</td>
-                        <td class="p-4">${person.sector}</td>
-                        <td class="p-4">${person.day} de ${getMonthName(person.month)}</td>
-                        <td class="p-4 text-center admin-only-table-cell">
-                            <button class="edit-btn text-blue-600 hover:text-blue-800 mr-2" data-id="${person.id}">Editar</button>
-                            <button class="delete-btn text-red-600 hover:text-red-800" data-id="${person.id}">Excluir</button>
-                        </td>
-                    `;
-                });
-                console.log("Tabela renderizada.");
-            }
-
-            function renderCalendar() {
-                console.log("Renderizando calendário...");
-                calendarGrid.innerHTML = "";
-                const year = currentDate.getFullYear();
-                const month = currentDate.getMonth(); // Mês é 0-baseado para Date
-                calendarMonthYear.textContent = `${getMonthName(month + 1)} ${year}`;
-
-                const firstDayOfMonth = new Date(year, month, 1);
-                const daysInMonth = new Date(year, month + 1, 0).getDate();
-                const startDay = firstDayOfMonth.getDay(); // 0 = Domingo, 6 = Sábado
-
-                // Preencher dias vazios no início
-                for (let i = 0; i < startDay; i++) {
-                    const emptyDiv = document.createElement("div");
-                    emptyDiv.className = "text-center py-2";
-                    calendarGrid.appendChild(emptyDiv);
-                }
-
-                // Preencher dias do mês
-                for (let day = 1; day <= daysInMonth; day++) {
-                    const dayDiv = document.createElement("div");
-                    dayDiv.className = "text-center py-2 border-t border-l border-gray-200 relative group";
-                    dayDiv.innerHTML = `<span class="font-semibold">${day}</span>`;
-
-                    const birthdaysOnDay = birthdayData.filter(person => {
-                        return person.day === day && person.month === (month + 1);
-                    });
-
-                    if (birthdaysOnDay.length > 0) {
-                        dayDiv.classList.add("bg-blue-50", "hover:bg-blue-100", "cursor-pointer");
-                        dayDiv.innerHTML += `<div class="text-xs text-blue-700 font-medium">${birthdaysOnDay.length} Aniversário${birthdaysOnDay.length > 1 ? "s" : ""}</div>`;
-
-                        // Tooltip para mostrar nomes
-                        const tooltip = document.createElement("div");
-                        tooltip.className = "absolute z-10 invisible group-hover:visible bg-blue-700 text-white text-xs p-2 rounded-md shadow-lg bottom-full left-1/2 -translate-x-1/2 mb-2 whitespace-nowrap";
-                        tooltip.innerHTML = birthdaysOnDay.map(p => p.name).join("  
-");
-                        dayDiv.appendChild(tooltip);
-                    }
-
-                    calendarGrid.appendChild(dayDiv);
-                }
-                console.log("Calendário renderizado.");
-            }
-
-            function renderCharts() {
-                console.log("Renderizando gráficos...");
-                // Gráfico de Setores
-                const sectorCounts = birthdayData.reduce((acc, person) => {
-                    acc[person.sector] = (acc[person.sector] || 0) + 1;
-                    return acc;
-                }, {});
-
-                const sectorLabels = Object.keys(sectorCounts);
-                const sectorValues = Object.values(sectorCounts);
-
-                if (sectorChartInstance) sectorChartInstance.destroy();
-                sectorChartInstance = new Chart(document.getElementById("sector-chart"), {
-                    type: "pie",
-                    data: {
-                        labels: sectorLabels,
-                        datasets: [{
-                            data: sectorValues,
-                            backgroundColor: ["#003366", "#009a74", "#f6ad55", "#fc8181", "#63b3ed", "#a78bfa", "#fbd38d", "#81e6d9"],
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: "right" },
-                            title: { display: true, text: "Aniversariantes por Setor" }
-                        }
-                    }
-                });
-
-                // Gráfico de Aniversários por Mês
-                const monthlyCounts = Array(12).fill(0);
-                birthdayData.forEach(person => {
-                    if (person.month >= 1 && person.month <= 12) {
-                        monthlyCounts[person.month - 1]++;
-                    }
-                });
-
-                if (birthdayChartInstance) birthdayChartInstance.destroy();
-                birthdayChartInstance = new Chart(document.getElementById("birthday-chart"), {
-                    type: "bar",
-                    data: {
-                        labels: monthNames,
-                        datasets: [{
-                            label: "Número de Aniversários",
-                            data: monthlyCounts,
-                            backgroundColor: "#003366",
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { display: false },
-                            title: { display: true, text: "Aniversários por Mês" }
-                        },
-                        scales: {
-                            y: { beginAtZero: true, ticks: { precision: 0 } }
-                        }
-                    }
-                });
-
-                totalPersonnel.textContent = birthdayData.length;
-                console.log("Gráficos renderizados.");
-            }
-
-            // === OPERAÇÕES CRUD ===
-            async function handlePersonFormSubmit(e) {
-                e.preventDefault();
-                const person = {
-                    name: personNameInput.value,
-                    sector: personSectorInput.value,
-                    day: parseInt(personDayInput.value),
-                    month: parseInt(personMonthSelect.value),
-                };
-
-                try {
-                    if (personIdInput.value) {
-                        // Editar existente
-                        const personRef = doc(dbCollection, personIdInput.value);
-                        await setDoc(personRef, person);
-                        showToast("Aniversariante atualizado com sucesso!");
-                    } else {
-                        // Adicionar novo
-                        await addDoc(dbCollection, person);
-                        showToast("Aniversariante adicionado com sucesso!");
-                    }
-                    closeModal(modal);
-                } catch (error) {
-                    console.error("Erro ao salvar aniversariante:", error);
-                    showToast("Erro ao salvar aniversariante.", "error");
-                }
-            }
-
-            async function deletePersonFromTable(id) {
-                if (!confirm("Tem certeza que deseja excluir este aniversariante?")) return;
-                try {
-                    await deleteDoc(doc(dbCollection, id));
-                    showToast("Aniversariante excluído com sucesso!");
-                } catch (error) {
-                    console.error("Erro ao excluir aniversariante:", error);
-                    showToast("Erro ao excluir aniversariante.", "error");
-                }
-            }
-
-            // === FUNÇÕES DE IMPORTAÇÃO ===
-            async function handleCsvImport(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                    const text = e.target.result;
-                    await importDataFromText(text, ",");
-                };
-                reader.readAsText(file);
-            }
-
-            async function handlePasteImport() {
-                const text = pasteDataInput.value;
-                if (!text) {
-                    showToast("Nenhum dado para importar.", "error");
-                    return;
-                }
-                await importDataFromText(text, "\t"); // Assumindo tab-separated para colagem
-            }
-
-            async function importDataFromText(text, delimiter) {
-                console.log("Iniciando importação de dados...");
-                const lines = text.trim().split("\n");
-                const batch = writeBatch(db);
-                let importedCount = 0;
-
-                for (const line of lines) {
-                    const parts = line.split(delimiter).map(p => p.trim());
-                    if (parts.length === 3) {
-                        const [name, sector, dateString] = parts;
-                        const [day, month] = dateString.split("/").map(Number);
-
-                        if (name && sector && day && month && !isNaN(day) && !isNaN(month) && day >= 1 && day <= 31 && month >= 1 && month <= 12) {
-                            const newDocRef = doc(dbCollection);
-                            batch.set(newDocRef, { name, sector, day, month });
-                            importedCount++;
-                        } else {
-                            console.warn("Linha ignorada devido a formato inválido:", line);
-                        }
-                    } else {
-                        console.warn("Linha ignorada devido a número incorreto de colunas:", line);
-                    }
-                }
-
-                try {
-                    await batch.commit();
-                    showToast(`${importedCount} aniversariante(s) importado(s) com sucesso!`);
-                    pasteDataInput.value = ""; // Limpa a área de texto após a importação
-                    csvFileInput.value = ""; // Limpa o input de arquivo
-                    console.log("Importação de dados concluída.");
-                } catch (error) {
-                    console.error("Erro ao importar dados em lote:", error);
-                    showToast("Erro ao importar dados.", "error");
-                }
-            }
-
-            // === FILTROS E PESQUISA ===
-            function populateFilters(data) {
-                console.log("Populando filtros...");
-                const sectors = [...new Set(data.map(p => p.sector))].sort();
-                sectorFilter.innerHTML = '<option value="all">Todos os Setores</option>';
-                sectors.forEach(s => sectorFilter.innerHTML += `<option value="${s}">${s}</option>`);
-                if (monthFilter.options.length <= 1) monthNames.forEach((name, i) => monthFilter.innerHTML += `<option value="${i+1}">${name}</option>`);
-                if (personMonthSelect.options.length === 0) monthNames.forEach((name, i) => personMonthSelect.innerHTML += `<option value="${i+1}">${name}</option>`);
-                console.log("Filtros populados.");
-            }
-
-            function applyFilters() {
-                console.log("Aplicando filtros...");
-                const month = monthFilter.value, sector = sectorFilter.value, search = nameSearch.value.toLowerCase();
-                const filteredData = birthdayData.filter(p => (month === 'all' || p.month == month) && (sector === 'all' || p.sector == sector) && (p.name.toLowerCase().includes(search)));
-                renderTable(filteredData);
-                console.log(`Filtros aplicados. ${filteredData.length} resultados.`);
-            }
-            
-            /* ================================== */
-            /* === BLOCO DE LISTENERS DE EVENTOS === */
-            /* ================================== */
-
-            authBtn.addEventListener("click", () => currentUser ? (confirm("Deseja realmente sair?") && handleSignOut()) : openModal(authModal));
-            authForm.addEventListener("submit", handleAuth);
-            authCancelBtn.addEventListener("click", () => closeModal(authModal));
-            tabsContainer.addEventListener("click", (e) => {
-                if (e.target.matches(".tab-btn")) {
-                    tabsContainer.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
-                    document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.add("hidden"));
-                    e.target.classList.add("active");
-                    document.getElementById(`${e.target.dataset.tab}-panel`).classList.remove("hidden");
-                    console.log(`Aba ${e.target.dataset.tab} ativada.`);
-                }
-            });
-            [monthFilter, sectorFilter, nameSearch].forEach(el => el.addEventListener('input', applyFilters));
-            addPersonBtn.addEventListener("click", () => openModal(modal));
-            personForm.addEventListener("submit", handlePersonFormSubmit);
-            cancelBtn.addEventListener("click", () => closeModal(modal));
-            tableBody.addEventListener("click", e => {
-                const editBtn = e.target.closest(".edit-btn"), deleteBtn = e.target.closest(".delete-btn");
-                if (isAdmin && editBtn) {
-                    console.log("Botão de editar clicado para ID:", editBtn.dataset.id);
-                    openModal(modal, birthdayData.find(p => p.id === editBtn.dataset.id));
-                }
-                if (isAdmin && deleteBtn) {
-                    console.log("Botão de excluir clicado para ID:", deleteBtn.dataset.id);
-                    deletePersonFromTable(deleteBtn.dataset.id);
-                }
-            });
-            prevMonthBtn.addEventListener("click", () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); console.log("Mês anterior clicado."); });
-            nextMonthBtn.addEventListener("click", () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); console.log("Próximo mês clicado."); });
-            todayBtn.addEventListener("click", () => { currentDate = new Date(); renderCalendar(); console.log("Botão 'Hoje' clicado."); });
-            csvFileInput.addEventListener("change", handleCsvImport);
-            pasteDataBtn.addEventListener("click", handlePasteImport);
-
-            // --- INICIALIZAÇÃO DA APLICAÇÃO ---
-            initFirebase();
-            tabsContainer.querySelector(".tab-btn").click();
-            monthFilter.value = new Date().getMonth() + 1;
-            console.log("Aplicação inicializada. Mês do filtro definido para o mês atual.");
+            document.body.classList.toggle('admin-mode', isAdmin);
+            listenForBirthdays();
+          } else {
+            authBtn.textContent = "🔒 Acesso Restrito";
+            isAdmin = false;
+            document.body.classList.remove('admin-mode');
+            // desconectar listener de dados
+            if (dataUnsub) { dataUnsub(); dataUnsub = null; }
+            // limpar ou mostrar demo
+            birthdayData = [];
+            populateFilters([]);
+            renderAllEmpty();
+          }
         });
-    </script>
+      }
+
+      // Listen for birthdays in Firestore (only if DB initialized)
+      function listenForBirthdays() {
+        if (!dbCollection) {
+          console.warn("dbCollection não inicializado.");
+          return;
+        }
+        if (dataUnsub) dataUnsub();
+
+        const q = query(dbCollection, orderBy("month"), orderBy("day"));
+        dataUnsub = onSnapshot(q, (snapshot) => {
+          const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          birthdayData = items;
+          populateFilters(birthdayData);
+          applyFilters();
+          renderTodayBirthdays();
+          renderCalendar();
+          renderCharts();
+        }, (err) => {
+          console.error("Erro onSnapshot:", err);
+          showNotification("Erro ao carregar dados do Firestore.", true);
+        });
+      }
+
+      // Render helpers
+      function renderTodayBirthdays() {
+        const today = new Date();
+        const d = today.getDate(), m = today.getMonth() + 1;
+        const todays = birthdayData.filter(p => p.day === d && p.month === m);
+        todayPanel.innerHTML = '';
+        if (todays.length) {
+          const container = document.createElement('div');
+          container.className = 'bg-white p-4 md:p-6 rounded-lg';
+          let inner = `<h2 class="text-2xl font-bold text-slate-800 mb-4">Aniversariantes de Hoje</h2><div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">`;
+          todays.forEach(p => {
+            inner += `<div class="bg-slate-50 rounded-xl p-4"><p class="font-semibold text-blue-800">${escapeHtml(p.name)}</p><p class="text-sm text-gray-600">${escapeHtml(p.sector)}</p></div>`;
+          });
+          inner += `</div>`;
+          container.innerHTML = inner;
+          todayPanel.appendChild(container);
+        } else {
+          todayPanel.innerHTML = `<div class="bg-white p-4 md:p-6 rounded-lg text-center text-gray-500">Ninguém faz aniversário hoje.</div>`;
+        }
+      }
+
+      function renderCalendar() {
+        calendarGrid.innerHTML = '';
+        const year = (typeof window._calendarYear === 'number') ? window._calendarYear : new Date().getFullYear();
+        const monthIndex = (typeof window._calendarMonth === 'number') ? window._calendarMonth : new Date().getMonth();
+        calendarMonthYear.textContent = `${monthNames[monthIndex]} ${year}`;
+        const firstDay = new Date(year, monthIndex, 1).getDay();
+        const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+
+        // empty placeholders
+        for (let i = 0; i < firstDay; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'border p-2 h-20';
+          calendarGrid.appendChild(cell);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+          const birthdaysOnDay = birthdayData.filter(p => p.day === day && p.month === (monthIndex + 1));
+          const cell = document.createElement('div');
+          cell.className = 'border p-2 h-20 overflow-hidden';
+          if (birthdaysOnDay.length) {
+            cell.classList.add('bg-blue-50');
+            let html = `<div class="font-bold">${day}</div><div class="text-xs mt-1">`;
+            html += birthdaysOnDay.map(p => `<div class="truncate text-blue-700">${escapeHtml(p.name)}</div>`).join('');
+            html += `</div>`;
+            cell.innerHTML = html;
+          } else {
+            cell.innerHTML = `<div class="font-bold">${day}</div>`;
+          }
+          calendarGrid.appendChild(cell);
+        }
+      }
+
+      function renderTable(filtered) {
+        tableBody.innerHTML = '';
+        if (!filtered || filtered.length === 0) {
+          noResults.classList.remove('hidden');
+          return;
+        }
+        noResults.classList.add('hidden');
+
+        const frag = document.createDocumentFragment();
+        filtered.forEach(p => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="p-4">${escapeHtml(p.name)}</td>
+            <td class="p-4 text-gray-600">${escapeHtml(p.sector)}</td>
+            <td class="p-4">${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}</td>
+            <td class="p-4 text-center admin-only-table-cell">
+              <button data-id="${p.id}" class="edit-btn text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+              <button data-id="${p.id}" class="delete-btn text-red-600 hover:text-red-800">🗑️</button>
+            </td>
+          `;
+          frag.appendChild(tr);
+        });
+        tableBody.appendChild(frag);
+      }
+
+      function renderCharts() {
+        // sectors pie/doughnut
+        const sectors = {};
+        birthdayData.forEach(p => { sectors[p.sector] = (sectors[p.sector] || 0) + 1; });
+        const labels = Object.keys(sectors);
+        const values = Object.values(sectors);
+
+        if (sectorChartInstance) sectorChartInstance.destroy();
+        sectorChartInstance = new Chart(sectorChartCanvas, {
+          type: 'doughnut',
+          data: { labels, datasets: [{ data: values, backgroundColor: ['#003366','#0072C6','#009a74','#f59e0b','#ef4444','#6366f1'] }] },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // monthly bar
+        const monthly = Array(12).fill(0);
+        birthdayData.forEach(p => { if (typeof p.month === 'number' && p.month >= 1 && p.month <= 12) monthly[p.month - 1]++; });
+        if (birthdayChartInstance) birthdayChartInstance.destroy();
+        birthdayChartInstance = new Chart(birthdayChartCanvas, {
+          type: 'bar',
+          data: { labels: monthNames, datasets: [{ label: 'Aniversariantes por Mês', data: monthly, backgroundColor: '#003366' }] },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision:0 } } } }
+        });
+
+        totalPersonnel.textContent = String(birthdayData.length);
+      }
+
+      // Filters
+      function populateFilters(data) {
+        const sectors = [...new Set((data||[]).map(p => p.sector).filter(Boolean))].sort();
+        sectorFilter.innerHTML = '<option value="all">Todos os Setores</option>' + sectors.map(s => `<option value="${escapeAttr(s)}">${escapeHtml(s)}</option>`).join('');
+        if (monthFilter.options.length <= 1) {
+          monthNames.forEach((name, i) => monthFilter.innerHTML += `<option value="${i+1}">${name}</option>`);
+        }
+        const personMonthSelect = document.getElementById('person-month');
+        if (personMonthSelect && personMonthSelect.options.length === 0) {
+          monthNames.forEach((name,i) => personMonthSelect.innerHTML += `<option value="${i+1}">${name}</option>`);
+        }
+      }
+
+      function applyFilters() {
+        const month = monthFilter.value;
+        const sector = sectorFilter.value;
+        const search = (nameSearch.value || '').toLowerCase();
+        const filtered = (birthdayData || []).filter(p => {
+          return (month === 'all' || String(p.month) === String(month)) &&
+                 (sector === 'all' || p.sector === sector) &&
+                 (p.name && p.name.toLowerCase().includes(search));
+        });
+        renderTable(filtered);
+      }
+
+      // CRUD handlers
+      async function handlePersonFormSubmit(e) {
+        e.preventDefault();
+        const id = document.getElementById('person-id').value || null;
+        const person = {
+          name: document.getElementById('person-name').value.trim(),
+          sector: document.getElementById('person-sector').value.trim(),
+          day: Number(document.getElementById('person-day').value),
+          month: Number(document.getElementById('person-month').value)
+        };
+        if (!person.name || !person.sector) {
+          showNotification('Nome e setor são obrigatórios.', true);
+          return;
+        }
+        if (!dbCollection) {
+          showNotification('Firestore não inicializado.', true);
+          return;
+        }
+        try {
+          if (id) {
+            await setDoc(doc(db, 'aniversariantes', id), person);
+            showNotification('Registro atualizado.');
+          } else {
+            await addDoc(dbCollection, person);
+            showNotification('Registro adicionado.');
+          }
+          closeModal(personModal);
+        } catch (err) {
+          console.error('Erro salvar:', err);
+          showNotification('Erro ao salvar. Verifique permissões.', true);
+        }
+      }
+
+      async function deletePersonFromTable(id) {
+        if (!confirm('Confirma exclusão?')) return;
+        try {
+          await deleteDoc(doc(db, 'aniversariantes', id));
+          showNotification('Registro excluído.');
+        } catch (err) {
+          console.error('Erro excluir:', err);
+          showNotification('Erro ao excluir. Verifique permissões.', true);
+        }
+      }
+
+      // Batch import
+      async function processImportedData(items) {
+        if (!dbCollection) { showNotification('Firestore não inicializado.', true); return; }
+        if (!items.length) { showNotification('Nenhum registro válido para importar.', true); return; }
+        if (!confirm(`Adicionar ${items.length} registros?`)) return;
+        const batch = writeBatch(db);
+        items.forEach(item => {
+          const ref = doc(db, 'aniversariantes', /* auto id */);
+          batch.set(ref, item);
+        });
+        try {
+          await batch.commit();
+          showNotification(`${items.length} registros importados.`);
+        } catch (err) {
+          console.error('Erro import:', err);
+          showNotification('Erro na importação.', true);
+        }
+      }
+
+      function handleCsvImport(evt) {
+        const file = evt.target.files && evt.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const text = ev.target.result || '';
+          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          const items = lines.slice(1).map(line => {
+            const parts = line.split(',').map(s => s.trim());
+            if (parts.length < 3) return null;
+            const [name, sector, date] = parts;
+            if (!date.includes('/')) return null;
+            const [d,m] = date.split('/').map(Number);
+            if (!name || !sector || !d || !m) return null;
+            return { name, sector, day: d, month: m };
+          }).filter(Boolean);
+          processImportedData(items);
+        };
+        reader.readAsText(file, 'UTF-8');
+        evt.target.value = '';
+      }
+
+      function handlePasteImport() {
+        const text = pasteDataInput.value || '';
+        if (!text.trim()) { showNotification('Nenhum dado para importar.', true); return; }
+        const lines = text.split(/\r?\n/).filter(l => l.trim());
+        const items = lines.map(line => {
+          const parts = line.split('\t').map(s => s.trim());
+          if (parts.length < 3) return null;
+          const [name, sector, date] = parts;
+          if (!date.includes('/')) return null;
+          const [d,m] = date.split('/').map(Number);
+          if (!name || !sector || !d || !m) return null;
+          return { name, sector, day: d, month: m };
+        }).filter(Boolean);
+        processImportedData(items);
+        pasteDataInput.value = '';
+      }
+
+      // Utility: simple escape for HTML injection prevention
+      function escapeHtml(s) {
+        if (s == null) return '';
+        return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+      function escapeAttr(s) { return escapeHtml(s).replace(/"/g,'&quot;'); }
+
+      // Modal open/close
+      function openModal(el, data = null) {
+        el.classList.remove('hidden');
+        if (el === personModal) {
+          document.getElementById('person-id').value = data ? data.id : '';
+          document.getElementById('person-name').value = data ? data.name : '';
+          document.getElementById('person-sector').value = data ? data.sector : '';
+          document.getElementById('person-day').value = data ? data.day : '';
+          document.getElementById('person-month').value = data ? data.month : (new Date().getMonth()+1);
+        } else if (el === authModal) {
+          authError.textContent = '';
+        }
+      }
+      function closeModal(el) {
+        el.classList.add('hidden');
+      }
+
+      function renderAllEmpty() {
+        populateFilters([]);
+        renderTable([]);
+        renderTodayBirthdays();
+        renderCalendar();
+        renderCharts();
+      }
+
+      // Event listeners
+      authBtn.addEventListener('click', () => {
+        if (currentUser) {
+          if (confirm('Deseja sair?')) signOut(auth).then(()=>showNotification('Logout com sucesso')).catch(()=>showNotification('Erro ao sair', true));
+        } else {
+          openModal(authModal);
+        }
+      });
+      authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        authError.textContent = '';
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+          closeModal(authModal);
+          showNotification('Login realizado com sucesso.');
+        } catch (err) {
+          console.error('Login error:', err);
+          authError.textContent = 'Email ou senha inválidos.';
+          showNotification('Falha no login.', true);
+        }
+      });
+      authCancelBtn.addEventListener('click', () => closeModal(authModal));
+
+      tabsContainer.addEventListener('click', (e) => {
+        if (e.target.matches('.tab-btn')) {
+          tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+          e.target.classList.add('active');
+          const id = e.target.dataset.tab;
+          const panel = document.getElementById(`${id}-panel`);
+          if (panel) panel.classList.remove('hidden');
+        }
+      });
+
+      // make first tab active
+      const firstBtn = tabsContainer.querySelector('.tab-btn');
+      if (firstBtn) firstBtn.click();
+
+      addPersonBtn.addEventListener('click', () => openModal(personModal));
+      cancelBtn.addEventListener('click', () => closeModal(personModal));
+      personForm.addEventListener('submit', handlePersonFormSubmit);
+
+      tableBody.addEventListener('click', (e) => {
+        const edit = e.target.closest('.edit-btn');
+        const del = e.target.closest('.delete-btn');
+        if (edit && isAdmin) {
+          const id = edit.dataset.id;
+          const person = birthdayData.find(p => p.id === id);
+          openModal(personModal, person || null);
+        }
+        if (del && isAdmin) {
+          const id = del.dataset.id;
+          deletePersonFromTable(id);
+        }
+      });
+
+      [monthFilter, sectorFilter, nameSearch].forEach(i => i.addEventListener('input', applyFilters));
+
+      prevMonthBtn.addEventListener('click', () => {
+        window._calendarMonth = (typeof window._calendarMonth === 'number') ? window._calendarMonth - 1 : new Date().getMonth() - 1;
+        renderCalendar();
+      });
+      nextMonthBtn.addEventListener('click', () => {
+        window._calendarMonth = (typeof window._calendarMonth === 'number') ? window._calendarMonth + 1 : new Date().getMonth() + 1;
+        renderCalendar();
+      });
+      todayBtn.addEventListener('click', () => { window._calendarMonth = new Date().getMonth(); renderCalendar(); });
+
+      csvFileInput.addEventListener('change', handleCsvImport);
+      pasteDataBtn.addEventListener('click', handlePasteImport);
+
+      // Start
+      initFirebase();
+      // set month filter to current month
+      monthFilter.value = String(new Date().getMonth() + 1);
+    });
+  </script>
 </body>
 </html>
+
