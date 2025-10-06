@@ -17,11 +17,11 @@
       --eletro-blue: #003366;
       --eletro-teal: #009a74;
       --muted: #6b7280;
-      --bg-page: #fff;
+      --bg-page: #f8fafc; /* Fundo um pouco mais suave */
       --card-bg: #fff;
-      --soft-border: #e6eef6;
-      --shadow-1: 0 6px 18px rgba(11, 22, 39, 0.06);
-      --radius: 10px;
+      --soft-border: #e2e8f0;
+      --shadow-1: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --radius: 12px;
     }
 
     html,
@@ -56,7 +56,7 @@
       align-items: center
     }
 
-    svg {
+    svg.logo-icon {
       width: 56px;
       height: 56px;
       border-radius: 8px;
@@ -86,7 +86,13 @@
       border-radius: 8px;
       color: var(--muted);
       font-weight: 600;
-      cursor: pointer
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+    
+    .tab-btn:hover {
+        background-color: #f1f5f9;
+        color: var(--eletro-blue);
     }
 
     .tab-btn.active {
@@ -106,19 +112,17 @@
       border: 1px solid var(--soft-border)
     }
 
-    .rounded-lg {
-      border-radius: 12px
-    }
-
     table {
       border-collapse: collapse;
       width: 100%
     }
 
     thead th {
-      background: rgba(6, 34, 63, 0.03);
+      background: #f8fafc;
       padding: 14px;
-      text-align: left
+      text-align: left;
+      font-size: 14px;
+      color: #475569;
     }
 
     .admin-only {
@@ -145,12 +149,13 @@
       position: fixed;
       right: 20px;
       bottom: 20px;
-      padding: 10px 14px;
+      padding: 12px 16px;
       border-radius: 8px;
       color: white;
       opacity: 0;
       transform: translateY(10px);
-      transition: all .25s ease
+      transition: all .25s ease;
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     }
   </style>
 </head>
@@ -159,7 +164,7 @@
   <div class="container">
     <header>
       <div class="title-group">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-5.197-5.975M15 10a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
         <div>
@@ -217,14 +222,18 @@
         </div>
       </div>
       <div id="chart-panel" class="tab-panel hidden admin-only">
-        <div class="bg-white p-4 rounded-lg">
-          <h2 style="margin:0 0 12px 0">Análises</h2>
-          <div style="display:flex; gap:12px; align-items:center">
-            <div style="flex:1">
-              <canvas id="birthday-chart" style="width:100%; height:160px"></canvas>
+        <div class="bg-white p-6 rounded-lg">
+          <h2 style="margin:0 0 18px 0; font-size:20px; font-weight: 600; color: var(--eletro-blue);">Análises de Dados</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div class="lg:col-span-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div style="position: relative; height: 350px;">
+                <canvas id="birthday-chart"></canvas>
+              </div>
             </div>
-            <div style="width:220px">
-              <canvas id="sector-chart" style="width:220px; height:160px"></canvas>
+            <div class="lg:col-span-2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div style="position: relative; height: 350px;">
+                <canvas id="sector-chart"></canvas>
+              </div>
             </div>
           </div>
         </div>
@@ -254,13 +263,12 @@
 
       // --- VARIÁVEIS DE ESTADO ---
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-      let db, auth, dbCollection, dataUnsub = null, authUnsub = null;
+      let db, auth, dbCollection, dataUnsub = null;
       let birthdayData = [];
       let currentDate = new Date();
       let isAdmin = false;
       let birthdayChart = null;
       let sectorChart = null;
-
 
       // --- FUNÇÕES UTILITÁRIAS ---
       function showNotification(msg, isError = false) {
@@ -289,9 +297,7 @@
       // --- LÓGICA PRINCIPAL ---
       function initFirebase() {
         try {
-          if (!window.__firebase_config) {
-            return showNotification("Configuração do Firebase ausente.", true);
-          }
+          if (!window.__firebase_config) return showNotification("Configuração do Firebase ausente.", true);
           const app = initializeApp(window.__firebase_config);
           auth = getAuth(app);
           db = getFirestore(app);
@@ -305,85 +311,54 @@
       }
 
       async function probeFirestoreOnce() {
-        console.log("ETAPA 1: Buscando dados iniciais (getDocs)...");
         try {
           const snap = await getDocs(dbCollection);
-          console.log(`ETAPA 1: Sucesso! Encontrados ${snap.size} documentos.`);
-          const arr = snap.docs.map(doc => mapFirebaseDoc(doc.data()));
-          birthdayData = arr; 
+          birthdayData = snap.docs.map(doc => mapFirebaseDoc(doc.data()));
           renderAll();
         } catch (err) {
-          console.error("ETAPA 1: Falha ao buscar dados iniciais.", err);
+          console.error("Falha ao buscar dados iniciais.", err);
           showNotification("Não foi possível carregar os dados.", true);
         } finally {
-            attachRealtimeListener();
+          attachRealtimeListener();
         }
       }
 
       function attachRealtimeListener() {
-        console.log("ETAPA 2: Iniciando conexão em tempo real (onSnapshot)...");
         if (dataUnsub) dataUnsub();
-
         dataUnsub = onSnapshot(query(dbCollection), (snapshot) => {
-          console.log(`ETAPA 2: Snapshot recebido com ${snapshot.size} documentos. HasPendingWrites: ${snapshot.metadata.hasPendingWrites}`);
-
-          if (snapshot.metadata.hasPendingWrites) {
-             console.log("ETAPA 2: Ignorando snapshot local (hasPendingWrites).");
-             return;
-          }
-
-          if (snapshot.empty && birthdayData.length > 0) {
-            console.warn("ETAPA 2: Snapshot vazio recebido, mas mantendo dados existentes para evitar 'piscar'.");
-            return;
-          }
-
-          const arr = snapshot.docs.map(doc => mapFirebaseDoc(doc.data()));
-          birthdayData = arr; 
-          renderAll(); 
-          console.log("ETAPA 2: Dados da tela atualizados com sucesso via real-time.");
-
+          if (snapshot.metadata.hasPendingWrites) return;
+          if (snapshot.empty && birthdayData.length > 0) return;
+          birthdayData = snapshot.docs.map(doc => mapFirebaseDoc(doc.data()));
+          renderAll();
         }, (error) => {
-          console.error("ETAPA 2: ERRO na conexão em tempo real. MANTENDO DADOS EM CACHE.", error);
+          console.error("ERRO na conexão em tempo real.", error);
           showNotification("Erro de conexão. Exibindo últimos dados válidos.", true);
         });
       }
 
       function setupAuthListener() {
         onAuthStateChanged(auth, async (user) => {
-          console.log("AUTH: Status do usuário alterado.", user ? `Logado como ${user.email}` : "Deslogado");
+          isAdmin = false;
           if (user) {
             authBtn.textContent = `🔓 ${user.email}`;
             try {
               const tokenResult = await user.getIdTokenResult();
               isAdmin = tokenResult.claims.admin === true;
-              console.log("AUTH: Permissões (claims) do usuário:", tokenResult.claims);
-            } catch (err) {
-              isAdmin = false;
-              console.warn("AUTH: Falha ao obter permissões de admin.", err);
-            }
+            } catch (err) { console.warn("Falha ao obter permissões de admin.", err); }
           } else {
             authBtn.textContent = "🔒 Acesso Restrito";
-            isAdmin = false;
           }
-          console.log(`AUTH: Modo Admin está: ${isAdmin ? 'ATIVADO' : 'DESATIVADO'}.`);
           document.body.classList.toggle('admin-mode', isAdmin);
         });
       }
 
       // --- RENDERIZAÇÃO ---
       function renderAll() {
-        console.log(`RENDER: Renderizando todos os painéis com ${birthdayData.length} registros.`);
-        birthdayData.sort((a,b) => (a.month - b.month) || (a.day - b.day));
+        birthdayData.sort((a, b) => (a.month - b.month) || (a.day - b.day));
         renderToday();
         renderTable();
         renderCalendar();
-
-        // --- CORREÇÃO PRINCIPAL AQUI ---
-        // Verifica se o usuário é admin E se a aba de gráficos é a que está ativa
-        const isChartTabActive = document.querySelector('.tab-btn[data-tab="chart"]').classList.contains('active');
-        if (isAdmin && isChartTabActive) {
-           renderCharts();
-        }
+        // A chamada para renderCharts FOI REMOVIDA DAQUI para evitar que apareça em outras abas.
       }
 
       function renderToday() {
@@ -398,8 +373,8 @@
         container.className = 'bg-white p-4 rounded-lg';
         todays.forEach(p => {
           const d = document.createElement('div');
-          d.style.marginBottom = '10px';
-          d.innerHTML = `<strong>${p.name}</strong> — ${p.sector}<div style="font-size:12px;color:var(--muted)">${p.day} de ${getMonthName(p.month)}</div>`;
+          d.className = 'pb-2 mb-2 border-b border-gray-100 last:border-b-0 last:pb-0 last:mb-0';
+          d.innerHTML = `<strong class="text-gray-800">${p.name}</strong> — <span class="text-sm text-gray-600">${p.sector}</span>`;
           container.appendChild(d);
         });
         todayPanel.appendChild(container);
@@ -409,10 +384,10 @@
         tableBody.innerHTML = '';
         noResults.classList.toggle('hidden', birthdayData.length > 0);
         if (birthdayData.length === 0) return;
-
         birthdayData.forEach(p => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td style="padding:10px">${p.name}</td><td style="padding:10px">${p.sector}</td><td style="padding:10px">${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}</td><td class="admin-only-table-cell" style="padding:10px">...</td>`;
+          tr.className = 'border-b border-gray-100 last:border-b-0';
+          tr.innerHTML = `<td class="p-3">${p.name}</td><td class="p-3">${p.sector}</td><td class="p-3">${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}</td><td class="admin-only-table-cell p-3">...</td>`;
           tableBody.appendChild(tr);
         });
       }
@@ -424,19 +399,16 @@
         calendarMonthYear.textContent = `${monthNames[m]} ${y}`;
         const firstDay = new Date(y, m, 1).getDay();
         const daysInMonth = new Date(y, m + 1, 0).getDate();
-
         for (let i = 0; i < firstDay; i++) calendarGrid.insertAdjacentHTML('beforeend', '<div></div>');
-
         for (let d = 1; d <= daysInMonth; d++) {
           const hits = birthdayData.filter(p => p.day === d && p.month === (m + 1));
-          const hitCount = hits.length > 0 ? `<div style="font-size:11px;color:#0ea5a3">${hits.length} anivers.</div>` : '';
-          const dayCell = `<div><div style="padding:6px;border:1px solid #eee;border-radius:6px"><div style="font-weight:600">${d}</div>${hitCount}</div></div>`;
+          const hitCount = hits.length > 0 ? `<div class="text-xs text-teal-600 font-semibold mt-1">${hits.length} anivers.</div>` : '';
+          const dayCell = `<div class="p-2 border border-gray-200 rounded-md text-center"><div class="font-semibold">${d}</div>${hitCount}</div>`;
           calendarGrid.insertAdjacentHTML('beforeend', dayCell);
         }
       }
 
       function renderCharts() {
-        console.log("RENDER: Renderizando gráficos...");
         const monthCounts = Array(12).fill(0);
         birthdayData.forEach(p => {
           if (p.month >= 1 && p.month <= 12) monthCounts[p.month - 1]++;
@@ -447,17 +419,17 @@
           type: 'bar',
           data: {
             labels: monthNames,
-            datasets: [{
-              label: 'Aniversariantes por Mês',
-              data: monthCounts,
-              backgroundColor: 'rgba(0, 51, 102, 0.7)'
-            }]
+            datasets: [{ data: monthCounts, backgroundColor: 'rgba(0, 51, 102, 0.7)', label: 'Aniversariantes' }]
           },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, title: { display: true, text: 'Aniversariantes por Mês' } }
+          }
         });
 
         const sectorCounts = birthdayData.reduce((acc, p) => {
-          acc[p.sector] = (acc[p.sector] || 0) + 1;
+          acc[p.sector || 'Não definido'] = (acc[p.sector || 'Não definido'] || 0) + 1;
           return acc;
         }, {});
 
@@ -468,13 +440,16 @@
             labels: Object.keys(sectorCounts),
             datasets: [{
               data: Object.values(sectorCounts),
-              backgroundColor: ['#003366', '#009a74', '#f0b400', '#dc2626', '#6b7280']
+              backgroundColor: ['#003366', '#009a74', '#f0b400', '#6b7280', '#dc2626', '#3b82f6']
             }]
           },
-          options: { responsive: true, maintainAspectRatio: false }
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' }, title: { display: true, text: 'Distribuição por Setor' } }
+          }
         });
       }
-
 
       // --- EVENTOS DE UI ---
       authBtn.addEventListener('click', () => {
@@ -495,12 +470,12 @@
         tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
         ev.target.classList.add('active');
-
         const panelId = ev.target.dataset.tab + '-panel';
         document.getElementById(panelId).classList.remove('hidden');
 
+        // A mágica acontece aqui: gráficos são renderizados APENAS ao clicar na aba correta.
         if (ev.target.dataset.tab === 'chart' && isAdmin) {
-            renderCharts();
+          renderCharts();
         }
       });
       tabsContainer.querySelector('.tab-btn')?.click();
