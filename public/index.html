@@ -258,6 +258,9 @@
       let birthdayData = [];
       let currentDate = new Date();
       let isAdmin = false;
+      let birthdayChart = null;
+      let sectorChart = null;
+
 
       // --- FUNÇÕES UTILITÁRIAS ---
       function showNotification(msg, isError = false) {
@@ -306,11 +309,9 @@
         try {
           const snap = await getDocs(dbCollection);
           console.log(`ETAPA 1: Sucesso! Encontrados ${snap.size} documentos.`);
-          if (snap.size > 0) {
-            const arr = snap.docs.map(doc => mapFirebaseDoc(doc.data()));
-            birthdayData = arr; // Define os dados pela primeira vez
-            renderAll();
-          }
+          const arr = snap.docs.map(doc => mapFirebaseDoc(doc.data()));
+          birthdayData = arr; // Define os dados pela primeira vez
+          renderAll();
         } catch (err) {
           console.error("ETAPA 1: Falha ao buscar dados iniciais.", err);
           showNotification("Não foi possível carregar os dados.", true);
@@ -325,18 +326,21 @@
         if (dataUnsub) dataUnsub(); // Cancela listener anterior para evitar duplicação
 
         dataUnsub = onSnapshot(query(dbCollection), (snapshot) => {
-          console.log(`ETAPA 2: Snapshot recebido com ${snapshot.size} documentos.`);
-          
+          console.log(`ETAPA 2: Snapshot recebido com ${snapshot.size} documentos. HasPendingWrites: ${snapshot.metadata.hasPendingWrites}`);
+
           if (snapshot.metadata.hasPendingWrites) {
              console.log("ETAPA 2: Ignorando snapshot local (hasPendingWrites).");
              return;
           }
 
-          if (snapshot.empty) {
-            console.warn("ETAPA 2: Snapshot está vazio. MANTENDO OS DADOS JÁ CARREGADOS na tela para evitar o 'pisca-pisca'. Verifique as regras de segurança do Firestore se isso for inesperado.");
-            return; // NÃO limpa a tela
+          // **MELHORIA PRINCIPAL**: Evita o "pisca-pisca"
+          // Se o snapshot vier vazio, mas já tínhamos dados, não fazemos nada.
+          // Isso pode acontecer por um instante por causa de regras de segurança ou latência.
+          if (snapshot.empty && birthdayData.length > 0) {
+            console.warn("ETAPA 2: Snapshot vazio recebido, mas mantendo dados existentes para evitar 'piscar'.");
+            return;
           }
-          
+
           const arr = snapshot.docs.map(doc => mapFirebaseDoc(doc.data()));
           birthdayData = arr; // Atualiza com os novos dados
           renderAll(); // Re-renderiza tudo
@@ -379,6 +383,10 @@
         renderToday();
         renderTable();
         renderCalendar();
+
+        if (isAdmin && document.getElementById('chart-panel').offsetParent !== null) {
+           renderCharts();
+        }
       }
 
       function renderToday() {
@@ -404,7 +412,7 @@
         tableBody.innerHTML = '';
         noResults.classList.toggle('hidden', birthdayData.length > 0);
         if (birthdayData.length === 0) return;
-        
+
         birthdayData.forEach(p => {
           const tr = document.createElement('tr');
           tr.innerHTML = `<td style="padding:10px">${p.name}</td><td style="padding:10px">${p.sector}</td><td style="padding:10px">${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}</td><td class="admin-only-table-cell" style="padding:10px">...</td>`;
@@ -419,9 +427,9 @@
         calendarMonthYear.textContent = `${monthNames[m]} ${y}`;
         const firstDay = new Date(y, m, 1).getDay();
         const daysInMonth = new Date(y, m + 1, 0).getDate();
-        
+
         for (let i = 0; i < firstDay; i++) calendarGrid.insertAdjacentHTML('beforeend', '<div></div>');
-        
+
         for (let d = 1; d <= daysInMonth; d++) {
           const hits = birthdayData.filter(p => p.day === d && p.month === (m + 1));
           const hitCount = hits.length > 0 ? `<div style="font-size:11px;color:#0ea5a3">${hits.length} anivers.</div>` : '';
@@ -429,6 +437,50 @@
           calendarGrid.insertAdjacentHTML('beforeend', dayCell);
         }
       }
+
+      // **NOVO**: Função para renderizar os gráficos
+      function renderCharts() {
+        console.log("RENDER: Renderizando gráficos...");
+        // Lógica para o gráfico de aniversariantes por mês
+        const monthCounts = Array(12).fill(0);
+        birthdayData.forEach(p => {
+          if (p.month >= 1 && p.month <= 12) monthCounts[p.month - 1]++;
+        });
+
+        if (birthdayChart) birthdayChart.destroy();
+        birthdayChart = new Chart(document.getElementById('birthday-chart'), {
+          type: 'bar',
+          data: {
+            labels: monthNames,
+            datasets: [{
+              label: 'Aniversariantes por Mês',
+              data: monthCounts,
+              backgroundColor: 'rgba(0, 51, 102, 0.7)'
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+
+        // Lógica para o gráfico de setores
+        const sectorCounts = birthdayData.reduce((acc, p) => {
+          acc[p.sector] = (acc[p.sector] || 0) + 1;
+          return acc;
+        }, {});
+
+        if (sectorChart) sectorChart.destroy();
+        sectorChart = new Chart(document.getElementById('sector-chart'), {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(sectorCounts),
+            datasets: [{
+              data: Object.values(sectorCounts),
+              backgroundColor: ['#003366', '#009a74', '#f0b400', '#dc2626', '#6b7280']
+            }]
+          },
+          options: { responsive: true, maintainAspectRatio: false }
+        });
+      }
+
 
       // --- EVENTOS DE UI ---
       authBtn.addEventListener('click', () => {
@@ -449,7 +501,14 @@
         tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
         ev.target.classList.add('active');
-        document.getElementById(ev.target.dataset.tab + '-panel').classList.remove('hidden');
+
+        const panelId = ev.target.dataset.tab + '-panel';
+        document.getElementById(panelId).classList.remove('hidden');
+
+        // **MELHORIA**: Renderiza o gráfico apenas quando a aba se torna visível
+        if (ev.target.dataset.tab === 'chart' && isAdmin) {
+            renderCharts();
+        }
       });
       tabsContainer.querySelector('.tab-btn')?.click();
 
