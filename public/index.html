@@ -379,66 +379,36 @@
       // NOVO CÓDIGO INSERIDO AQUI
       function attachRealtimeListener() {
         try {
-          if (!db) {
-            console.warn("DB LISTENER: db não inicializado");
+          if (!dbCollection) {
+            console.warn("DB LISTENER: dbCollection não inicializado");
             return;
           }
-          const colRef = collection(db, 'aniversariantes');
+          const q = query(dbCollection);
+          if (dataUnsub) dataUnsub(); // unsubscribe anterior
 
-          if (dataUnsub) {
-            console.log("DB LISTENER: removendo listener anterior.");
-            dataUnsub();
-            dataUnsub = null;
-          }
-
-          console.log("DB LISTENER: registrando onSnapshot em 'aniversariantes' ...");
-          dataUnsub = onSnapshot(colRef, (snapshot) => {
+          dataUnsub = onSnapshot(q, (snapshot) => {
             console.log("DB SNAPSHOT: recebido. size=", snapshot.size);
-            // debug: mostrar ids e dados brutos
-            const docsRaw = snapshot.docs.map(d => ({
+            const arr = [];
+            snapshot.forEach(d => arr.push({
               id: d.id,
-              raw: d.data()
+              ...d.data()
             }));
-            console.log("DB SNAPSHOT raw docs:", docsRaw);
-
-            // mapear com fallback entre pt/en e garantir números
-            const arr = snapshot.docs.map(docSnap => {
-              const d = docSnap.data() || {};
-              return {
-                id: docSnap.id,
-                name: d.name || d.nome || "",
-                sector: d.sector || d.setor || "",
-                day: Number(d.day ?? d.dia) || 0,
-                month: Number(d.month ?? d.mes) || 0,
-                textoData: d.textoData || d.texto || ""
-              };
-            });
-
-            // ordenar
-            arr.sort((a, b) => (a.month - b.month) || (a.day - b.day));
-
-            if (arr.length === 0) {
-              console.warn("DB SNAPSHOT: snapshot vazio. Mantendo dados anteriores até investigação.");
-              // não sobrescrever birthdayData com [] imediatamente — guardamos o último conjunto
-              // Se você prefere sobrescrever, retire esta condição.
-              // birthdayData = [];
-              // renderAll();
-              return;
+            if (arr.length > 0) {
+              birthdayData = arr;
+              renderAll();
+            } else {
+              console.warn("DB SNAPSHOT vazio — mantendo dados anteriores");
             }
-
-            birthdayData = arr;
-            console.log("DB SNAPSHOT: dados atualizados (mapeados)", birthdayData.slice(0, 10));
-            renderAll();
           }, (error) => {
-            console.error("DB SNAPSHOT: erro:", error);
-            showNotification("Erro realtime Firestore: " + (error.message || error.code), true);
+            console.error("DB SNAPSHOT: erro (mantendo cache local):", error);
+            showNotification("Conexão em tempo real indisponível — modo leitura ativado.", true);
+            // NÃO LIMPAR birthdayData — mantém cache local
           });
         } catch (err) {
           console.error("DB LISTENER: erro ao registrar onSnapshot:", err);
         }
       }
-      
-      // NOVO CÓDIGO INSERIDO AQUI
+
       function setupAuthListener() {
         if (!auth) {
           console.warn("AUTH: auth não inicializado");
