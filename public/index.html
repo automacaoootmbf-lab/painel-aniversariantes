@@ -297,7 +297,7 @@
           db = getFirestore(app);
           dbCollection = collection(db, 'aniversariantes');
           setupAuthListener();
-          probeFirestoreOnce(); // Carga inicial
+          probeFirestoreOnce();
         } catch (err) {
           console.error("Erro Crítico ao inicializar Firebase:", err);
           showNotification("Erro fatal na inicialização (ver console).", true);
@@ -310,20 +310,19 @@
           const snap = await getDocs(dbCollection);
           console.log(`ETAPA 1: Sucesso! Encontrados ${snap.size} documentos.`);
           const arr = snap.docs.map(doc => mapFirebaseDoc(doc.data()));
-          birthdayData = arr; // Define os dados pela primeira vez
+          birthdayData = arr; 
           renderAll();
         } catch (err) {
           console.error("ETAPA 1: Falha ao buscar dados iniciais.", err);
           showNotification("Não foi possível carregar os dados.", true);
         } finally {
-            // A conexão em tempo real é iniciada independentemente do resultado
             attachRealtimeListener();
         }
       }
 
       function attachRealtimeListener() {
         console.log("ETAPA 2: Iniciando conexão em tempo real (onSnapshot)...");
-        if (dataUnsub) dataUnsub(); // Cancela listener anterior para evitar duplicação
+        if (dataUnsub) dataUnsub();
 
         dataUnsub = onSnapshot(query(dbCollection), (snapshot) => {
           console.log(`ETAPA 2: Snapshot recebido com ${snapshot.size} documentos. HasPendingWrites: ${snapshot.metadata.hasPendingWrites}`);
@@ -333,23 +332,19 @@
              return;
           }
 
-          // **MELHORIA PRINCIPAL**: Evita o "pisca-pisca"
-          // Se o snapshot vier vazio, mas já tínhamos dados, não fazemos nada.
-          // Isso pode acontecer por um instante por causa de regras de segurança ou latência.
           if (snapshot.empty && birthdayData.length > 0) {
             console.warn("ETAPA 2: Snapshot vazio recebido, mas mantendo dados existentes para evitar 'piscar'.");
             return;
           }
 
           const arr = snapshot.docs.map(doc => mapFirebaseDoc(doc.data()));
-          birthdayData = arr; // Atualiza com os novos dados
-          renderAll(); // Re-renderiza tudo
+          birthdayData = arr; 
+          renderAll(); 
           console.log("ETAPA 2: Dados da tela atualizados com sucesso via real-time.");
 
         }, (error) => {
           console.error("ETAPA 2: ERRO na conexão em tempo real. MANTENDO DADOS EM CACHE.", error);
           showNotification("Erro de conexão. Exibindo últimos dados válidos.", true);
-          // Propositalmente NÃO limpamos 'birthdayData' para manter o que já estava na tela
         });
       }
 
@@ -378,13 +373,15 @@
       // --- RENDERIZAÇÃO ---
       function renderAll() {
         console.log(`RENDER: Renderizando todos os painéis com ${birthdayData.length} registros.`);
-        // Ordena os dados antes de renderizar
         birthdayData.sort((a,b) => (a.month - b.month) || (a.day - b.day));
         renderToday();
         renderTable();
         renderCalendar();
 
-        if (isAdmin && document.getElementById('chart-panel').offsetParent !== null) {
+        // --- CORREÇÃO PRINCIPAL AQUI ---
+        // Verifica se o usuário é admin E se a aba de gráficos é a que está ativa
+        const isChartTabActive = document.querySelector('.tab-btn[data-tab="chart"]').classList.contains('active');
+        if (isAdmin && isChartTabActive) {
            renderCharts();
         }
       }
@@ -438,10 +435,8 @@
         }
       }
 
-      // **NOVO**: Função para renderizar os gráficos
       function renderCharts() {
         console.log("RENDER: Renderizando gráficos...");
-        // Lógica para o gráfico de aniversariantes por mês
         const monthCounts = Array(12).fill(0);
         birthdayData.forEach(p => {
           if (p.month >= 1 && p.month <= 12) monthCounts[p.month - 1]++;
@@ -461,7 +456,6 @@
           options: { responsive: true, maintainAspectRatio: false }
         });
 
-        // Lógica para o gráfico de setores
         const sectorCounts = birthdayData.reduce((acc, p) => {
           acc[p.sector] = (acc[p.sector] || 0) + 1;
           return acc;
@@ -505,7 +499,6 @@
         const panelId = ev.target.dataset.tab + '-panel';
         document.getElementById(panelId).classList.remove('hidden');
 
-        // **MELHORIA**: Renderiza o gráfico apenas quando a aba se torna visível
         if (ev.target.dataset.tab === 'chart' && isAdmin) {
             renderCharts();
         }
