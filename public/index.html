@@ -315,7 +315,7 @@
             function initFirebase() {
                 try {
                     if (typeof window.__firebase_config !== "undefined") {
-                        const firebaseConfig = JSON.parse(window.__firebase_config);
+                        const firebaseConfig = window.__firebase_config;
                         const app = initializeApp(firebaseConfig);
                         db = getFirestore(app); auth = getAuth(app);
                         dbCollection = collection(db, "aniversariantes");
