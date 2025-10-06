@@ -15,7 +15,7 @@
         "headers": [
           {
             "key": "Content-Security-Policy",
-            "value": "frame-ancestors 'self' https://eletrobras.sharepoint.com https://*.sharepoint.com;"
+            "value": "frame-ancestors 'self' https://eletrobras.sharepoint.com https://eletrobras.sharepoint.com/sites/OOTM-TransmissoMinaseVitria"
           }
         ]
       }
