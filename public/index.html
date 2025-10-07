@@ -17,7 +17,7 @@
       --eletro-blue: #003366;
       --eletro-teal: #009a74;
       --muted: #6b7280;
-      --bg-page: #f8fafc; /* Fundo um pouco mais suave */
+      --bg-page: #f8fafc;
       --card-bg: #fff;
       --soft-border: #e2e8f0;
       --shadow-1: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
@@ -89,10 +89,10 @@
       cursor: pointer;
       transition: all 0.2s ease-in-out;
     }
-    
+
     .tab-btn:hover {
-        background-color: #f1f5f9;
-        color: var(--eletro-blue);
+      background-color: #f1f5f9;
+      color: var(--eletro-blue);
     }
 
     .tab-btn.active {
@@ -125,25 +125,11 @@
       color: #475569;
     }
 
-    .admin-only {
-      display: none !important
-    }
-
-    body.admin-mode .admin-only {
-      display: block !important
-    }
-
-    .admin-only-table-cell {
-      display: none !important
-    }
-
-    body.admin-mode .admin-only-table-cell {
-      display: table-cell !important
-    }
-
-    .hidden {
-      display: none !important
-    }
+    .admin-only { display: none !important }
+    body.admin-mode .admin-only { display: block !important }
+    .admin-only-table-cell { display: none !important }
+    body.admin-mode .admin-only-table-cell { display: table-cell !important }
+    .hidden { display: none !important }
 
     #notification-toast {
       position: fixed;
@@ -156,6 +142,37 @@
       transform: translateY(10px);
       transition: all .25s ease;
       box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
+    
+    /* ===== ESTILOS DA ANIMAÇÃO DE BALÕES ===== */
+    .balloon-container {
+      position: relative;
+      overflow: hidden; /* Mude para hidden para conter os balões no início */
+      pointer-events: none;
+    }
+
+    .balloon {
+      position: absolute;
+      bottom: -50px; /* Começa de baixo para um efeito mais suave */
+      width: 30px;
+      height: 40px;
+      background: #ff5e57;
+      border-radius: 50%;
+      opacity: 0.9;
+      animation: rise 4s ease-in-out infinite;
+    }
+    .balloon::after {
+        content: '';
+        position: absolute;
+        border: 2px solid transparent;
+        border-bottom: 7px solid #ff5e57;
+        bottom: -6px;
+        left: calc(50% - 2px);
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(0) rotate(0deg); }
+      100% { transform: translateY(-500px) rotate(720deg); opacity: 0; }
     }
   </style>
 </head>
@@ -185,7 +202,8 @@
     </div>
 
     <main id="tab-panels-container">
-      <div id="today-panel" class="tab-panel"></div>
+      <div id="today-panel" class="tab-panel balloon-container"></div>
+      
       <div id="calendar-panel" class="tab-panel hidden">
         <div class="bg-white p-4 rounded-lg">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
@@ -249,7 +267,6 @@
     import { getFirestore, collection, query, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', () => {
-      // --- ELEMENTOS DO DOM ---
       const authBtn = document.getElementById('auth-btn');
       const tabsContainer = document.getElementById('tabs-container');
       const todayPanel = document.getElementById('today-panel');
@@ -261,7 +278,6 @@
       const noResults = document.getElementById('no-results');
       const notificationToast = document.getElementById('notification-toast');
 
-      // --- VARIÁVEIS DE ESTADO ---
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
       let db, auth, dbCollection, dataUnsub = null;
       let birthdayData = [];
@@ -270,7 +286,6 @@
       let birthdayChart = null;
       let sectorChart = null;
 
-      // --- FUNÇÕES UTILITÁRIAS ---
       function showNotification(msg, isError = false) {
         notificationToast.textContent = msg;
         notificationToast.style.background = isError ? '#dc2626' : '#059669';
@@ -281,9 +296,20 @@
           notificationToast.style.transform = 'translateY(10px)';
         }, 3500);
       }
-
-      function getMonthName(monthIndex) {
-        return (monthIndex >= 1 && monthIndex <= 12) ? monthNames[monthIndex - 1] : 'Mês Desconhecido';
+      
+      // ===== FUNÇÃO PARA CRIAR OS BALÕES =====
+      function createBalloons(count) {
+          const colors = ['#003366', '#009a74', '#f0b400', '#dc2626', '#3b82f6'];
+          for(let i = 0; i < count * 2 && i < 10; i++) { // Limite de balões
+              const balloon = document.createElement('div');
+              balloon.className = 'balloon';
+              balloon.style.left = `${Math.random() * 95}%`;
+              balloon.style.animationDelay = `${Math.random() * 2}s`;
+              balloon.style.backgroundColor = colors[i % colors.length];
+              todayPanel.appendChild(balloon);
+              // Remove o balão depois da animação para não sobrecarregar
+              setTimeout(() => balloon.remove(), 4000);
+          }
       }
 
       const mapFirebaseDoc = (d) => ({
@@ -294,7 +320,6 @@
         month: Number(d.month ?? d.mes) || 0,
       });
 
-      // --- LÓGICA PRINCIPAL ---
       function initFirebase() {
         try {
           if (!window.__firebase_config) return showNotification("Configuração do Firebase ausente.", true);
@@ -305,8 +330,7 @@
           setupAuthListener();
           probeFirestoreOnce();
         } catch (err) {
-          console.error("Erro Crítico ao inicializar Firebase:", err);
-          showNotification("Erro fatal na inicialização (ver console).", true);
+          showNotification("Erro fatal na inicialização.", true);
         }
       }
 
@@ -316,7 +340,6 @@
           birthdayData = snap.docs.map(doc => mapFirebaseDoc(doc.data()));
           renderAll();
         } catch (err) {
-          console.error("Falha ao buscar dados iniciais.", err);
           showNotification("Não foi possível carregar os dados.", true);
         } finally {
           attachRealtimeListener();
@@ -331,8 +354,7 @@
           birthdayData = snapshot.docs.map(doc => mapFirebaseDoc(doc.data()));
           renderAll();
         }, (error) => {
-          console.error("ERRO na conexão em tempo real.", error);
-          showNotification("Erro de conexão. Exibindo últimos dados válidos.", true);
+          showNotification("Erro de conexão. Exibindo últimos dados.", true);
         });
       }
 
@@ -344,7 +366,7 @@
             try {
               const tokenResult = await user.getIdTokenResult();
               isAdmin = tokenResult.claims.admin === true;
-            } catch (err) { console.warn("Falha ao obter permissões de admin.", err); }
+            } catch (err) {}
           } else {
             authBtn.textContent = "🔒 Acesso Restrito";
           }
@@ -352,31 +374,33 @@
         });
       }
 
-      // --- RENDERIZAÇÃO ---
       function renderAll() {
         birthdayData.sort((a, b) => (a.month - b.month) || (a.day - b.day));
         renderToday();
         renderTable();
         renderCalendar();
-        // A chamada para renderCharts FOI REMOVIDA DAQUI para evitar que apareça em outras abas.
       }
 
       function renderToday() {
         todayPanel.innerHTML = '';
         const now = new Date();
         const todays = birthdayData.filter(p => p.day === now.getDate() && p.month === (now.getMonth() + 1));
-        if (todays.length === 0) {
-          todayPanel.innerHTML = `<div class="bg-white p-4 rounded-lg">Nenhum aniversariante hoje.</div>`;
-          return;
-        }
+        
         const container = document.createElement('div');
         container.className = 'bg-white p-4 rounded-lg';
-        todays.forEach(p => {
-          const d = document.createElement('div');
-          d.className = 'pb-2 mb-2 border-b border-gray-100 last:border-b-0 last:pb-0 last:mb-0';
-          d.innerHTML = `<strong class="text-gray-800">${p.name}</strong> — <span class="text-sm text-gray-600">${p.sector}</span>`;
-          container.appendChild(d);
-        });
+
+        if (todays.length === 0) {
+          container.innerHTML = 'Nenhum aniversariante hoje.';
+        } else {
+          todays.forEach(p => {
+            const d = document.createElement('div');
+            d.className = 'pb-2 mb-2 border-b border-gray-100 last:border-b-0 last:pb-0 last:mb-0';
+            d.innerHTML = `<strong class="text-gray-800">${p.name}</strong> — <span class="text-sm text-gray-600">${p.sector}</span>`;
+            container.appendChild(d);
+          });
+          // Chama a animação se houver aniversariantes
+          createBalloons(todays.length);
+        }
         todayPanel.appendChild(container);
       }
 
@@ -413,45 +437,22 @@
         birthdayData.forEach(p => {
           if (p.month >= 1 && p.month <= 12) monthCounts[p.month - 1]++;
         });
-
         if (birthdayChart) birthdayChart.destroy();
         birthdayChart = new Chart(document.getElementById('birthday-chart'), {
-          type: 'bar',
-          data: {
-            labels: monthNames,
-            datasets: [{ data: monthCounts, backgroundColor: 'rgba(0, 51, 102, 0.7)', label: 'Aniversariantes' }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false }, title: { display: true, text: 'Aniversariantes por Mês' } }
-          }
+          type: 'bar', data: { labels: monthNames, datasets: [{ data: monthCounts, backgroundColor: 'rgba(0, 51, 102, 0.7)', label: 'Aniversariantes' }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: 'Aniversariantes por Mês' } } }
         });
-
         const sectorCounts = birthdayData.reduce((acc, p) => {
           acc[p.sector || 'Não definido'] = (acc[p.sector || 'Não definido'] || 0) + 1;
           return acc;
         }, {});
-
         if (sectorChart) sectorChart.destroy();
         sectorChart = new Chart(document.getElementById('sector-chart'), {
-          type: 'doughnut',
-          data: {
-            labels: Object.keys(sectorCounts),
-            datasets: [{
-              data: Object.values(sectorCounts),
-              backgroundColor: ['#003366', '#009a74', '#f0b400', '#6b7280', '#dc2626', '#3b82f6']
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' }, title: { display: true, text: 'Distribuição por Setor' } }
-          }
+          type: 'doughnut', data: { labels: Object.keys(sectorCounts), datasets: [{ data: Object.values(sectorCounts), backgroundColor: ['#003366', '#009a74', '#f0b400', '#6b7280', '#dc2626', '#3b82f6'] }] },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Distribuição por Setor' } } }
         });
       }
 
-      // --- EVENTOS DE UI ---
       authBtn.addEventListener('click', () => {
         if (auth.currentUser) {
           if (confirm("Sair da conta?")) signOut(auth);
@@ -472,8 +473,6 @@
         ev.target.classList.add('active');
         const panelId = ev.target.dataset.tab + '-panel';
         document.getElementById(panelId).classList.remove('hidden');
-
-        // A mágica acontece aqui: gráficos são renderizados APENAS ao clicar na aba correta.
         if (ev.target.dataset.tab === 'chart' && isAdmin) {
           renderCharts();
         }
