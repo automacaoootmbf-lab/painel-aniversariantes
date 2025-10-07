@@ -38,6 +38,8 @@
       max-width: 1200px;
       margin: 0 auto;
       padding: 28px 20px;
+      position: relative; /* Adicionado para garantir o contexto de empilhamento */
+      z-index: 10;
     }
 
     header {
@@ -101,10 +103,7 @@
       color: var(--eletro-blue)
     }
 
-    .tab-panel {
-      margin-top: 12px
-    }
-
+    .tab-panel { margin-top: 12px }
     .bg-white {
       background: var(--card-bg);
       border-radius: var(--radius);
@@ -112,11 +111,7 @@
       border: 1px solid var(--soft-border)
     }
 
-    table {
-      border-collapse: collapse;
-      width: 100%
-    }
-
+    table { border-collapse: collapse; width: 100% }
     thead th {
       background: #f8fafc;
       padding: 14px;
@@ -142,42 +137,52 @@
       transform: translateY(10px);
       transition: all .25s ease;
       box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+      z-index: 1000000; /* Z-index alto para a notificação */
     }
-    
-    /* ===== ESTILOS DA ANIMAÇÃO DE BALÕES ===== */
-    .balloon-container {
-      position: relative;
-      overflow: hidden; /* Mude para hidden para conter os balões no início */
+
+    /* ===== ANIMAÇÃO DE BALÕES EM TELA CHEIA (CORRIGIDO PARA SHAREPOINT) ===== */
+    #fullscreen-celebration {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       pointer-events: none;
+      overflow: hidden;
+      z-index: 999999; /* Z-index muito alto para sobrepor a UI do SharePoint */
     }
 
     .balloon {
       position: absolute;
-      bottom: -50px; /* Começa de baixo para um efeito mais suave */
-      width: 30px;
-      height: 40px;
-      background: #ff5e57;
-      border-radius: 50%;
-      opacity: 0.9;
-      animation: rise 4s ease-in-out infinite;
+      bottom: -100px;
+      width: 60px;
+      height: 75px;
+      border-radius: 50% 50% 40% 40%;
+      opacity: 0.8;
+      animation: rise 5s linear forwards;
     }
+
     .balloon::after {
         content: '';
         position: absolute;
-        border: 2px solid transparent;
-        border-bottom: 7px solid #ff5e57;
-        bottom: -6px;
-        left: calc(50% - 2px);
+        border-style: solid;
+        border-width: 0 7px 12px 7px;
+        border-color: transparent transparent inherit transparent;
+        bottom: -10px;
+        left: calc(50% - 7px);
     }
 
     @keyframes rise {
-      0% { transform: translateY(0) rotate(0deg); }
-      100% { transform: translateY(-500px) rotate(720deg); opacity: 0; }
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-120vh); }
     }
   </style>
 </head>
 
-<body class="text-gray-800">
+<body>
+
+  <div id="fullscreen-celebration"></div>
+
   <div class="container">
     <header>
       <div class="title-group">
@@ -202,7 +207,7 @@
     </div>
 
     <main id="tab-panels-container">
-      <div id="today-panel" class="tab-panel balloon-container"></div>
+      <div id="today-panel" class="tab-panel"></div>
       
       <div id="calendar-panel" class="tab-panel hidden">
         <div class="bg-white p-4 rounded-lg">
@@ -277,6 +282,7 @@
       const tableBody = document.getElementById('birthday-table-body');
       const noResults = document.getElementById('no-results');
       const notificationToast = document.getElementById('notification-toast');
+      const celebrationContainer = document.getElementById('fullscreen-celebration');
 
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
       let db, auth, dbCollection, dataUnsub = null;
@@ -297,18 +303,21 @@
         }, 3500);
       }
       
-      // ===== FUNÇÃO PARA CRIAR OS BALÕES =====
       function createBalloons(count) {
-          const colors = ['#003366', '#009a74', '#f0b400', '#dc2626', '#3b82f6'];
-          for(let i = 0; i < count * 2 && i < 10; i++) { // Limite de balões
+          const colors = ['#003366', '#009a74', '#f0b400', '#dc2626', '#3b82f6', '#f43f5e', '#ef4444'];
+          const balloonCount = Math.min(count * 3, 15);
+          for(let i = 0; i < balloonCount; i++) {
               const balloon = document.createElement('div');
               balloon.className = 'balloon';
-              balloon.style.left = `${Math.random() * 95}%`;
+              balloon.style.left = `${Math.random() * 98}%`;
               balloon.style.animationDelay = `${Math.random() * 2}s`;
-              balloon.style.backgroundColor = colors[i % colors.length];
-              todayPanel.appendChild(balloon);
-              // Remove o balão depois da animação para não sobrecarregar
-              setTimeout(() => balloon.remove(), 4000);
+              const color = colors[i % colors.length];
+              balloon.style.backgroundColor = color;
+              balloon.style.borderColor = color;
+              
+              celebrationContainer.appendChild(balloon);
+              
+              setTimeout(() => balloon.remove(), 5000);
           }
       }
 
@@ -398,8 +407,10 @@
             d.innerHTML = `<strong class="text-gray-800">${p.name}</strong> — <span class="text-sm text-gray-600">${p.sector}</span>`;
             container.appendChild(d);
           });
-          // Chama a animação se houver aniversariantes
-          createBalloons(todays.length);
+          if (!window.celebratedToday) {
+            createBalloons(todays.length);
+            window.celebratedToday = true;
+          }
         }
         todayPanel.appendChild(container);
       }
