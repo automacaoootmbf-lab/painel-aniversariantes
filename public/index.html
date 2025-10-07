@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class=""> <head>
+<html lang="pt-BR" class="">
+<head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Painel de Aniversariantes</title>
@@ -234,6 +235,45 @@
 
     canvas#confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
+    /* Balões */
+    .balloon {
+      position: absolute;
+      bottom: -100px; /* Começa abaixo da tela */
+      width: 60px;
+      height: 80px;
+      background-color: #ff69b4; /* Cor padrão */
+      border-radius: 75% 75% 70% 70%;
+      opacity: 0.8;
+      animation: rise 10s ease-in forwards; /* Animação mais suave e longa */
+      z-index: 1000;
+    }
+
+    .balloon::before {
+      content: '';
+      position: absolute;
+      width: 1px;
+      height: 40px; /* Comprimento da cordinha */
+      background-color: rgba(0, 0, 0, 0.3);
+      bottom: -40px; /* Posição da cordinha */
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .balloon::after {
+      content: '';
+      position: absolute;
+      border-style: solid;
+      border-width: 0 7px 12px 7px;
+      border-color: transparent transparent inherit transparent; /* Usa a cor de fundo do balão */
+      bottom: -10px;
+      left: calc(50% - 7px);
+      transform: rotate(180deg); /* Ponta para cima */
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(0) scale(0.8); opacity: 0.5; }
+      100% { transform: translateY(-120vh) scale(1.2); opacity: 0; }
+    }
   </style>
 </head>
 
@@ -350,6 +390,7 @@
       const notificationToast = document.getElementById('notification-toast');
       const themeToggleBtn = document.getElementById('theme-toggle-btn');
       const confettiCanvas = document.getElementById('confetti-canvas');
+      const celebrationContainer = document.getElementById('fullscreen-celebration'); // Adicionado
       const confettiCannon = confetti.create(confettiCanvas, { resize: true });
 
       const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -395,10 +436,38 @@
         return avatar;
       };
 
+      const createBalloons = () => {
+        const colors = ['#FF6F61', '#6B5B95', '#88B04B', '#F7CAC9', '#92A8D1', '#FFD700', '#C70039']; // Cores vibrantes
+        const numBalloons = 15 + Math.floor(Math.random() * 6); // Entre 15 e 20 balões
+
+        for (let i = 0; i < numBalloons; i++) {
+          const balloon = document.createElement('div');
+          balloon.className = 'balloon';
+          balloon.style.left = `${Math.random() * 90}%`; // Posição horizontal aleatória
+          balloon.style.animationDuration = `${7 + Math.random() * 6}s`; // Duração da animação entre 7 e 13 segundos
+          balloon.style.animationDelay = `${Math.random() * 2}s`; // Delay inicial para escalonar
+
+          const color = colors[Math.floor(Math.random() * colors.length)];
+          balloon.style.backgroundColor = color;
+          balloon.style.setProperty('--balloon-color', color); // Para a cordinha herdar a cor
+
+          celebrationContainer.appendChild(balloon);
+
+          // Remove o balão após a animação para evitar acúmulo no DOM
+          balloon.addEventListener('animationend', () => {
+            balloon.remove();
+          });
+        }
+      };
+
       const triggerCelebration = () => {
+        // Dispara confetes primeiro
         confettiCannon({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
         setTimeout(() => confettiCannon({ particleCount: 50, angle: 60, spread: 55, origin: { x: 0 } }), 200);
         setTimeout(() => confettiCannon({ particleCount: 50, angle: 120, spread: 55, origin: { x: 1 } }), 200);
+        
+        // Em seguida, dispara os balões após um pequeno atraso
+        setTimeout(createBalloons, 500); // 0.5 segundos depois dos confetes
       };
 
       const mapFirebaseDoc = (doc) => ({
