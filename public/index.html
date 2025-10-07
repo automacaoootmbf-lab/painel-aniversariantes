@@ -60,7 +60,6 @@
     h1 { font-size: 24px; margin: 0; color: var(--eletro-blue); font-weight: 700; }
     html.dark h1 { color: #5eead4; }
     
-    /* === TABS COM UNDERLINE ANIMADO === */
     #tabs-container {
       position: relative;
       display: flex; gap: 16px; flex-wrap: wrap;
@@ -85,7 +84,6 @@
     }
     html.dark #tab-underline { background-color: var(--eletro-teal); }
 
-
     .tab-panel { margin-top: 24px }
     .bg-card {
       background: var(--card-bg);
@@ -95,24 +93,18 @@
       transition: background-color 0.3s, border-color 0.3s, transform 0.2s, box-shadow 0.2s;
     }
     
-    /* === CARD COM PROFUNDIDADE E FOCO === */
     .birthday-card {
         transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
     }
     .birthday-card:hover {
-        transform: translateY(-6px) scale(1.01);
+        transform: translateY(-6px);
         box-shadow: var(--shadow-lg);
-    }
-    .birthday-card:focus-visible {
-        outline: 2px solid var(--eletro-blue);
-        outline-offset: 2px;
     }
 
     .admin-only { display: none !important }
     body.admin-mode .admin-only { display: block !important }
     .hidden { display: none !important }
 
-    /* Componentes UI */
     .btn {
         padding: 8px 14px; border-radius: 8px; font-weight: 600;
         cursor: pointer; transition: all 0.2s ease;
@@ -122,17 +114,7 @@
     html.dark .btn-primary { background: var(--eletro-teal); color: var(--eletro-blue); }
     .btn-secondary { background: var(--soft-border); color: var(--text-main); border:0; }
     .btn-icon { background: transparent; border: 0; color: var(--text-muted); padding: 6px; }
-    .btn-icon:hover { color: var(--eletro-blue); }
-    html.dark .btn-icon:hover { color: var(--eletro-teal); }
 
-    .form-input {
-        background: var(--card-bg);
-        border: 1px solid var(--soft-border);
-        border-radius: 8px; padding: 8px 12px;
-        color: var(--text-main); width: 100%;
-    }
-
-    /* Avatar */
     .avatar {
         width: 64px; height: 64px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
@@ -142,24 +124,19 @@
     }
     .avatar-sm { width: 40px; height: 40px; font-size: 16px; box-shadow: 0 0 0 2px var(--card-bg); }
 
-    /* Skeleton Loader */
     .skeleton { animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; background-color: var(--soft-border); }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
     
-    /* Animações de Celebração */
     #celebration-canvas {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       pointer-events: none; z-index: 999999;
     }
 
-    /* Modal */
     .modal-backdrop {
         position: fixed; inset: 0; background-color: rgba(0,0,0,0.5);
         display: flex; align-items: center; justify-content: center; z-index: 1000;
     }
-    .modal-content {
-        width: 90%; max-width: 420px;
-    }
+    .modal-content { width: 90%; max-width: 420px; }
 
   </style>
 </head>
@@ -197,20 +174,18 @@
     <main id="tab-panels-container">
       <div id="today-panel" class="tab-panel">
         <div id="today-skeleton" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="bg-card p-6 rounded-lg skeleton h-[110px]"></div>
-            <div class="bg-card p-6 rounded-lg skeleton h-[110px]"></div>
+            <div class="bg-card p-6 rounded-lg skeleton h-[110px]"></div><div class="bg-card p-6 rounded-lg skeleton h-[110px]"></div>
         </div>
         <div id="today-content" class="hidden"></div>
       </div>
       
       <div id="list-panel" class="tab-panel hidden">
-        <div class="bg-card p-4 rounded-lg">
-            <div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-4">
-                <div class="w-full md:w-1/2 lg:w-1/3"><input type="text" id="search-input" placeholder="Pesquisar por nome..." class="form-input"></div>
+        <div class="bg-card p-4 rounded-lg"><div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-4">
+                <div class="w-full md:w-1/2 lg:w-1/3"><input type="text" id="search-input" placeholder="Pesquisar por nome..." class="form-input" style="background:var(--bg-page); border-color:var(--soft-border);"></div>
                 <button id="add-person-btn" class="btn btn-primary admin-only">+ Adicionar</button>
             </div>
             <div class="max-h-[60vh] overflow-auto">
-                <table class="w-full text-left"><thead class="sticky top-0"><tr id="list-header"><th>Nome</th><th>Setor</th><th>Data</th><th class="admin-only">Ações</th></tr></thead>
+                <table class="w-full text-left"><thead class="sticky top-0"><tr><th>Nome</th><th>Setor</th><th>Data</th><th class="admin-only">Ações</th></tr></thead>
                     <tbody id="birthday-table-body"></tbody>
                 </table>
                 <div id="no-results" class="hidden p-6 text-center text-muted">Nenhum aniversariante encontrado.</div>
@@ -220,8 +195,7 @@
 
       <div id="calendar-panel" class="tab-panel hidden">
         <div class="bg-card p-4 rounded-lg">
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-bold">Calendário</h2>
+          <div class="flex justify-between items-center mb-4"><h2 class="text-lg font-bold">Calendário</h2>
             <div>
               <button id="prev-month-btn" class="btn-icon">◀</button>
               <span id="calendar-month-year" class="font-semibold mx-2"></span>
@@ -233,8 +207,7 @@
       </div>
 
       <div id="chart-panel" class="tab-panel hidden admin-only">
-        <div class="bg-card p-6 rounded-lg">
-          <h2 class="text-xl font-bold mb-4">Análises de Dados</h2>
+        <div class="bg-card p-6 rounded-lg"><h2 class="text-xl font-bold mb-4">Análises de Dados</h2>
           <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
             <div class="lg:col-span-3 h-[350px]"><canvas id="birthday-chart"></canvas></div>
             <div class="lg:col-span-2 h-[350px]"><canvas id="sector-chart"></canvas></div>
@@ -249,8 +222,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, query, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', () => {
         const elements = {
@@ -277,14 +250,7 @@
                 if (names.length === 1 && names[0].length > 1) return names[0].substring(0, 2);
                 return names.length > 0 ? names[0][0] : '?';
             },
-            getColorForName: (name) => avatarColors[(name || '').length % avatarColors.length],
-            debounce: (func, delay) => {
-                let timeout;
-                return function(...args) {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => func.apply(this, args), delay);
-                };
-            }
+            getColorForName: (name) => avatarColors[(name || '').length % avatarColors.length]
         };
 
         const themeManager = {
@@ -304,7 +270,7 @@
                 themeManager.apply(storedTheme === 'dark' || (!storedTheme && prefersDark));
             }
         };
-
+        
         const confetti = {
             particles: [],
             isReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -313,12 +279,9 @@
                 this.particles = [];
                 for (let i = 0; i < 150; i++) {
                     this.particles.push({
-                        x: Math.random() * elements.celebrationCanvas.width,
-                        y: -20 - Math.random() * 50,
-                        size: Math.random() * 8 + 4,
-                        color: avatarColors[i % avatarColors.length],
-                        speed: Math.random() * 3 + 2,
-                        angle: Math.random() * 360
+                        x: Math.random() * elements.celebrationCanvas.width, y: -20 - Math.random() * 50,
+                        size: Math.random() * 8 + 4, color: avatarColors[i % avatarColors.length],
+                        speed: Math.random() * 3 + 2, angle: Math.random() * 360
                     });
                 }
             },
@@ -327,11 +290,9 @@
                 const ctx = elements.celebrationCanvas.getContext('2d');
                 ctx.clearRect(0, 0, elements.celebrationCanvas.width, elements.celebrationCanvas.height);
                 this.particles.forEach(p => {
-                    p.y += p.speed;
-                    p.angle += p.speed / 2;
+                    p.y += p.speed; p.angle += p.speed / 2;
                     ctx.fillStyle = p.color;
-                    ctx.save();
-                    ctx.translate(p.x, p.y);
+                    ctx.save(); ctx.translate(p.x, p.y);
                     ctx.rotate(p.angle * Math.PI / 180);
                     ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
                     ctx.restore();
@@ -350,58 +311,12 @@
             }
         };
 
-        const toastManager = {
-            undoTimeout: null,
-            show: ({ message, actionText, onAction }) => {
-                const toast = document.createElement('div');
-                toast.className = 'bg-card p-4 rounded-lg shadow-lg flex items-center gap-4';
-                toast.innerHTML = `<span>${message}</span>`;
-                if (actionText && onAction) {
-                    const button = document.createElement('button');
-                    button.className = 'btn btn-secondary';
-                    button.textContent = actionText;
-                    button.onclick = () => { onAction(); toast.remove(); clearTimeout(this.undoTimeout); };
-                    toast.appendChild(button);
-                }
-                elements.toastContainer.appendChild(toast);
-                this.undoTimeout = setTimeout(() => toast.remove(), 5000);
-            }
-        };
-
-        const modalManager = {
-            show: (person) => {
-                const templates = ["Parabéns e muitas felicidades!", "Feliz aniversário! Tudo de bom hoje e sempre.", "Muitos anos de vida!"];
-                elements.modalContainer.innerHTML = `
-                    <div class="modal-content bg-card p-6 rounded-lg">
-                        <h2 class="text-xl font-bold mb-2">Parabenizar ${person.name}</h2>
-                        <p class="text-muted mb-4">Escolha uma mensagem rápida para enviar:</p>
-                        <div class="space-y-2 mb-4">
-                            ${templates.map(t => `<div class="p-3 bg-page rounded-lg cursor-pointer hover:bg-soft-border" data-template="${t}">${t}</div>`).join('')}
-                        </div>
-                        <div class="flex justify-end gap-2">
-                            <button class="btn btn-secondary" id="modal-close">Cancelar</button>
-                        </div>
-                    </div>`;
-                elements.modalContainer.classList.remove('hidden');
-                elements.modalContainer.querySelector('#modal-close').onclick = modalManager.hide;
-                elements.modalContainer.querySelectorAll('[data-template]').forEach(el => {
-                    el.onclick = () => {
-                        console.log(`Mensagem "${el.dataset.template}" enviada para ${person.name}`);
-                        modalManager.hide();
-                        toastManager.show({ message: "Mensagem enviada!", actionText: "Desfazer", onAction: () => console.log('Envio desfeito.') });
-                    };
-                });
-            },
-            hide: () => elements.modalContainer.classList.add('hidden')
-        };
-        
         function renderToday() {
             const now = new Date();
             const todays = state.allBirthdays.filter(p => p.day === now.getDate() && p.month === (now.getMonth() + 1));
             elements.todaySkeleton.classList.add('hidden');
             elements.todayContent.classList.remove('hidden');
             elements.todayContent.innerHTML = '';
-
             if (todays.length === 0) {
                 elements.todayContent.innerHTML = `<div class="bg-card p-6 rounded-lg text-center text-muted">Nenhum aniversariante hoje.</div>`;
             } else {
@@ -418,12 +333,10 @@
                                 <p class="text-muted text-sm">${p.sector}</p>
                             </div>
                         </div>
-                        <button class="btn btn-primary w-full mt-auto" data-person-id="${p.id}">Parabenizar</button>`;
-                    card.querySelector('button').onclick = () => modalManager.show(p);
+                        <button class="btn btn-primary w-full mt-auto">Parabenizar</button>`;
                     grid.appendChild(card);
                 });
                 elements.todayContent.appendChild(grid);
-
                 if (!window.celebratedToday) {
                     confetti.start();
                     window.celebratedToday = true;
@@ -434,99 +347,74 @@
         function renderTable() {
             elements.tableBody.innerHTML = '';
             elements.noResults.classList.toggle('hidden', state.filteredBirthdays.length > 0);
-            
             state.filteredBirthdays.forEach(p => {
                 const tr = document.createElement('tr');
-                tr.className = 'border-b border-soft-border last:border-b-0';
+                tr.className = 'border-b last:border-b-0'
+                tr.style.borderColor = 'var(--soft-border)';
                 tr.innerHTML = `
-                    <td class="flex items-center gap-3">
+                    <td class="p-3 flex items-center gap-3">
                         <div class="avatar avatar-sm" style="background-color: ${utils.getColorForName(p.name)}">${utils.getInitials(p.name)}</div>
                         <span>${p.name}</span>
                     </td>
-                    <td>${p.sector}</td>
-                    <td>${String(p.day).padStart(2, '0')}/${String(p.month).padStart(2, '0')}</td>
-                    <td class="admin-only">...</td>`;
+                    <td class="p-3">${p.sector}</td>
+                    <td class="p-3">${String(p.day).padStart(2, '0')}/${String(p.month).padStart(2, '0')}</td>
+                    <td class="admin-only p-3">...</td>`;
                 elements.tableBody.appendChild(tr);
             });
         }
         
         function renderCalendar() {
             elements.calendarGrid.innerHTML = '';
-            const y = state.currentDate.getFullYear();
-            const m = state.currentDate.getMonth();
-            elements.calendarMonthYear.textContent = `${new Date(y, m).toLocaleString('default', { month: 'long' })} ${y}`;
+            const y = state.currentDate.getFullYear(); const m = state.currentDate.getMonth();
+            elements.calendarMonthYear.textContent = `${new Date(y, m).toLocaleString('pt-BR', { month: 'long' })} ${y}`;
             const firstDay = new Date(y, m, 1).getDay();
             const daysInMonth = new Date(y, m + 1, 0).getDate();
-            
             for (let i = 0; i < firstDay; i++) elements.calendarGrid.insertAdjacentHTML('beforeend', '<div></div>');
-            
             const monthBdays = state.allBirthdays.filter(p => p.month === m + 1);
-            const maxHits = Math.max(...Array.from({length: daysInMonth}, (_, i) => monthBdays.filter(p => p.day === i + 1).length));
-
+            const maxHits = Math.max(1, ...Array.from({length: daysInMonth}, (_, i) => monthBdays.filter(p => p.day === i + 1).length));
             for (let d = 1; d <= daysInMonth; d++) {
                 const hits = monthBdays.filter(p => p.day === d);
                 const opacity = hits.length > 0 ? 0.2 + (0.8 * hits.length / maxHits) : 0;
-                const dayCell = `<div class="p-2 rounded-md relative">
-                    <div class="absolute inset-0 bg-blue-500 rounded-md" style="opacity: ${opacity};"></div>
-                    <span class="relative font-semibold">${d}</span>
-                </div>`;
+                const dayCell = `<div class="p-2 rounded-md relative"><div class="absolute inset-0 rounded-md" style="background-color: var(--eletro-blue); opacity: ${opacity};"></div><span class="relative font-semibold">${d}</span></div>`;
                 elements.calendarGrid.insertAdjacentHTML('beforeend', dayCell);
             }
         }
 
-        function handleSearch() {
-            const searchTerm = elements.searchInput.value.toLowerCase();
-            state.filteredBirthdays = state.allBirthdays.filter(p => p.name.toLowerCase().includes(searchTerm));
-            renderTable();
-        }
-
         function updateTabUnderline(activeTab) {
+            if (!activeTab) return;
             elements.tabUnderline.style.left = `${activeTab.offsetLeft}px`;
             elements.tabUnderline.style.width = `${activeTab.offsetWidth}px`;
         }
 
-        function setupEventListeners() {
-            elements.searchInput.addEventListener('input', utils.debounce(handleSearch, 300));
-            elements.tabsContainer.addEventListener('click', (ev) => {
-                if (!ev.target.matches('.tab-btn')) return;
-                elements.tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-                ev.target.classList.add('active');
-                const panelId = ev.target.dataset.tab + '-panel';
-                document.getElementById(panelId).classList.remove('hidden');
-                updateTabUnderline(ev.target);
-                if (ev.target.dataset.tab === 'calendar') renderCalendar();
-            });
-            elements.prevMonthBtn.onclick = () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); renderCalendar(); };
-            elements.nextMonthBtn.onclick = () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); renderCalendar(); };
-        }
-
-        function init() {
+        async function init() {
             try {
                 if (!window.__firebase_config) throw new Error("Config Firebase ausente");
                 const app = initializeApp(window.__firebase_config);
                 state.auth = getAuth(app); state.db = getFirestore(app);
                 state.dbCollection = collection(state.db, 'aniversariantes');
                 
-                onSnapshot(query(state.dbCollection), (snapshot) => {
-                    state.allBirthdays = snapshot.docs.map(utils.mapFirebaseDoc);
-                    state.allBirthdays.sort((a,b) => (a.month - b.month) || (a.day - b.day));
-                    state.filteredBirthdays = [...state.allBirthdays];
-                    renderToday();
-                    renderTable();
-                });
+                themeManager.init();
                 
-                onAuthStateChanged(state.auth, async (user) => {
-                    state.isAdmin = user ? (await user.getIdTokenResult()).claims.admin === true : false;
-                    document.body.classList.toggle('admin-mode', state.isAdmin);
+                elements.tabsContainer.addEventListener('click', (ev) => {
+                    if (!ev.target.matches('.tab-btn')) return;
+                    elements.tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+                    ev.target.classList.add('active');
+                    document.getElementById(ev.target.dataset.tab + '-panel').classList.remove('hidden');
+                    updateTabUnderline(ev.target);
+                    if (ev.target.dataset.tab === 'calendar') renderCalendar();
                 });
 
-                themeManager.init();
-                setupEventListeners();
                 const initialTab = elements.tabsContainer.querySelector('.tab-btn');
                 initialTab.click();
-                updateTabUnderline(initialTab); // Set initial position
-
+                
+                onSnapshot(query(state.dbCollection), (snapshot) => {
+                    state.allBirthdays = snapshot.docs.map(utils.mapFirebaseDoc).sort((a,b) => (a.month - b.month) || (a.day - b.day));
+                    state.filteredBirthdays = [...state.allBirthdays];
+                    renderToday(); renderTable();
+                    if (document.querySelector('[data-tab="calendar"].active')) renderCalendar();
+                });
+                
             } catch (err) { console.error("Erro na inicialização:", err); }
         }
         
