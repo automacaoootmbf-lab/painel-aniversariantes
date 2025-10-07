@@ -21,7 +21,6 @@
       --bg-page: #f8fafc;
       --card-bg: #ffffff;
       --soft-border: #e2e8f0;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
       --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
       --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
       --radius: 12px;
@@ -50,8 +49,6 @@
       padding-bottom: 18px; border-bottom: 1px solid var(--soft-border); margin-bottom: 22px;
     }
 
-    .title-group { display: flex; gap: 12px; align-items: center; }
-
     svg.logo-icon {
       width: 56px; height: 56px; border-radius: 8px; padding: 6px;
       background: linear-gradient(135deg, var(--eletro-blue), var(--eletro-teal)); color: white;
@@ -61,65 +58,46 @@
     html.dark h1 { color: #5eead4; }
     
     #tabs-container {
-      position: relative;
-      display: flex; gap: 16px; flex-wrap: wrap;
+      position: relative; display: flex; gap: 16px; flex-wrap: wrap;
       border-bottom: 1px solid var(--soft-border);
     }
     .tab-btn {
-      background: transparent; border: 0;
-      padding: 10px 4px;
-      color: var(--text-muted); font-weight: 600; cursor: pointer;
-      transition: color 0.2s ease-in-out;
+      background: transparent; border: 0; padding: 10px 4px;
+      color: var(--text-muted); font-weight: 600; cursor: pointer; transition: color 0.2s ease-in-out;
     }
     .tab-btn:hover { color: var(--eletro-blue); }
     html.dark .tab-btn:hover { color: var(--eletro-teal); }
     .tab-btn.active { color: var(--eletro-blue); }
     html.dark .tab-btn.active { color: var(--eletro-teal); }
     #tab-underline {
-        position: absolute;
-        bottom: -1px;
-        height: 2px;
-        background-color: var(--eletro-blue);
-        transition: left 0.3s, width 0.3s;
+        position: absolute; bottom: -1px; height: 2px;
+        background-color: var(--eletro-blue); transition: left 0.3s, width 0.3s;
     }
     html.dark #tab-underline { background-color: var(--eletro-teal); }
 
     .tab-panel { margin-top: 24px }
     .bg-card {
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-md);
-      border: 1px solid var(--soft-border);
-      transition: background-color 0.3s, border-color 0.3s, transform 0.2s, box-shadow 0.2s;
+      background: var(--card-bg); border-radius: var(--radius);
+      box-shadow: var(--shadow-md); border: 1px solid var(--soft-border);
     }
     
-    .birthday-card {
-        transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
-    }
-    .birthday-card:hover {
-        transform: translateY(-6px);
-        box-shadow: var(--shadow-lg);
-    }
+    .birthday-card { transition: transform 0.2s ease-out, box-shadow 0.2s ease-out; }
+    .birthday-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
 
     .admin-only { display: none !important }
     body.admin-mode .admin-only { display: block !important }
     .hidden { display: none !important }
 
-    .btn {
-        padding: 8px 14px; border-radius: 8px; font-weight: 600;
-        cursor: pointer; transition: all 0.2s ease;
-    }
+    .btn { padding: 8px 14px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
     .btn-primary { background: var(--eletro-blue); color: white; border:0; }
     .btn-primary:hover { opacity: 0.9; }
     html.dark .btn-primary { background: var(--eletro-teal); color: var(--eletro-blue); }
-    .btn-secondary { background: var(--soft-border); color: var(--text-main); border:0; }
     .btn-icon { background: transparent; border: 0; color: var(--text-muted); padding: 6px; }
 
     .avatar {
         width: 64px; height: 64px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        font-weight: 600; font-size: 24px; color: white;
-        text-transform: uppercase;
+        font-weight: 600; font-size: 24px; color: white; text-transform: uppercase;
         box-shadow: 0 0 0 3px var(--card-bg);
     }
     .avatar-sm { width: 40px; height: 40px; font-size: 16px; box-shadow: 0 0 0 2px var(--card-bg); }
@@ -131,20 +109,11 @@
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       pointer-events: none; z-index: 999999;
     }
-
-    .modal-backdrop {
-        position: fixed; inset: 0; background-color: rgba(0,0,0,0.5);
-        display: flex; align-items: center; justify-content: center; z-index: 1000;
-    }
-    .modal-content { width: 90%; max-width: 420px; }
-
   </style>
 </head>
 
 <body>
-
   <canvas id="celebration-canvas"></canvas>
-
   <div class="container">
     <header>
       <div class="title-group">
@@ -155,7 +124,7 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button id="auth-btn" class="btn-icon text-sm" aria-label="Acesso Restrito">🔒</button>
+        <button id="auth-btn" class="btn-icon text-sm" aria-label="Acesso Restrito">🔒 <span id="user-email" class="text-xs"></span></button>
         <button id="dark-mode-toggle" class="btn-icon" aria-label="Alternar modo escuro">
             <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
             <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm-.707 10.607a1 1 0 011.414 0l.707-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zM1 11a1 1 0 100-2H0a1 1 0 100 2h1z"></path></svg>
@@ -172,254 +141,183 @@
     </div>
 
     <main id="tab-panels-container">
-      <div id="today-panel" class="tab-panel">
-        <div id="today-skeleton" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="bg-card p-6 rounded-lg skeleton h-[110px]"></div><div class="bg-card p-6 rounded-lg skeleton h-[110px]"></div>
-        </div>
-        <div id="today-content" class="hidden"></div>
-      </div>
-      
-      <div id="list-panel" class="tab-panel hidden">
-        <div class="bg-card p-4 rounded-lg"><div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-4">
-                <div class="w-full md:w-1/2 lg:w-1/3"><input type="text" id="search-input" placeholder="Pesquisar por nome..." class="form-input" style="background:var(--bg-page); border-color:var(--soft-border);"></div>
-                <button id="add-person-btn" class="btn btn-primary admin-only">+ Adicionar</button>
-            </div>
-            <div class="max-h-[60vh] overflow-auto">
-                <table class="w-full text-left"><thead class="sticky top-0"><tr><th>Nome</th><th>Setor</th><th>Data</th><th class="admin-only">Ações</th></tr></thead>
-                    <tbody id="birthday-table-body"></tbody>
-                </table>
-                <div id="no-results" class="hidden p-6 text-center text-muted">Nenhum aniversariante encontrado.</div>
-            </div>
-        </div>
-      </div>
-
-      <div id="calendar-panel" class="tab-panel hidden">
-        <div class="bg-card p-4 rounded-lg">
-          <div class="flex justify-between items-center mb-4"><h2 class="text-lg font-bold">Calendário</h2>
-            <div>
-              <button id="prev-month-btn" class="btn-icon">◀</button>
-              <span id="calendar-month-year" class="font-semibold mx-2"></span>
-              <button id="next-month-btn" class="btn-icon">▶</button>
-            </div>
-          </div>
-          <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center"></div>
-        </div>
-      </div>
-
-      <div id="chart-panel" class="tab-panel hidden admin-only">
-        <div class="bg-card p-6 rounded-lg"><h2 class="text-xl font-bold mb-4">Análises de Dados</h2>
-          <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-            <div class="lg:col-span-3 h-[350px]"><canvas id="birthday-chart"></canvas></div>
-            <div class="lg:col-span-2 h-[350px]"><canvas id="sector-chart"></canvas></div>
-          </div>
-        </div>
-      </div>
+      <div id="today-panel" class="tab-panel"><div id="today-skeleton" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><div class="bg-card p-6 rounded-lg skeleton h-[110px]"></div><div class="bg-card p-6 rounded-lg skeleton h-[110px]"></div></div><div id="today-content" class="hidden"></div></div>
+      <div id="list-panel" class="tab-panel hidden"><div class="bg-card p-4 rounded-lg"><div class="flex flex-col md:flex-row gap-4 justify-between items-center mb-4"><div class="w-full md:w-1/2 lg:w-1/3"><input type="text" id="search-input" placeholder="Pesquisar por nome..." class="form-input" style="background:var(--bg-page); border-color:var(--soft-border);"></div><button id="add-person-btn" class="btn btn-primary admin-only">+ Adicionar</button></div><div class="max-h-[60vh] overflow-auto"><table class="w-full text-left"><thead class="sticky top-0"><tr><th>Nome</th><th>Setor</th><th>Data</th><th class="admin-only">Ações</th></tr></thead><tbody id="birthday-table-body"></tbody></table><div id="no-results" class="hidden p-6 text-center text-muted">Nenhum aniversariante encontrado.</div></div></div></div>
+      <div id="calendar-panel" class="tab-panel hidden"><div class="bg-card p-4 rounded-lg"><div class="flex justify-between items-center mb-4"><h2 class="text-lg font-bold">Calendário</h2><div><button id="prev-month-btn" class="btn-icon">◀</button><span id="calendar-month-year" class="font-semibold mx-2"></span><button id="next-month-btn" class="btn-icon">▶</button></div></div><div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center"></div></div></div>
+      <div id="chart-panel" class="tab-panel hidden admin-only"><div class="bg-card p-6 rounded-lg"><h2 class="text-xl font-bold mb-4">Análises de Dados</h2><div class="grid grid-cols-1 lg:grid-cols-5 gap-6"><div class="lg:col-span-3 h-[350px]"><canvas id="birthday-chart"></canvas></div><div class="lg:col-span-2 h-[350px]"><canvas id="sector-chart"></canvas></div></div></div></div>
     </main>
   </div>
-
-  <div id="celebration-modal" class="modal-backdrop hidden"></div>
-  <div id="toast-container" class="fixed bottom-5 right-5 z-[1001]"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, query, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, query, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const elements = {
-            authBtn: document.getElementById('auth-btn'), tabsContainer: document.getElementById('tabs-container'),
-            tabUnderline: document.getElementById('tab-underline'), todayContent: document.getElementById('today-content'),
-            todaySkeleton: document.getElementById('today-skeleton'), tableBody: document.getElementById('birthday-table-body'),
-            noResults: document.getElementById('no-results'), searchInput: document.getElementById('search-input'),
-            darkModeToggle: document.getElementById('dark-mode-toggle'), lightIcon: document.getElementById('theme-toggle-light-icon'),
-            darkIcon: document.getElementById('theme-toggle-dark-icon'), celebrationCanvas: document.getElementById('celebration-canvas'),
-            modalContainer: document.getElementById('celebration-modal'), toastContainer: document.getElementById('toast-container'),
-            calendarGrid: document.getElementById('calendar-grid'), prevMonthBtn: document.getElementById('prev-month-btn'),
-            nextMonthBtn: document.getElementById('next-month-btn'), calendarMonthYear: document.getElementById('calendar-month-year')
-        };
-        
-        let state = { db: null, auth: null, dbCollection: null, dataUnsub: null, allBirthdays: [], filteredBirthdays: [], isAdmin: false, currentDate: new Date() };
-        const avatarColors = ['#003366', '#009a74', '#f0b400', '#dc2626', '#3b82f6', '#f43f5e', '#ef4444'];
-        
-        const utils = {
-            mapFirebaseDoc: (d) => ({ id: d.id, name: d.name || d.nome || "", sector: d.sector || d.setor || "", day: Number(d.day ?? d.dia) || 0, month: Number(d.month ?? d.mes) || 0 }),
-            getInitials: (name) => {
-                if (!name) return '?';
-                const names = name.trim().split(' ').filter(Boolean);
-                if (names.length > 1) return `${names[0][0]}${names[names.length - 1][0]}`;
-                if (names.length === 1 && names[0].length > 1) return names[0].substring(0, 2);
-                return names.length > 0 ? names[0][0] : '?';
-            },
-            getColorForName: (name) => avatarColors[(name || '').length % avatarColors.length]
-        };
+    const elements = {
+        authBtn: document.getElementById('auth-btn'), userEmail: document.getElementById('user-email'),
+        tabsContainer: document.getElementById('tabs-container'), tabUnderline: document.getElementById('tab-underline'),
+        todayContent: document.getElementById('today-content'), todaySkeleton: document.getElementById('today-skeleton'),
+        tableBody: document.getElementById('birthday-table-body'), noResults: document.getElementById('no-results'),
+        searchInput: document.getElementById('search-input'), darkModeToggle: document.getElementById('dark-mode-toggle'),
+        lightIcon: document.getElementById('theme-toggle-light-icon'), darkIcon: document.getElementById('theme-toggle-dark-icon'),
+        celebrationCanvas: document.getElementById('celebration-canvas'), calendarGrid: document.getElementById('calendar-grid'),
+        prevMonthBtn: document.getElementById('prev-month-btn'), nextMonthBtn: document.getElementById('next-month-btn'),
+        calendarMonthYear: document.getElementById('calendar-month-year')
+    };
+    
+    let state = { db: null, auth: null, allBirthdays: [], filteredBirthdays: [], isAdmin: false, currentDate: new Date() };
+    const avatarColors = ['#003366', '#009a74', '#f0b400', '#dc2626', '#3b82f6', '#f43f5e', '#ef4444'];
+    
+    const utils = {
+        mapFirebaseDoc: (d) => ({ id: d.id, name: d.name || "", sector: d.sector || "", day: Number(d.day) || 0, month: Number(d.month) || 0 }),
+        getInitials: (name) => {
+            if (!name) return '?'; const names = name.trim().split(' ').filter(Boolean);
+            if (names.length > 1) return `${names[0][0]}${names[names.length - 1][0]}`;
+            if (names.length === 1 && names[0].length > 1) return names[0].substring(0, 2);
+            return names.length > 0 ? names[0][0] : '?';
+        },
+        getColorForName: (name) => avatarColors[(name || '').length % avatarColors.length]
+    };
 
-        const themeManager = {
-            apply: (isDark) => {
-                document.documentElement.classList.toggle('dark', isDark);
-                elements.lightIcon.classList.toggle('hidden', !isDark);
-                elements.darkIcon.classList.toggle('hidden', isDark);
-            },
-            init: () => {
-                elements.darkModeToggle.addEventListener('click', () => {
-                    const isDark = !document.documentElement.classList.contains('dark');
-                    localStorage.setItem('color-theme', isDark ? 'dark' : 'light');
-                    themeManager.apply(isDark);
-                });
-                const storedTheme = localStorage.getItem('color-theme');
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                themeManager.apply(storedTheme === 'dark' || (!storedTheme && prefersDark));
-            }
-        };
-        
-        const confetti = {
-            particles: [],
-            isReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
-            createParticles: function() {
-                if (this.isReducedMotion) return;
-                this.particles = [];
-                for (let i = 0; i < 150; i++) {
-                    this.particles.push({
-                        x: Math.random() * elements.celebrationCanvas.width, y: -20 - Math.random() * 50,
-                        size: Math.random() * 8 + 4, color: avatarColors[i % avatarColors.length],
-                        speed: Math.random() * 3 + 2, angle: Math.random() * 360
-                    });
-                }
-            },
-            animate: function() {
-                if (this.isReducedMotion || this.particles.length === 0) return;
-                const ctx = elements.celebrationCanvas.getContext('2d');
-                ctx.clearRect(0, 0, elements.celebrationCanvas.width, elements.celebrationCanvas.height);
-                this.particles.forEach(p => {
-                    p.y += p.speed; p.angle += p.speed / 2;
-                    ctx.fillStyle = p.color;
-                    ctx.save(); ctx.translate(p.x, p.y);
-                    ctx.rotate(p.angle * Math.PI / 180);
-                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                    ctx.restore();
-                });
-                if (this.particles.some(p => p.y < elements.celebrationCanvas.height + 20)) {
-                    requestAnimationFrame(this.animate.bind(this));
-                } else {
-                    ctx.clearRect(0, 0, elements.celebrationCanvas.width, elements.celebrationCanvas.height);
-                }
-            },
-            start: function() {
-                elements.celebrationCanvas.width = window.innerWidth;
-                elements.celebrationCanvas.height = window.innerHeight;
-                this.createParticles();
-                this.animate();
-            }
-        };
-
-        function renderToday() {
-            const now = new Date();
-            const todays = state.allBirthdays.filter(p => p.day === now.getDate() && p.month === (now.getMonth() + 1));
-            elements.todaySkeleton.classList.add('hidden');
-            elements.todayContent.classList.remove('hidden');
-            elements.todayContent.innerHTML = '';
-            if (todays.length === 0) {
-                elements.todayContent.innerHTML = `<div class="bg-card p-6 rounded-lg text-center text-muted">Nenhum aniversariante hoje.</div>`;
-            } else {
-                const grid = document.createElement('div');
-                grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
-                todays.forEach(p => {
-                    const card = document.createElement('div');
-                    card.className = 'birthday-card bg-card p-6 rounded-lg flex flex-col gap-4';
-                    card.innerHTML = `
-                        <div class="flex items-center gap-4">
-                            <div class="avatar" style="background-color: ${utils.getColorForName(p.name)}">${utils.getInitials(p.name)}</div>
-                            <div>
-                                <p class="font-bold text-lg">${p.name}</p>
-                                <p class="text-muted text-sm">${p.sector}</p>
-                            </div>
-                        </div>
-                        <button class="btn btn-primary w-full mt-auto">Parabenizar</button>`;
-                    grid.appendChild(card);
-                });
-                elements.todayContent.appendChild(grid);
-                if (!window.celebratedToday) {
-                    confetti.start();
-                    window.celebratedToday = true;
-                }
-            }
-        }
-        
-        function renderTable() {
-            elements.tableBody.innerHTML = '';
-            elements.noResults.classList.toggle('hidden', state.filteredBirthdays.length > 0);
-            state.filteredBirthdays.forEach(p => {
-                const tr = document.createElement('tr');
-                tr.className = 'border-b last:border-b-0'
-                tr.style.borderColor = 'var(--soft-border)';
-                tr.innerHTML = `
-                    <td class="p-3 flex items-center gap-3">
-                        <div class="avatar avatar-sm" style="background-color: ${utils.getColorForName(p.name)}">${utils.getInitials(p.name)}</div>
-                        <span>${p.name}</span>
-                    </td>
-                    <td class="p-3">${p.sector}</td>
-                    <td class="p-3">${String(p.day).padStart(2, '0')}/${String(p.month).padStart(2, '0')}</td>
-                    <td class="admin-only p-3">...</td>`;
-                elements.tableBody.appendChild(tr);
+    const themeManager = {
+        apply: (isDark) => {
+            document.documentElement.classList.toggle('dark', isDark);
+            elements.lightIcon.classList.toggle('hidden', !isDark);
+            elements.darkIcon.classList.toggle('hidden', isDark);
+        },
+        init: () => {
+            elements.darkModeToggle.addEventListener('click', () => {
+                const isDark = !document.documentElement.classList.contains('dark');
+                localStorage.setItem('color-theme', isDark ? 'dark' : 'light'); themeManager.apply(isDark);
             });
+            const storedTheme = localStorage.getItem('color-theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            themeManager.apply(storedTheme === 'dark' || (!storedTheme && prefersDark));
         }
-        
-        function renderCalendar() {
-            elements.calendarGrid.innerHTML = '';
-            const y = state.currentDate.getFullYear(); const m = state.currentDate.getMonth();
-            elements.calendarMonthYear.textContent = `${new Date(y, m).toLocaleString('pt-BR', { month: 'long' })} ${y}`;
-            const firstDay = new Date(y, m, 1).getDay();
-            const daysInMonth = new Date(y, m + 1, 0).getDate();
-            for (let i = 0; i < firstDay; i++) elements.calendarGrid.insertAdjacentHTML('beforeend', '<div></div>');
-            const monthBdays = state.allBirthdays.filter(p => p.month === m + 1);
-            const maxHits = Math.max(1, ...Array.from({length: daysInMonth}, (_, i) => monthBdays.filter(p => p.day === i + 1).length));
-            for (let d = 1; d <= daysInMonth; d++) {
-                const hits = monthBdays.filter(p => p.day === d);
-                const opacity = hits.length > 0 ? 0.2 + (0.8 * hits.length / maxHits) : 0;
-                const dayCell = `<div class="p-2 rounded-md relative"><div class="absolute inset-0 rounded-md" style="background-color: var(--eletro-blue); opacity: ${opacity};"></div><span class="relative font-semibold">${d}</span></div>`;
-                elements.calendarGrid.insertAdjacentHTML('beforeend', dayCell);
-            }
+    };
+    
+    const confetti = {
+        particles: [], isReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        animate: function() {
+            if (this.isReducedMotion || this.particles.length === 0) return;
+            const ctx = elements.celebrationCanvas.getContext('2d');
+            ctx.clearRect(0, 0, elements.celebrationCanvas.width, elements.celebrationCanvas.height);
+            this.particles.forEach(p => {
+                p.y += p.speed; p.angle += p.speed / 2; ctx.fillStyle = p.color;
+                ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle * Math.PI / 180);
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); ctx.restore();
+            });
+            if (this.particles.some(p => p.y < elements.celebrationCanvas.height + 20)) {
+                requestAnimationFrame(this.animate.bind(this));
+            } else { ctx.clearRect(0, 0, elements.celebrationCanvas.width, elements.celebrationCanvas.height); }
+        },
+        start: function() {
+            if (this.isReducedMotion) return;
+            elements.celebrationCanvas.width = window.innerWidth; elements.celebrationCanvas.height = window.innerHeight;
+            this.particles = [];
+            for (let i = 0; i < 150; i++) { this.particles.push({ x: Math.random() * window.innerWidth, y: -20 - Math.random() * 50, size: Math.random() * 8 + 4, color: avatarColors[i % avatarColors.length], speed: Math.random() * 3 + 2, angle: Math.random() * 360 }); }
+            this.animate();
         }
+    };
 
-        function updateTabUnderline(activeTab) {
-            if (!activeTab) return;
-            elements.tabUnderline.style.left = `${activeTab.offsetLeft}px`;
-            elements.tabUnderline.style.width = `${activeTab.offsetWidth}px`;
+    function renderToday() {
+        const now = new Date();
+        const todays = state.allBirthdays.filter(p => p.day === now.getDate() && p.month === (now.getMonth() + 1));
+        elements.todaySkeleton.classList.add('hidden'); elements.todayContent.classList.remove('hidden');
+        elements.todayContent.innerHTML = '';
+        if (todays.length === 0) {
+            elements.todayContent.innerHTML = `<div class="bg-card p-6 rounded-lg text-center text-muted">Nenhum aniversariante hoje.</div>`;
+        } else {
+            const grid = document.createElement('div'); grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+            todays.forEach(p => {
+                grid.innerHTML += `<div class="birthday-card bg-card p-6 rounded-lg flex items-center gap-4"><div class="avatar" style="background-color: ${utils.getColorForName(p.name)}">${utils.getInitials(p.name)}</div><div><p class="font-bold text-lg">${p.name}</p><p class="text-muted text-sm">${p.sector}</p></div></div>`;
+            });
+            elements.todayContent.appendChild(grid);
+            if (!window.celebratedToday) { confetti.start(); window.celebratedToday = true; }
         }
-
-        async function init() {
-            try {
-                if (!window.__firebase_config) throw new Error("Config Firebase ausente");
-                const app = initializeApp(window.__firebase_config);
-                state.auth = getAuth(app); state.db = getFirestore(app);
-                state.dbCollection = collection(state.db, 'aniversariantes');
-                
-                themeManager.init();
-                
-                elements.tabsContainer.addEventListener('click', (ev) => {
-                    if (!ev.target.matches('.tab-btn')) return;
-                    elements.tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                    document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
-                    ev.target.classList.add('active');
-                    document.getElementById(ev.target.dataset.tab + '-panel').classList.remove('hidden');
-                    updateTabUnderline(ev.target);
-                    if (ev.target.dataset.tab === 'calendar') renderCalendar();
-                });
-
-                const initialTab = elements.tabsContainer.querySelector('.tab-btn');
-                initialTab.click();
-                
-                onSnapshot(query(state.dbCollection), (snapshot) => {
-                    state.allBirthdays = snapshot.docs.map(utils.mapFirebaseDoc).sort((a,b) => (a.month - b.month) || (a.day - b.day));
-                    state.filteredBirthdays = [...state.allBirthdays];
-                    renderToday(); renderTable();
-                    if (document.querySelector('[data-tab="calendar"].active')) renderCalendar();
-                });
-                
-            } catch (err) { console.error("Erro na inicialização:", err); }
+    }
+    
+    function renderTable() {
+        elements.tableBody.innerHTML = ''; elements.noResults.classList.toggle('hidden', state.filteredBirthdays.length > 0);
+        state.filteredBirthdays.forEach(p => {
+            const tr = document.createElement('tr'); tr.className = 'border-b last:border-b-0'; tr.style.borderColor = 'var(--soft-border)';
+            tr.innerHTML = `<td class="p-3 flex items-center gap-3"><div class="avatar avatar-sm" style="background-color: ${utils.getColorForName(p.name)}">${utils.getInitials(p.name)}</div><span>${p.name}</span></td><td class="p-3">${p.sector}</td><td class="p-3">${String(p.day).padStart(2, '0')}/${String(p.month).padStart(2, '0')}</td><td class="admin-only p-3">...</td>`;
+            elements.tableBody.appendChild(tr);
+        });
+    }
+    
+    function renderCalendar() {
+        elements.calendarGrid.innerHTML = ''; const y = state.currentDate.getFullYear(); const m = state.currentDate.getMonth();
+        elements.calendarMonthYear.textContent = `${new Date(y, m).toLocaleString('pt-BR', { month: 'long' })} ${y}`;
+        const firstDay = new Date(y, m, 1).getDay(); const daysInMonth = new Date(y, m + 1, 0).getDate();
+        for (let i = 0; i < firstDay; i++) elements.calendarGrid.insertAdjacentHTML('beforeend', '<div></div>');
+        const monthBdays = state.allBirthdays.filter(p => p.month === m + 1);
+        const maxHits = Math.max(1, ...Array.from({length: daysInMonth}, (_, i) => monthBdays.filter(p => p.day === i + 1).length));
+        for (let d = 1; d <= daysInMonth; d++) {
+            const hits = monthBdays.filter(p => p.day === d);
+            const opacity = hits.length > 0 ? 0.2 + (0.8 * hits.length / maxHits) : 0;
+            elements.calendarGrid.insertAdjacentHTML('beforeend', `<div class="p-2 rounded-md relative"><div class="absolute inset-0 rounded-md" style="background-color: var(--eletro-blue); opacity: ${opacity};"></div><span class="relative font-semibold">${d}</span></div>`);
         }
-        
-        init();
-    });
+    }
+
+    function updateTabUnderline(activeTab) {
+        if (!activeTab) return;
+        elements.tabUnderline.style.left = `${activeTab.offsetLeft}px`;
+        elements.tabUnderline.style.width = `${activeTab.offsetWidth}px`;
+    }
+
+    async function init() {
+        try {
+            if (!window.__firebase_config) throw new Error("Config Firebase ausente");
+            const app = initializeApp(window.__firebase_config);
+            state.auth = getAuth(app); state.db = getFirestore(app);
+            const dbCollection = collection(state.db, 'aniversariantes');
+            
+            themeManager.init();
+            
+            elements.tabsContainer.addEventListener('click', (ev) => {
+                if (!ev.target.matches('.tab-btn')) return;
+                elements.tabsContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+                ev.target.classList.add('active');
+                document.getElementById(ev.target.dataset.tab + '-panel').classList.remove('hidden');
+                updateTabUnderline(ev.target);
+                if (ev.target.dataset.tab === 'calendar') renderCalendar();
+            });
+
+            elements.prevMonthBtn.onclick = () => { state.currentDate.setMonth(state.currentDate.getMonth() - 1); renderCalendar(); };
+            elements.nextMonthBtn.onclick = () => { state.currentDate.setMonth(state.currentDate.getMonth() + 1); renderCalendar(); };
+            elements.searchInput.addEventListener('input', () => {
+                state.filteredBirthdays = state.allBirthdays.filter(p => p.name.toLowerCase().includes(elements.searchInput.value.toLowerCase()));
+                renderTable();
+            });
+
+            onAuthStateChanged(state.auth, async (user) => {
+                if (user) {
+                    try {
+                        const tokenResult = await user.getIdTokenResult();
+                        state.isAdmin = tokenResult.claims.admin === true;
+                        elements.userEmail.textContent = user.email;
+                    } catch (e) { state.isAdmin = false; }
+                } else { state.isAdmin = false; elements.userEmail.textContent = ''; }
+                document.body.classList.toggle('admin-mode', state.isAdmin);
+            });
+
+            onSnapshot(query(dbCollection), (snapshot) => {
+                state.allBirthdays = snapshot.docs.map(utils.mapFirebaseDoc).sort((a,b) => (a.month - b.month) || (a.day - b.day));
+                state.filteredBirthdays = [...state.allBirthdays];
+                renderToday(); renderTable();
+                if (document.querySelector('[data-tab="calendar"].active')) renderCalendar();
+            });
+
+            const initialTab = elements.tabsContainer.querySelector('.tab-btn');
+            initialTab.click();
+            setTimeout(() => updateTabUnderline(initialTab), 50);
+
+        } catch (err) { console.error("Erro na inicialização:", err); }
+    }
+    
+    init();
   </script>
 </body>
 
