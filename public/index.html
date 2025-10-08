@@ -12,7 +12,12 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <script src="/firebase-config.js"></script>
+  <!--
+    firebase-config.js deve estar separado e definir window.firebaseConfig
+    ou window.__firebase_config. Exemplo (NUNCA commitar service account):
+    window.__firebase_config = { apiKey: "...", authDomain: "...", projectId: "..." };
+  -->
+  <script src="./firebase-config.js"></script>
 
   <style>
     :root {
@@ -261,7 +266,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-  <!-- ======= SCRIPT PRINCIPAL - substitua o antigo module script por este ======= -->
+  <!-- ======= SCRIPT PRINCIPAL - versão de produção pronta ======= -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -396,18 +401,21 @@
         day: Number(doc.data().day) || 0, month: Number(doc.data().month) || 0,
       });
 
-      // --- Firebase init with graceful fallback ---
+      // --- Firebase init with graceful fallback (robusto: aceita vários nomes) ---
       const initFirebase = async () => {
         try {
-          if (window.firebaseConfig) {
-            const app = initializeApp(window.firebaseConfig);
+          // aceita window.firebaseConfig ou window.__firebase_config (ou variantes)
+          const fbCfg = window.firebaseConfig || window.__firebase_config || window.__FIREBASE_CONFIG || null;
+          if (fbCfg) {
+            const app = initializeApp(fbCfg);
             auth = getAuth(app);
             db = getFirestore(app);
             dbCollection = collection(db, 'aniversariantes');
             setupAuthListener();
+            console.info('Firebase inicializado (client).');
           } else {
             console.warn('firebaseConfig não encontrado. Usando modo demo (dados mock).');
-            dbCollection = null;
+            dbCollection = null; // marca modo demo
           }
         } catch (err) {
           console.error('Erro initFirebase', err);
@@ -799,7 +807,6 @@
           try {
             if (dbCollection) {
               await deleteDoc(doc(db, 'aniversariantes', id));
-              // optionally show final success
             } else {
               showNotification(`${name} excluído (demo).`);
             }
