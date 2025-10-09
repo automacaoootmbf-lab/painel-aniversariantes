@@ -5,22 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Painel de Aniversariantes</title>
 
-  <!-- Fonte -->
+  <!-- Fonte e libs -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Dependências -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-  <!-- firebase-config.js (coloque seu config aqui, definindo window.__firebase_config) -->
+  <!-- Coloque aqui seu firebase-config.js que define window.__firebase_config -->
   <script src="./firebase-config.js"></script>
 
   <style>
     :root{
       --eletro-blue:#003366; --eletro-teal:#009a74; --bg-page:#f8fafc; --card-bg:#ffffff; --muted:#6b7280;
-      --text-color:#0f172a; --soft-border:#e2e8f0; --radius:12px; --shadow-1: 0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -2px rgba(0,0,0,0.06);
+      --text-color:#0f172a; --soft-border:#e2e8f0; --radius:12px; --shadow-1:0 4px 6px -1px rgba(0,0,0,0.1);
     }
     html.dark { --muted:#9ca3af; --bg-page:#111827; --card-bg:#1f2937; --text-color:#f9fafb; --soft-border:#374151; }
     html,body{height:100%;margin:0;padding:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial;background:var(--bg-page);color:var(--text-color);transition:background .25s,color .25s}
@@ -61,6 +59,16 @@
     #loading-indicator{display:flex;justify-content:center;align-items:center;padding:40px;font-weight:500;color:var(--muted)}
     @media (max-width:768px){table thead{display:none}table tbody,table tr,table td{display:block;width:100%}table tr{border:1px solid var(--soft-border);border-radius:var(--radius);margin-bottom:16px}table td{border:none;padding-left:16px;padding-right:16px;display:flex;justify-content:space-between;align-items:center}table td::before{content:attr(data-label);font-weight:600;padding-right:12px}}
     @media (prefers-reduced-motion: reduce) {.balloon, canvas#confetti-canvas {display:none!important} * {animation-duration:0s!important;transition-duration:0s!important}}
+    
+    /* ---------- Calendar highlights & badge (maior especificidade) ---------- */
+    #calendar-grid .day-cell { position: relative; transition: background-color .18s ease, color .18s ease; }
+    #calendar-grid .day-cell[data-count="1"], #calendar-grid .day-cell.bg-card[data-count="1"] { background-color: rgba(0,154,116,0.18); color: #053233; }
+    #calendar-grid .day-cell[data-count="2"], #calendar-grid .day-cell.bg-card[data-count="2"] { background-color: rgba(0,154,116,0.34); color: #042a2d; }
+    #calendar-grid .day-cell[data-count="3"], #calendar-grid .day-cell.bg-card[data-count="3"] { background-color: rgba(0,154,116,0.60); color: #021f23; }
+    #calendar-grid .birthday-badge { position: absolute; right: 6px; bottom: 6px; background: var(--eletro-teal); color: #fff; font-size: 11px; font-weight:700; padding:4px 7px; border-radius:999px; box-shadow:0 4px 10px rgba(0,0,0,0.08); pointer-events:none; line-height:1; }
+    #calendar-grid .day-num { font-weight:700; font-size:15px; }
+    /* célula vazia (dias antes do 1o do mês) */
+    #calendar-grid .day-cell[style*="opacity: 0.25"] { background: transparent !important; color: var(--muted); }
   </style>
 </head>
 
@@ -153,8 +161,8 @@
           <div class="bg-card p-6 rounded-lg">
             <h2 style="margin:0 0 18px 0;font-size:20px;font-weight:600">Análises de Dados</h2>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-              <div style="min-height:260px;background:transparent;padding:8px;border-radius:8px"><canvas id="birthday-chart"></canvas></div>
-              <div style="min-height:260px;background:transparent;padding:8px;border-radius:8px"><canvas id="sector-chart"></canvas></div>
+              <div style="min-height:260px;padding:8px;border-radius:8px"><canvas id="birthday-chart"></canvas></div>
+              <div style="min-height:260px;padding:8px;border-radius:8px"><canvas id="sector-chart"></canvas></div>
             </div>
           </div>
         </div>
@@ -202,7 +210,7 @@
     import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     document.addEventListener('DOMContentLoaded', () => {
-      /* ---------------- DOM Refs ---------------- */
+      /* DOM refs */
       const authBtn = document.getElementById('auth-btn');
       const tabsContainer = document.getElementById('tabs-container');
       const activeTabUnderline = document.getElementById('active-tab-underline');
@@ -234,20 +242,20 @@
       const exportCsvBtn = document.getElementById('export-csv-btn');
       const csvFileInput = document.getElementById('csv-file-input');
 
-      /* ---------------- Globals ---------------- */
+      /* Globals */
       const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
       const avatarColors = ['#003366','#009a74','#f0b400','#dc2626','#3b82f6','#f43f5e','#a855f7'];
       let db = null, auth = null, dbCollection = null, dataUnsub = null;
-      let birthdayData = [];
+      window.birthdayData = []; // exposto global para debug no console
       let currentDate = new Date();
       let isAdmin = false;
       let sortConfig = { key: 'date', direction: 'ascending' };
 
-      /* ---------------- Confetti setup ---------------- */
+      /* Confetti setup */
       const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const confettiCannon = (!prefersReduced && window.confetti) ? confetti.create(confettiCanvas, { resize: true }) : null;
 
-      /* ---------------- Helpers ---------------- */
+      /* Helpers */
       const safeFinallyShowUI = () => {
         try {
           loadingIndicator.classList.add('hidden');
@@ -286,30 +294,15 @@
         return wrapper;
       };
 
-      /* ---------------- Celebração Aprimorada ---------------- */
-      const CELEBRATION_CONFIG = {
-        maxBalloons: 12,
-        balloonPerPerson: 3,
-        baseParticleCount: 80,
-        maxIntensity: 6
-      };
-
+      /* Celebração Aprimorada */
+      const CELEBRATION_CONFIG = { maxBalloons: 12, balloonPerPerson: 3, baseParticleCount: 80, maxIntensity: 6 };
       const celebrationKey = 'celebration_shown_date_v1';
-      const hasCelebratedToday = () => {
-        try {
-          return localStorage.getItem(celebrationKey) === new Date().toISOString().slice(0,10);
-        } catch(e){ return false; }
-      };
-      const markCelebrated = () => {
-        try { localStorage.setItem(celebrationKey, new Date().toISOString().slice(0,10)); } catch(e){}
-      };
-      const resetCelebrationFlag = () => {
-        try { localStorage.removeItem(celebrationKey); return true;} catch(e){ return false; }
-      };
+      const hasCelebratedToday = () => { try { return localStorage.getItem(celebrationKey) === new Date().toISOString().slice(0,10); } catch(e){ return false; } };
+      const markCelebrated = () => { try { localStorage.setItem(celebrationKey, new Date().toISOString().slice(0,10)); } catch(e){} };
+      const resetCelebrationFlag = () => { try { localStorage.removeItem(celebrationKey); return true;} catch(e){ return false; } };
 
       const createBalloons = (count = 6) => {
         if (prefersReduced) return;
-        // limpa balões antigos
         document.querySelectorAll('.balloon').forEach(el => el.remove());
         const clamped = Math.max(1, Math.min(CELEBRATION_CONFIG.maxBalloons, Math.round(count)));
         const colors = avatarColors;
@@ -333,20 +326,17 @@
           createBalloons(balloons);
           const intensity = Math.min(CELEBRATION_CONFIG.maxIntensity, Math.max(1, Math.round(count)));
           const particleCount = CELEBRATION_CONFIG.baseParticleCount * intensity;
-          if (confettiCannon) {
-            confettiCannon({ particleCount, spread: 140, origin: { y: 0.62 } });
-          } else if (typeof confetti === 'function') {
-            confetti({ particleCount, spread: 140, origin: { y: 0.62 } });
-          }
+          if (confettiCannon) confettiCannon({ particleCount, spread: 140, origin: { y: 0.62 } });
+          else if (typeof confetti === 'function') confetti({ particleCount, spread: 140, origin: { y: 0.62 } });
           if (!force) markCelebrated();
         } catch(err){ console.warn('triggerCelebration erro', err); }
       };
 
-      // expor helpers de teste
+      // expose for debugging/testing
       window.triggerCelebration = (count = 1, force = false) => triggerCelebration(count, force);
       window.resetCelebrationFlag = resetCelebrationFlag;
 
-      /* ---------------- Mapping / Firebase ---------------- */
+      /* Mapping / Firebase robust */
       const mapFirebaseDoc = (docSnapshot) => {
         const raw = (docSnapshot && typeof docSnapshot.data === 'function') ? docSnapshot.data() : (docSnapshot || {});
         const id = (docSnapshot && docSnapshot.id) ? docSnapshot.id : (raw.id || ('local_' + Date.now()));
@@ -385,15 +375,15 @@
               const snap = await getDocs(dbCollection);
               console.info('Firestore getDocs -> docs:', snap.size);
               console.debug('Firestore raw sample:', snap.docs.slice(0,10).map(d => ({id:d.id, data:d.data()})));
-              birthdayData = snap.docs.map(mapFirebaseDoc);
-              console.info('Mapped birthdayData length:', birthdayData.length, 'sample:', birthdayData.slice(0,6));
+              window.birthdayData = snap.docs.map(mapFirebaseDoc);
+              console.info('Mapped birthdayData length:', window.birthdayData.length, 'sample:', window.birthdayData.slice(0,6));
             } catch(err) {
               console.error('Erro getDocs', err);
               showNotification('Falha ao carregar dados reais; usando modo offline.', true);
-              birthdayData = sampleData();
+              window.birthdayData = sampleData();
             }
           } else {
-            birthdayData = sampleData();
+            window.birthdayData = sampleData();
             console.info('Usando sampleData (modo demo).');
           }
           renderAll();
@@ -413,8 +403,8 @@
             dataUnsub = onSnapshot(dbCollection, snap => {
               console.info('onSnapshot -> docs:', snap.size);
               console.debug('onSnapshot raw sample:', snap.docs.slice(0,10).map(d => ({id:d.id, data:d.data()})));
-              birthdayData = snap.docs.map(mapFirebaseDoc);
-              console.info('Mapped birthdayData (realtime):', birthdayData.length);
+              window.birthdayData = snap.docs.map(mapFirebaseDoc);
+              console.info('Mapped birthdayData (realtime):', window.birthdayData.length);
               renderAll();
             }, err => { console.warn('Realtime listener erro', err); });
           }
@@ -444,10 +434,10 @@
         { id:'s3', name: 'Carla Nunes', sector: 'RH', day: ((currentDate.getDate()+10)%28)+1, month: currentDate.getMonth() + 1 },
       ]);
 
-      /* ---------------- Rendering ---------------- */
+      /* RENDER */
       const renderAll = (searchTerm='') => {
         try {
-          birthdayData.sort((a,b)=>{
+          window.birthdayData.sort((a,b)=>{
             const dir = sortConfig.direction === 'ascending' ? 1 : -1;
             const valA = sortConfig.key === 'date' ? (a.month*100 + a.day) : (a[sortConfig.key] || '');
             const valB = sortConfig.key === 'date' ? (b.month*100 + b.day) : (b[sortConfig.key] || '');
@@ -469,7 +459,7 @@
           const today = new Date();
           const day = today.getDate();
           const month = today.getMonth() + 1;
-          const todays = birthdayData.filter(p => p.day === day && p.month === month);
+          const todays = window.birthdayData.filter(p => p.day === day && p.month === month);
           if (todays.length === 0) {
             todayPanel.innerHTML = `<div class="bg-card p-4 text-center rounded-lg">Nenhum aniversário hoje.</div>`;
           } else {
@@ -486,7 +476,6 @@
               grid.appendChild(card);
             });
             todayPanel.appendChild(grid);
-            // chama a celebração com intensidade proporcional ao número de aniversariantes
             triggerCelebration(todays.length || 1);
           }
         } catch(e){ console.warn('renderToday', e); }
@@ -499,7 +488,7 @@
         for(let i=1;i<=15;i++){
           const futureDate = new Date(); futureDate.setDate(today.getDate() + i);
           const day = futureDate.getDate(), month = futureDate.getMonth() + 1;
-          const match = birthdayData.filter(p => p.day === day && p.month === month);
+          const match = window.birthdayData.filter(p => p.day === day && p.month === month);
           if (match.length) upcomingBdays.push(...match);
         }
         if (upcomingBdays.length === 0) {
@@ -524,7 +513,7 @@
       const renderTable = (searchTerm='') => {
         tableBody.innerHTML = '';
         const q = (searchTerm || '').toLowerCase();
-        const filtered = q ? birthdayData.filter(p => (p.name || '').toLowerCase().includes(q) || (p.sector||'').toLowerCase().includes(q)) : birthdayData;
+        const filtered = q ? window.birthdayData.filter(p => (p.name || '').toLowerCase().includes(q) || (p.sector||'').toLowerCase().includes(q)) : window.birthdayData;
         noResults.classList.toggle('hidden', filtered.length > 0);
         filtered.forEach(p => {
           const tr = document.createElement('tr');
@@ -543,29 +532,66 @@
         updateSortIndicators();
       };
 
+      // ---------- renderCalendar (com badge e data-count) ----------
       const renderCalendar = () => {
         calendarGrid.innerHTML = '';
         const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
+        const month = currentDate.getMonth(); // 0-index
         calendarMonthYear.textContent = `${monthNames[month]} ${year}`;
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month+1, 0).getDate();
-        for(let i=0;i<firstDay;i++){ const cell = document.createElement('div'); cell.className='day-cell'; cell.style.opacity='0.25'; calendarGrid.appendChild(cell); }
-        for(let d=1; d<=daysInMonth; d++){
-          const cell = document.createElement('div'); cell.className='day-cell bg-card p-2 rounded-lg';
-          const items = birthdayData.filter(b => b.day === d && b.month === month+1);
-          const count = items.length; if (count>0) cell.dataset.count = String(Math.min(count,3));
-          cell.textContent = d;
-          cell.addEventListener('mouseenter', (ev)=> {
+
+        const firstDay = new Date(year, month, 1).getDay(); // 0..6 (Sun..Sat)
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let i = 0; i < firstDay; i++) {
+          const emptyCell = document.createElement('div');
+          emptyCell.className = 'day-cell';
+          emptyCell.style.opacity = '0.25';
+          calendarGrid.appendChild(emptyCell);
+        }
+
+        for (let d = 1; d <= daysInMonth; d++) {
+          const cell = document.createElement('div');
+          cell.className = 'day-cell bg-card p-2 rounded-lg';
+          const items = window.birthdayData.filter(b => Number(b.day) === d && Number(b.month) === (month + 1));
+          const count = items.length;
+
+          const dayNum = document.createElement('div');
+          dayNum.className = 'day-num';
+          dayNum.textContent = d;
+          cell.appendChild(dayNum);
+
+          if (count > 0) {
+            const capped = Math.min(3, count);
+            cell.dataset.count = String(capped);
+            const badge = document.createElement('div');
+            badge.className = 'birthday-badge';
+            badge.textContent = count > 1 ? `${count} anivers.` : '1 anivers.';
+            cell.appendChild(badge);
+            cell.title = `${count} aniversariante(s) — passe o mouse para detalhes`;
+          }
+
+          cell.addEventListener('mouseenter', (ev) => {
             if (!items.length) return;
-            calendarTooltip.style.display='block'; calendarTooltip.innerHTML='';
+            calendarTooltip.style.display = 'block';
+            calendarTooltip.innerHTML = '';
             const title = document.createElement('strong'); title.textContent = `${d} ${monthNames[month]}`; calendarTooltip.appendChild(title);
-            const ul = document.createElement('ul'); items.forEach(it => { const li=document.createElement('li'); const name=document.createElement('span'); name.className='name'; name.textContent=it.name; const sector=document.createElement('span'); sector.className='sector'; sector.textContent=` — ${it.sector}`; li.append(name,sector); ul.appendChild(li); });
+            const ul = document.createElement('ul');
+            items.forEach(it => {
+              const li = document.createElement('li');
+              const name = document.createElement('span'); name.className = 'name'; name.textContent = it.name;
+              const sector = document.createElement('span'); sector.className = 'sector'; sector.textContent = ` — ${it.sector}`;
+              li.append(name, sector);
+              ul.appendChild(li);
+            });
             calendarTooltip.appendChild(ul);
-            const rect = ev.target.getBoundingClientRect(); const x = Math.min(window.innerWidth - calendarTooltip.offsetWidth - 8, rect.left + window.scrollX); const y = rect.bottom + window.scrollY + 6;
-            calendarTooltip.style.left = `${Math.max(8, x)}px`; calendarTooltip.style.top = `${Math.min(window.innerHeight - 40, y)}px`;
+            const rect = ev.target.getBoundingClientRect();
+            const x = Math.min(window.innerWidth - calendarTooltip.offsetWidth - 8, rect.left + window.scrollX);
+            const y = rect.bottom + window.scrollY + 6;
+            calendarTooltip.style.left = `${Math.max(8, x)}px`;
+            calendarTooltip.style.top = `${Math.min(window.innerHeight - 40, y)}px`;
           });
-          cell.addEventListener('mouseleave', ()=> { calendarTooltip.style.display='none'; });
+          cell.addEventListener('mouseleave', () => { calendarTooltip.style.display = 'none'; });
+
           calendarGrid.appendChild(cell);
         }
       };
@@ -576,16 +602,16 @@
           if (!chartPanel || chartPanel.classList.contains('hidden')) return;
           const bc = document.getElementById('birthday-chart'); const sc = document.getElementById('sector-chart');
           if (!bc || !sc || typeof Chart === 'undefined') return;
-          const monthsCount = new Array(12).fill(0); birthdayData.forEach(b => monthsCount[(b.month||1)-1]++);
+          const monthsCount = new Array(12).fill(0); window.birthdayData.forEach(b => monthsCount[(b.month||1)-1]++);
           if (window._birthdayChart) window._birthdayChart.destroy();
           window._birthdayChart = new Chart(bc.getContext('2d'), { type:'bar', data:{ labels:monthNames, datasets:[{ label:'Aniversariantes', data:monthsCount }] }, options:{ responsive:true, maintainAspectRatio:false } });
-          const sectorMap = {}; birthdayData.forEach(b => sectorMap[b.sector] = (sectorMap[b.sector]||0)+1);
+          const sectorMap = {}; window.birthdayData.forEach(b => sectorMap[b.sector] = (sectorMap[b.sector]||0)+1);
           if (window._sectorChart) window._sectorChart.destroy();
           window._sectorChart = new Chart(sc.getContext('2d'), { type:'doughnut', data:{ labels:Object.keys(sectorMap), datasets:[{ data:Object.values(sectorMap) }] }, options:{ responsive:true, maintainAspectRatio:false } });
         } catch(e){ console.warn('renderCharts', e); }
       };
 
-      /* ---------------- CRUD & Modal ---------------- */
+      /* CRUD & Modal */
       let lastFocusedEl = null;
       const openModal = (person=null) => {
         try {
@@ -623,8 +649,8 @@
             if (id) { await updateDoc(doc(db, 'aniversariantes', id), payload); showNotification('Dados atualizados com sucesso!'); }
             else { await addDoc(dbCollection, { ...payload, createdAt: serverTimestamp() }); showNotification('Aniversariante adicionado com sucesso!'); }
           } else {
-            if (id) { const idx = birthdayData.findIndex(x => x.id === id); if (idx>=0) birthdayData[idx] = { ...birthdayData[idx], ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1]}` }; showNotification('Alteração local (demo).'); }
-            else { birthdayData.push({ id:'local_'+Date.now(), ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1]}` }); showNotification('Adicionado local (demo).'); }
+            if (id) { const idx = window.birthdayData.findIndex(x => x.id === id); if (idx>=0) window.birthdayData[idx] = { ...window.birthdayData[idx], ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1]}` }; showNotification('Alteração local (demo).'); }
+            else { window.birthdayData.push({ id:'local_'+Date.now(), ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1]}` }); showNotification('Adicionado local (demo).'); }
             renderAll(searchInput.value);
           }
           closeModal();
@@ -633,11 +659,11 @@
 
       const deletePerson = async (id, name) => {
         if (!confirm(`Tem certeza que deseja excluir ${name}?`)) return;
-        const item = birthdayData.find(x => x.id === id);
-        birthdayData = birthdayData.filter(x => x.id !== id);
+        const item = window.birthdayData.find(x => x.id === id);
+        window.birthdayData = window.birthdayData.filter(x => x.id !== id);
         renderAll();
         let undone = false;
-        const undoHandler = () => { undone = true; birthdayData.push(item); renderAll(); showNotification('Exclusão desfeita.'); };
+        const undoHandler = () => { undone = true; window.birthdayData.push(item); renderAll(); showNotification('Exclusão desfeita.'); };
         showNotification(`${name} excluído.`, false, [{ label: 'Desfazer', handler: undoHandler }]);
         setTimeout(async () => {
           if (undone) return;
@@ -645,9 +671,9 @@
         }, 6000);
       };
 
-      /* ---------------- CSV ---------------- */
+      /* CSV */
       const escapeCSV = s => `"${String(s).replace(/"/g,'""')}"`;
-      const exportToCSV = () => { let csv = 'Nome,Setor,Dia,Mês\n'; birthdayData.forEach(p => { csv += `${escapeCSV(p.name)},${escapeCSV(p.sector)},${p.day},${p.month}\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'aniversariantes.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); showNotification('Dados exportados para CSV.'); };
+      const exportToCSV = () => { let csv = 'Nome,Setor,Dia,Mês\n'; window.birthdayData.forEach(p => { csv += `${escapeCSV(p.name)},${escapeCSV(p.sector)},${p.day},${p.month}\n`; }); const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'aniversariantes.csv'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); showNotification('Dados exportados para CSV.'); };
       const importFromCSV = (e) => {
         const file = e.target.files && e.target.files[0]; if (!file) return;
         Papa.parse(file, { header:true, skipEmptyLines:true, complete: async (results) => {
@@ -658,14 +684,14 @@
             const previewCount = Math.min(6, valid.length);
             const confirmTxt = `${valid.length} registros válidos encontrados (mostrando ${previewCount}). Deseja importar?`; if (!confirm(confirmTxt)) return;
             if (dbCollection) { for (const item of valid) { await addDoc(dbCollection, { nome:item.name, setor:item.sector, dia:item.day, mes:item.month, textoData:`${item.day} de ${monthNames[(item.month||1)-1]}`, createdAt:serverTimestamp() }); } }
-            else { valid.forEach(v => birthdayData.push({ id:'local_'+Date.now()+Math.random(), ...v })); renderAll(); }
+            else { valid.forEach(v => window.birthdayData.push({ id:'local_'+Date.now()+Math.random(), ...v })); renderAll(); }
             showNotification('Importação concluída.');
           } catch(err){ console.error('importFromCSV parsing', err); showNotification('Erro durante a importação.', true); }
         }, error: (err) => { console.error('PapaParse error', err); showNotification('Erro ao ler CSV.', true); }});
         e.target.value = '';
       };
 
-      /* ---------------- Sorting & Utils ---------------- */
+      /* Sorting & Utils */
       const updateSortIndicators = () => {
         if (!tableHeader) return;
         tableHeader.querySelectorAll('th').forEach(th => {
@@ -675,7 +701,7 @@
       };
       const debounce = (fn, delay=250) => { let t; return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), delay); }; };
 
-      /* ---------------- Events ---------------- */
+      /* Events */
       prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
       nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
       searchInput.addEventListener('input', debounce((e) => renderTable(e.target.value), 220));
@@ -733,21 +759,19 @@
       const firstTab = tabsContainer.querySelector('.tab-btn');
       if (firstTab) { firstTab.click(); requestAnimationFrame(()=> { activeTabUnderline.style.width = `${firstTab.offsetWidth}px`; activeTabUnderline.style.left = `${firstTab.offsetLeft}px`; }); }
 
-      /* ---------------- Init flow ---------------- */
+      /* Init */
       initTheme();
       (async () => { await initFirebase(); await fetchAndRenderData(); })();
 
       window.addEventListener('error', (ev) => { console.error('Global error:', ev.error || ev.message); safeFinallyShowUI(); });
       window.addEventListener('unhandledrejection', (ev) => { console.error('Unhandled rejection:', ev.reason); safeFinallyShowUI(); });
 
-      /* ---------------- Debug helpers ---------------- */
+      /* Debug helpers */
       window.__reRenderBirthdays = () => renderAll();
-      window.__getBirthdayData = () => { try { return (typeof birthdayData !== 'undefined') ? JSON.parse(JSON.stringify(birthdayData.slice(0,200))) : null; } catch(e) { return { error: String(e) }; } };
-      window.__setBirthdayData = (arr) => { try { birthdayData = Array.isArray(arr) ? arr : birthdayData; renderAll(); return true; } catch(e){ return String(e); } };
+      window.__getBirthdayData = () => { try { return (typeof window.birthdayData !== 'undefined') ? JSON.parse(JSON.stringify(window.birthdayData.slice(0,200))) : null; } catch(e) { return { error: String(e) }; } };
+      window.__setBirthdayData = (arr) => { try { window.birthdayData = Array.isArray(arr) ? arr : window.birthdayData; renderAll(); return true; } catch(e){ return String(e); } };
       console.info('DEBUG hooks: window.__getBirthdayData(), window.__setBirthdayData(arr), window.__reRenderBirthdays(), window.triggerCelebration(count,force), window.resetCelebrationFlag()');
-
     });
   </script>
 </body>
 </html>
-
