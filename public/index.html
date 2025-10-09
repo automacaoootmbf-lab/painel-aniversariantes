@@ -5,6 +5,32 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Painel de Aniversariantes</title>
 
+  <style>
+    :root{
+      --eletro-blue:#003366; --eletro-teal:#009a74; --bg:#f8fafc; --card:#ffffff; --muted:#6b7280;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:#0f172a;}
+    .container{max-width:1200px;margin:0 auto;padding:28px 20px;}
+    header{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;border-bottom:1px solid #e6edf3;margin-bottom:18px;}
+    .title-group{display:flex;gap:12px;align-items:center;}
+    .logo-icon{width:48px;height:48px;border-radius:8px;padding:6px;background:linear-gradient(135deg,var(--eletro-blue),var(--eletro-teal));color:#fff;display:inline-flex;align-items:center;justify-content:center;}
+    h1{font-size:20px;margin:0;color:var(--eletro-blue);font-weight:600;}
+    p{margin:0;color:var(--muted);font-size:13px;}
+    #tabs-container{display:flex;gap:8px;margin:18px 0;border-bottom:1px solid #e6edf3;padding-bottom:8px;}
+    .tab-btn{background:transparent;border:none;padding:8px 12px;border-radius:8px;color:var(--muted);font-weight:600;cursor:pointer;}
+    .tab-btn.active{color:var(--eletro-blue);background:rgba(0,51,102,0.06);border:1px solid rgba(0,51,102,0.08);}
+    .bg-card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(2,6,23,0.06);border:1px solid #e6edf3;}
+    table{width:100%;border-collapse:collapse;font-size:14px;}
+    thead th{background:#f8fafc;padding:12px;text-align:left;color:#475569;}
+    tbody td{padding:12px;border-top:1px solid #f0f3f6;}
+    .avatar{width:40px;height:40px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-weight:700;}
+    .birthday-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;background:linear-gradient(180deg,rgba(255,255,255,0.9),#fff);border:1px solid #f1f5f9;}
+    #loading-indicator{display:flex;align-items:center;gap:8px;color:var(--muted);padding:30px;text-align:center;}
+    #notification-toast{position:fixed;right:18px;bottom:18px;padding:10px 14px;border-radius:10px;background:#059669;color:#fff;box-shadow:0 10px 30px rgba(2,6,23,0.12);opacity:0;transition:opacity .25s;}
+    /* simple responsive */
+    @media (max-width:760px){ .container{padding:16px;} table thead{display:none;} tbody td{display:block;width:100%} }
+  </style>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -388,7 +414,6 @@
         } catch(e){ console.warn('celebration error', e); }
       };
 
-      // [SUBSTITUIÇÃO 1] - Nova função mapFirebaseDoc
       // Mapeador robusto - lê campos pt/en e gera textoData se necessário
       const mapFirebaseDoc = (docSnapshot) => {
         const raw = (docSnapshot && typeof docSnapshot.data === 'function') ? docSnapshot.data() : (docSnapshot || {});
@@ -775,38 +800,37 @@
           return showNotification("Data inválida.", true);
         }
         try {
-          // [SUBSTITUIÇÃO 2] - Novo bloco de gravação no Firestore
           if (dbCollection) {
             // payload no formato PT — mantém compatibilidade com seus docs atuais
             const payload = {
               nome: personData.name,
               setor: personData.sector,
               dia: personData.day,
-              mes: personData.month,
-              textoData: `${personData.day} de ${monthNames[(personData.month || 1) - 1] || ''}`,
-              updatedAt: serverTimestamp()
-            };
+            	mes: personData.month,
+            	textoData: `${personData.day} de ${monthNames[(personData.month || 1) - 1] || ''}`,
+            	updatedAt: serverTimestamp()
+          	};
 
-            if (id) {
-              await updateDoc(doc(db, 'aniversariantes', id), payload);
-              showNotification('Dados atualizados com sucesso!');
-            } else {
-              await addDoc(dbCollection, { ...payload, createdAt: serverTimestamp() });
-              showNotification('Aniversariante adicionado com sucesso!');
-            }
-          } else {
-            // Modo demo: manter estrutura interna (name/sector/day/month) usada pelo app,
-            // mas também incluir textoData para consistência
-            if (id) {
-              const idx = birthdayData.findIndex(x => x.id === id);
-              if (idx >= 0) birthdayData[idx] = { ...birthdayData[idx], ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1] || ''}` };
-              showNotification('Alteração local (demo).');
-            } else {
-              birthdayData.push({ id: 'local_' + Date.now(), ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1] || ''}` });
-              showNotification('Adicionado local (demo).');
-            }
-            renderAll(searchInput.value);
-          }
+          	if (id) {
+          	  await updateDoc(doc(db, 'aniversariantes', id), payload);
+          	  showNotification('Dados atualizados com sucesso!');
+          	} else {
+          	  await addDoc(dbCollection, { ...payload, createdAt: serverTimestamp() });
+          	  showNotification('Aniversariante adicionado com sucesso!');
+          	}
+          } else {
+          	// Modo demo: manter estrutura interna (name/sector/day/month) usada pelo app,
+          	// mas também incluir textoData para consistência
+          	if (id) {
+          	  const idx = birthdayData.findIndex(x => x.id === id);
+          	  if (idx >= 0) birthdayData[idx] = { ...birthdayData[idx], ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1] || ''}` };
+          	  showNotification('Alteração local (demo).');
+          	} else {
+          	  birthdayData.push({ id: 'local_' + Date.now(), ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1] || ''}` });
+          	  showNotification('Adicionado local (demo).');
+          	}
+          	renderAll(searchInput.value);
+          }
           closeModal();
         } catch(err) {
           console.error('savePerson', err);
@@ -1034,6 +1058,17 @@
 
       // debug helper
       window.__reRenderBirthdays = () => renderAll();
+
+            // DEBUG helpers — expor dados para Console (temporário)
+      window.__getBirthdayData = () => {
+        try { return (typeof birthdayData !== 'undefined') ? JSON.parse(JSON.stringify(birthdayData.slice(0,200))) : null; }
+        catch(e) { return { error: String(e) }; }
+      };
+      window.__setBirthdayData = (arr) => {
+        try { birthdayData = Array.isArray(arr) ? arr : birthdayData; renderAll(); return true; }
+        catch(e) { return String(e); }
+      };
+      console.info('DEBUG hooks: window.__getBirthdayData(), window.__setBirthdayData(arr)');
 
     });
   </script>
