@@ -1,1014 +1,1041 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel de Aniversariantes</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Painel de Aniversariantes</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- PapaParse para import CSV robusto -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!--
-    firebase-config.js deve estar separado e definir window.firebaseConfig
-    ou window.__firebase_config. Exemplo (NUNCA commitar service account):
-    window.__firebase_config = { apiKey: "...", authDomain: "...", projectId: "..." };
-  -->
-  <script src="./firebase-config.js"></script>
+    <script src="./firebase-config.js"></script>
 
-  <style>
-    :root {
-      --eletro-blue: #003366;
-      --eletro-teal: #009a74;
-      --muted: #6b7280;
-      --bg-page: #f8fafc;
-      --card-bg: #ffffff;
-      --text-color: #0f172a;
-      --soft-border: #e2e8f0;
-      --shadow-1: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --radius: 12px;
-    }
+  <style>
+    :root {
+      --eletro-blue: #003366;
+      --eletro-teal: #009a74;
+      --muted: #6b7280;
+      --bg-page: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --soft-border: #e2e8f0;
+      --shadow-1: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --radius: 12px;
+    }
 
-    html.dark {
-      --muted: #9ca3af;
-      --bg-page: #111827;
-      --card-bg: #1f2937;
-      --text-color: #f9fafb;
-      --soft-border: #374151;
-      --shadow-1: 0 4px 6px -1px rgb(255 255 255 / 0.05), 0 2px 4px -2px rgb(255 255 255 / 0.05);
-    }
+    html.dark {
+      --muted: #9ca3af;
+      --bg-page: #111827;
+      --card-bg: #1f2937;
+      --text-color: #f9fafb;
+      --soft-border: #374151;
+      --shadow-1: 0 4px 6px -1px rgb(255 255 255 / 0.05), 0 2px 4px -2px rgb(255 255 255 / 0.05);
+    }
 
-    html, body {
-      height: 100%; margin: 0; padding: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial;
-      background: var(--bg-page); color: var(--text-color); transition: background 0.3s ease, color 0.3s ease;
-    }
-    .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px; position: relative; z-index: 10; }
-    header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--soft-border); margin-bottom: 22px; }
-    .title-group { display: flex; gap: 12px; align-items: center; }
-    svg.logo-icon { width: 56px; height: 56px; border-radius: 8px; padding: 6px; background: linear-gradient(135deg, var(--eletro-blue), var(--eletro-teal)); color: white; }
-    h1 { font-size: 22px; margin: 0; color: var(--text-color); font-weight: 600; }
-    html.dark h1 { color: var(--eletro-teal); }
-    .header-actions { display: flex; align-items: center; gap: 1rem; }
-    #theme-toggle-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; display: flex; align-items: center; justify-content: center; }
-    #theme-toggle-btn svg { width: 22px; height: 22px; }
-    .sun-icon { display: none; }
-    .moon-icon { display: block; }
-    html.dark .sun-icon { display: block; }
-    html.dark .moon-icon { display: none; }
-    #tabs-container { position: relative; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--soft-border); }
-    #active-tab-underline { position: absolute; bottom: -1px; height: 2px; background-color: var(--eletro-blue); transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); left:0; width:0; }
-    html.dark #active-tab-underline { background-color: var(--eletro-teal); }
-    .tab-btn { background: transparent; border: none; padding: 10px 14px; color: var(--muted); font-weight: 600; cursor: pointer; transition: color 0.12s ease-in-out; z-index: 1; }
-    .tab-btn:hover { color: var(--text-color); }
-    .tab-btn.active { color: var(--eletro-blue); }
-    html.dark .tab-btn.active { color: var(--eletro-teal); }
-    .tab-panel { margin-top: 12px; }
-    .bg-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow-1); border: 1px solid var(--soft-border); transition: background 0.3s ease, border-color 0.3s ease; }
-    #today-panel-grid, #upcoming-panel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
-    .birthday-card { display: flex; align-items: center; gap: 16px; padding: 16px; }
-    .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; font-size: 18px; flex-shrink: 0; }
-    .card-info .name { font-weight: 600; display: block; }
-    .card-info .sector, .card-info .date { font-size: 14px; color: var(--muted); }
-    .table-avatar-cell { display: flex; align-items: center; gap: 12px; }
-    table { border-collapse: collapse; width: 100%; }
-    thead th { background: #f8fafc; padding: 14px; text-align: left; font-size: 14px; color: #475569; cursor: pointer; user-select: none; }
-    thead th:hover { background: #f1f5f9; }
-    html.dark thead th { background: #374151; color: #d1d5db; }
-    html.dark thead th:hover { background: #4b5563; }
-    tbody tr { border-bottom: 1px solid var(--soft-border); }
-    tbody tr:last-child { border-bottom: none; }
-    tbody td { padding: 12px 14px; }
-    .search-input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--soft-border); background-color: var(--bg-page); margin-bottom: 16px; color: var(--text-color); }
-    .search-input:focus { outline: none; border-color: var(--eletro-blue); box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.12); }
-    html.dark .search-input:focus { border-color: var(--eletro-teal); box-shadow: 0 0 0 2px rgba(0, 154, 116, 0.12); }
-    #calendar-grid .day-cell { background-color: rgba(0, 154, 116, 0.05); cursor: pointer; }
-    #calendar-grid .day-cell[data-count="1"] { background-color: rgba(0, 154, 116, 0.2); }
-    #calendar-grid .day-cell[data-count="2"] { background-color: rgba(0, 154, 116, 0.5); }
-    #calendar-grid .day-cell[data-count="3"] { background-color: rgba(0, 154, 116, 0.8); }
-    .admin-only { display: none !important; }
-    body.admin-mode .admin-only { display: block !important; }
-    .admin-only-table-cell { display: none !important; }
-    body.admin-mode .admin-only-table-cell { display: table-cell !important; }
-    .hidden { display: none !important; }
-    #notification-toast { position: fixed; right: 20px; bottom: 20px; padding: 12px 16px; border-radius: 8px; color: white; opacity: 0; transform: translateY(10px); transition: all .25s ease; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); z-index: 1000000; pointer-events: auto; }
-    #notification-toast button { margin-left:8px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:inherit; padding:6px 8px; border-radius:6px; cursor:pointer; }
-    #fullscreen-celebration { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; overflow: hidden; z-index: 999999; }
-    canvas#confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-    .balloon { position: absolute; bottom: -120px; width: 60px; height: 80px; border-radius: 80% 80% 70% 70%; opacity: 0.95; animation: rise 10s ease-in forwards; z-index: 1000; pointer-events: none; }
-    .balloon::before { content: ''; position: absolute; width: 1px; height: 50px; background-color: rgba(0, 0, 0, 0.4); bottom: -50px; left: 50%; transform: translateX(-50%); }
-    .balloon::after { content: ''; position: absolute; border-style: solid; border-width: 0 8px 12px 8px; border-color: transparent transparent inherit transparent; bottom: -10px; left: calc(50% - 8px); }
-    @keyframes rise { 0% { transform: translateY(0) scale(0.8) rotate(5deg); } 100% { transform: translateY(-120vh) scale(1.2) rotate(-5deg); opacity: 0; } }
-    #calendar-tooltip { position: absolute; display: none; padding: 8px 12px; background-color: var(--card-bg); border: 1px solid var(--soft-border); border-radius: 8px; box-shadow: var(--shadow-1); z-index: 10000; pointer-events: none; font-size: 14px; max-width: 280px; transition: opacity 0.2s; }
-    #calendar-tooltip ul { margin: 0; padding: 0; list-style: none; } #calendar-tooltip li { white-space: nowrap; margin-bottom: 4px; } #calendar-tooltip li:last-child { margin-bottom: 0; } #calendar-tooltip .name { font-weight: 600; } #calendar-tooltip .sector { color: var(--muted); }
-    #loading-indicator { display: flex; justify-content: center; align-items: center; padding: 40px; font-weight: 500; color:var(--muted); }
-    /* Modal Styles */
-    #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; }
-    #modal-content { background: var(--card-bg); padding: 24px; border-radius: var(--radius); width: 90%; max-width: 400px; }
-    #modal-content h2 { margin-top: 0; }
-    #modal-form .form-group { margin-bottom: 16px; }
-    #modal-form label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 14px; }
-    #modal-form input, #modal-form select { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--soft-border); background-color: var(--bg-page); color: var(--text-color); }
-    #modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-    #modal-actions button { padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    #modal-save-btn { background: var(--eletro-blue); color: white; border: none; }
-    #modal-cancel-btn { background: transparent; border: 1px solid var(--soft-border); color: var(--text-color); }
+    html, body {
+      height: 100%; margin: 0; padding: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial;
+      background: var(--bg-page); color: var(--text-color); transition: background 0.3s ease, color 0.3s ease;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 28px 20px; position: relative; z-index: 10; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--soft-border); margin-bottom: 22px; }
+    .title-group { display: flex; gap: 12px; align-items: center; }
+    svg.logo-icon { width: 56px; height: 56px; border-radius: 8px; padding: 6px; background: linear-gradient(135deg, var(--eletro-blue), var(--eletro-teal)); color: white; }
+    h1 { font-size: 22px; margin: 0; color: var(--text-color); font-weight: 600; }
+    html.dark h1 { color: var(--eletro-teal); }
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+    #theme-toggle-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; display: flex; align-items: center; justify-content: center; }
+    #theme-toggle-btn svg { width: 22px; height: 22px; }
+    .sun-icon { display: none; }
+    .moon-icon { display: block; }
+    html.dark .sun-icon { display: block; }
+    html.dark .moon-icon { display: none; }
+    #tabs-container { position: relative; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; border-bottom: 1px solid var(--soft-border); }
+    #active-tab-underline { position: absolute; bottom: -1px; height: 2px; background-color: var(--eletro-blue); transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1); left:0; width:0; }
+    html.dark #active-tab-underline { background-color: var(--eletro-teal); }
+    .tab-btn { background: transparent; border: none; padding: 10px 14px; color: var(--muted); font-weight: 600; cursor: pointer; transition: color 0.12s ease-in-out; z-index: 1; }
+    .tab-btn:hover { color: var(--text-color); }
+    .tab-btn.active { color: var(--eletro-blue); }
+    html.dark .tab-btn.active { color: var(--eletro-teal); }
+    .tab-panel { margin-top: 12px; }
+    .bg-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow-1); border: 1px solid var(--soft-border); transition: background 0.3s ease, border-color 0.3s ease; }
+    #today-panel-grid, #upcoming-panel-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .birthday-card { display: flex; align-items: center; gap: 16px; padding: 16px; }
+    .avatar { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; color: white; font-size: 18px; flex-shrink: 0; }
+    .card-info .name { font-weight: 600; display: block; }
+    .card-info .sector, .card-info .date { font-size: 14px; color: var(--muted); }
+    .table-avatar-cell { display: flex; align-items: center; gap: 12px; }
+    table { border-collapse: collapse; width: 100%; }
+    thead th { background: #f8fafc; padding: 14px; text-align: left; font-size: 14px; color: #475569; cursor: pointer; user-select: none; }
+    thead th:hover { background: #f1f5f9; }
+    html.dark thead th { background: #374151; color: #d1d5db; }
+    html.dark thead th:hover { background: #4b5563; }
+    tbody tr { border-bottom: 1px solid var(--soft-border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 12px 14px; }
+    .search-input { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--soft-border); background-color: var(--bg-page); margin-bottom: 16px; color: var(--text-color); }
+    .search-input:focus { outline: none; border-color: var(--eletro-blue); box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.12); }
+    html.dark .search-input:focus { border-color: var(--eletro-teal); box-shadow: 0 0 0 2px rgba(0, 154, 116, 0.12); }
+    #calendar-grid .day-cell { background-color: rgba(0, 154, 116, 0.05); cursor: pointer; }
+    #calendar-grid .day-cell[data-count="1"] { background-color: rgba(0, 154, 116, 0.2); }
+    #calendar-grid .day-cell[data-count="2"] { background-color: rgba(0, 154, 116, 0.5); }
+    #calendar-grid .day-cell[data-count="3"] { background-color: rgba(0, 154, 116, 0.8); }
+    .admin-only { display: none !important; }
+    body.admin-mode .admin-only { display: block !important; }
+    .admin-only-table-cell { display: none !important; }
+    body.admin-mode .admin-only-table-cell { display: table-cell !important; }
+    .hidden { display: none !important; }
+    #notification-toast { position: fixed; right: 20px; bottom: 20px; padding: 12px 16px; border-radius: 8px; color: white; opacity: 0; transform: translateY(10px); transition: all .25s ease; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); z-index: 1000000; pointer-events: auto; }
+    #notification-toast button { margin-left:8px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:inherit; padding:6px 8px; border-radius:6px; cursor:pointer; }
+    #fullscreen-celebration { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; overflow: hidden; z-index: 999999; }
+    canvas#confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+    .balloon { position: absolute; bottom: -120px; width: 60px; height: 80px; border-radius: 80% 80% 70% 70%; opacity: 0.95; animation: rise 10s ease-in forwards; z-index: 1000; pointer-events: none; }
+    .balloon::before { content: ''; position: absolute; width: 1px; height: 50px; background-color: rgba(0, 0, 0, 0.4); bottom: -50px; left: 50%; transform: translateX(-50%); }
+    .balloon::after { content: ''; position: absolute; border-style: solid; border-width: 0 8px 12px 8px; border-color: transparent transparent inherit transparent; bottom: -10px; left: calc(50% - 8px); }
+    @keyframes rise { 0% { transform: translateY(0) scale(0.8) rotate(5deg); } 100% { transform: translateY(-120vh) scale(1.2) rotate(-5deg); opacity: 0; } }
+    #calendar-tooltip { position: absolute; display: none; padding: 8px 12px; background-color: var(--card-bg); border: 1px solid var(--soft-border); border-radius: 8px; box-shadow: var(--shadow-1); z-index: 10000; pointer-events: none; font-size: 14px; max-width: 280px; transition: opacity 0.2s; }
+    #calendar-tooltip ul { margin: 0; padding: 0; list-style: none; } #calendar-tooltip li { white-space: nowrap; margin-bottom: 4px; } #calendar-tooltip li:last-child { margin-bottom: 0; } #calendar-tooltip .name { font-weight: 600; } #calendar-tooltip .sector { color: var(--muted); }
+    #loading-indicator { display: flex; justify-content: center; align-items: center; padding: 40px; font-weight: 500; color:var(--muted); }
+    /* Modal Styles */
+    #modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+    #modal-content { background: var(--card-bg); padding: 24px; border-radius: var(--radius); width: 90%; max-width: 400px; }
+    #modal-content h2 { margin-top: 0; }
+    #modal-form .form-group { margin-bottom: 16px; }
+    #modal-form label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 14px; }
+    #modal-form input, #modal-form select { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--soft-border); background-color: var(--bg-page); color: var(--text-color); }
+    #modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+    #modal-actions button { padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    #modal-save-btn { background: var(--eletro-blue); color: white; border: none; }
+    #modal-cancel-btn { background: transparent; border: 1px solid var(--soft-border); color: var(--text-color); }
 
-    /* Responsive Table to Cards */
-    @media (max-width: 768px) {
-      table thead { display: none; }
-      table tbody, table tr, table td { display: block; width: 100%; }
-      table tr { border: 1px solid var(--soft-border); border-radius: var(--radius); margin-bottom: 16px; }
-      table td { border: none; padding-left: 16px; padding-right: 16px; display: flex; justify-content: space-between; align-items: center; }
-      table td:first-child { padding-top: 16px; }
-      table td:last-child { padding-bottom: 16px; }
-      table td::before { content: attr(data-label); font-weight: 600; padding-right: 12px; }
-      .table-avatar-cell { flex-direction: column; align-items: flex-start !important; gap: 4px !important; }
-      .table-avatar-cell .avatar { display: none; } /* Oculta avatar na vista de cartão para simplicidade */
-      table td[data-label="Ações"]::before { display: none; }
-      table td[data-label="Ações"] { justify-content: flex-start; gap: 8px; }
-    }
+    /* Responsive Table to Cards */
+    @media (max-width: 768px) {
+      table thead { display: none; }
+      table tbody, table tr, table td { display: block; width: 100%; }
+      table tr { border: 1px solid var(--soft-border); border-radius: var(--radius); margin-bottom: 16px; }
+      table td { border: none; padding-left: 16px; padding-right: 16px; display: flex; justify-content: space-between; align-items: center; }
+      table td:first-child { padding-top: 16px; }
+      table td:last-child { padding-bottom: 16px; }
+      table td::before { content: attr(data-label); font-weight: 600; padding-right: 12px; }
+      .table-avatar-cell { flex-direction: column; align-items: flex-start !important; gap: 4px !important; }
+      .table-avatar-cell .avatar { display: none; } /* Oculta avatar na vista de cartão para simplicidade */
+      table td[data-label="Ações"]::before { display: none; }
+      table td[data-label="Ações"] { justify-content: flex-start; gap: 8px; }
+    }
 
-    /* respect reduced motion */
-    @media (prefers-reduced-motion: reduce) {
-      .balloon, canvas#confetti-canvas { display:none !important; }
-      * { animation-duration: 0s !important; transition-duration: 0s !important; }
-    }
-  </style>
+    /* respect reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .balloon, canvas#confetti-canvas { display:none !important; }
+      * { animation-duration: 0s !important; transition-duration: 0s !important; }
+    }
+  </style>
 </head>
 
 <body>
-  <div id="fullscreen-celebration" aria-hidden="true"><canvas id="confetti-canvas" aria-hidden="true"></canvas></div>
-  <div id="calendar-tooltip" role="tooltip" aria-hidden="true"></div>
-  
-  <div class="container">
-    <header>
-      <div class="title-group">
-        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-5.197-5.975M15 10a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-        <div>
-          <h1>Painel de Aniversariantes</h1>
-          <p style="margin:0; color:var(--muted); font-size:13px">Celebre com a nossa equipe.</p>
-        </div>
-      </div>
-      <div class="header-actions">
-          <button id="theme-toggle-btn" aria-label="Toggle dark mode">
-            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
-            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
-          </button>
-        <button id="auth-btn" class="tertiary text-sm">🔒 Acesso Restrito</button>
-      </div>
-    </header>
+  <div id="fullscreen-celebration" aria-hidden="true"><canvas id="confetti-canvas" aria-hidden="true"></canvas></div>
+  <div id="calendar-tooltip" role="tooltip" aria-hidden="true"></div>
+  
+  <div class="container">
+    <header>
+      <div class="title-group">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-1a6 6 0 00-5.197-5.975M15 10a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+        <div>
+          <h1>Painel de Aniversariantes</h1>
+          <p style="margin:0; color:var(--muted); font-size:13px">Celebre com a nossa equipe.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+          <button id="theme-toggle-btn" aria-label="Toggle dark mode">
+            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
+            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+          </button>
+        <button id="auth-btn" class="tertiary text-sm">🔒 Acesso Restrito</button>
+      </div>
+    </header>
 
-    <div id="tabs-container">
-      <button data-tab="today" class="tab-btn">🎂 Hoje</button>
-      <button data-tab="upcoming" class="tab-btn">🎉 Próximos</button>
-      <button data-tab="calendar" class="tab-btn">🗓️ Calendário</button>
-      <button data-tab="list" class="tab-btn">📋 Lista Completa</button>
-      <button data-tab="chart" class="tab-btn admin-only">📊 Gestão</button>
-      <div id="active-tab-underline" aria-hidden="true"></div>
-    </div>
+    <div id="tabs-container">
+      <button data-tab="today" class="tab-btn">🎂 Hoje</button>
+      <button data-tab="upcoming" class="tab-btn">🎉 Próximos</button>
+      <button data-tab="calendar" class="tab-btn">🗓️ Calendário</button>
+      <button data-tab="list" class="tab-btn">📋 Lista Completa</button>
+      <button data-tab="chart" class="tab-btn admin-only">📊 Gestão</button>
+      <div id="active-tab-underline" aria-hidden="true"></div>
+    </div>
 
-    <main id="tab-panels-container">
-      <div id="loading-indicator" role="status" aria-live="polite">
-          <svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H8v-2h3V6l4 4-4 4z"></path></svg>
-          Carregando dados...
-      </div>
-      <div id="content-wrapper" class="hidden" aria-hidden="true">
-        <div id="today-panel" class="tab-panel"></div>
-        <div id="upcoming-panel" class="tab-panel hidden"></div>
-        <div id="calendar-panel" class="tab-panel hidden">
-          <div class="bg-card p-4 rounded-lg">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-              <h2 style="margin:0; font-size:18px">Calendário Heatmap</h2>
-              <div>
-                <button id="prev-month-btn" style="margin-right:6px">◀</button>
-                <span id="calendar-month-year" aria-live="polite"></span>
-                <button id="next-month-btn" style="margin-left:6px">▶</button>
-              </div>
-            </div>
-            <div id="calendar-grid" class="grid grid-cols-7 gap-2" aria-hidden="false"></div>
-          </div>
-        </div>
-        <div id="list-panel" class="tab-panel hidden">
-          <div class="bg-card p-4 rounded-lg">
-              <div style="display:flex; flex-wrap: wrap; justify-content:space-between; align-items:center; margin-bottom:12px; gap: 12px;">
-                  <h2 style="margin:0; font-size:18px">Lista Completa</h2>
-                  <div class="admin-only" style="display:flex; gap: 8px;">
-                      <button id="import-csv-btn" style="background:var(--eletro-teal); color:#fff; padding:8px 12px; border-radius:8px">Importar CSV</button>
-                      <button id="export-csv-btn" style="background:var(--eletro-teal); color:#fff; padding:8px 12px; border-radius:8px">Exportar CSV</button>
-                      <button id="add-person-btn" style="background:var(--eletro-blue); color:#fff; padding:8px 12px; border-radius:8px">+ Adicionar</button>
-                      <input type="file" id="csv-file-input" class="hidden" accept=".csv,text/csv">
-                  </div>
-              </div>
-              <input type="search" id="search-input" placeholder="Buscar por nome ou setor..." class="search-input" aria-label="Buscar por nome ou setor">
-              <div style="overflow:auto">
-                  <table>
-                      <thead><tr>
-                        <th data-sort="name">Nome <span></span></th>
-                        <th data-sort="sector">Setor <span></span></th>
-                        <th data-sort="date">Data <span></span></th>
-                        <th class="admin-only-table-cell" data-sort="none">Ações</th>
-                      </tr></thead>
-                      <tbody id="birthday-table-body" aria-live="polite"></tbody>
-                  </table>
-                  <div id="no-results" class="hidden" style="padding:18px; color:var(--muted)">Nenhum resultado encontrado.</div>
-              </div>
-          </div>
-        </div>
-        <div id="chart-panel" class="tab-panel hidden admin-only">
-          <div class="bg-card p-6 rounded-lg">
-            <h2 style="margin:0 0 18px 0; font-size:20px; font-weight: 600;">Análises de Dados</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-              <div class="lg:col-span-3 bg-gray-50/50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700"><canvas id="birthday-chart"></canvas></div>
-              <div class="lg:col-span-2 bg-gray-50/50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700"><canvas id="sector-chart"></canvas></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
+    <main id="tab-panels-container">
+      <div id="loading-indicator" role="status" aria-live="polite">
+          <svg class="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H8v-2h3V6l4 4-4 4z"></path></svg>
+          Carregando dados...
+      </div>
+      <div id="content-wrapper" class="hidden" aria-hidden="true">
+        <div id="today-panel" class="tab-panel"></div>
+        <div id="upcoming-panel" class="tab-panel hidden"></div>
+        <div id="calendar-panel" class="tab-panel hidden">
+          <div class="bg-card p-4 rounded-lg">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+              <h2 style="margin:0; font-size:18px">Calendário Heatmap</h2>
+              <div>
+                <button id="prev-month-btn" style="margin-right:6px">◀</button>
+                <span id="calendar-month-year" aria-live="polite"></span>
+                <button id="next-month-btn" style="margin-left:6px">▶</button>
+              </div>
+            </div>
+            <div id="calendar-grid" class="grid grid-cols-7 gap-2" aria-hidden="false"></div>
+          </div>
+        </div>
+        <div id="list-panel" class="tab-panel hidden">
+          <div class="bg-card p-4 rounded-lg">
+              <div style="display:flex; flex-wrap: wrap; justify-content:space-between; align-items:center; margin-bottom:12px; gap: 12px;">
+                  <h2 style="margin:0; font-size:18px">Lista Completa</h2>
+                  <div class="admin-only" style="display:flex; gap: 8px;">
+                      <button id="import-csv-btn" style="background:var(--eletro-teal); color:#fff; padding:8px 12px; border-radius:8px">Importar CSV</button>
+                      <button id="export-csv-btn" style="background:var(--eletro-teal); color:#fff; padding:8px 12px; border-radius:8px">Exportar CSV</button>
+                      <button id="add-person-btn" style="background:var(--eletro-blue); color:#fff; padding:8px 12px; border-radius:8px">+ Adicionar</button>
+                      <input type="file" id="csv-file-input" class="hidden" accept=".csv,text/csv">
+                  </div>
+              </div>
+              <input type="search" id="search-input" placeholder="Buscar por nome ou setor..." class="search-input" aria-label="Buscar por nome ou setor">
+              <div style="overflow:auto">
+                  <table>
+                      <thead><tr>
+                        <th data-sort="name">Nome <span></span></th>
+                        <th data-sort="sector">Setor <span></span></th>
+                        <th data-sort="date">Data <span></span></th>
+                        <th class="admin-only-table-cell" data-sort="none">Ações</th>
+                      </tr></thead>
+                      <tbody id="birthday-table-body" aria-live="polite"></tbody>
+                  </table>
+                  <div id="no-results" class="hidden" style="padding:18px; color:var(--muted)">Nenhum resultado encontrado.</div>
+              </div>
+          </div>
+        </div>
+        <div id="chart-panel" class="tab-panel hidden admin-only">
+          <div class="bg-card p-6 rounded-lg">
+            <h2 style="margin:0 0 18px 0; font-size:20px; font-weight: 600;">Análises de Dados</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <div class="lg:col-span-3 bg-gray-50/50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700"><canvas id="birthday-chart"></canvas></div>
+              <div class="lg:col-span-2 bg-gray-50/50 dark:bg-gray-800/50 p-4 rounded-lg border border-gray-200 dark:border-gray-700"><canvas id="sector-chart"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 
-  <!-- accessible toast (aria-live) -->
-  <div id="notification-toast" role="status" aria-live="polite"></div>
+    <div id="notification-toast" role="status" aria-live="polite"></div>
 
-  <div id="modal-overlay" class="hidden" aria-hidden="true">
-    <div id="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <h2 id="modal-title">Adicionar Aniversariante</h2>
-      <form id="modal-form">
-        <input type="hidden" id="modal-person-id">
-        <div class="form-group">
-          <label for="person-name">Nome</label>
-          <input type="text" id="person-name" required>
-        </div>
-        <div class="form-group">
-          <label for="person-sector">Setor</label>
-          <input type="text" id="person-sector" required>
-        </div>
-        <div style="display: flex; gap: 16px;">
-          <div class="form-group" style="flex: 1;">
-            <label for="person-day">Dia</label>
-            <input type="number" id="person-day" required min="1" max="31">
-          </div>
-          <div class="form-group" style="flex: 1;">
-            <label for="person-month">Mês</label>
-            <input type="number" id="person-month" required min="1" max="12">
-          </div>
-        </div>
-        <div id="modal-actions">
-          <button type="button" id="modal-cancel-btn">Cancelar</button>
-          <button type="submit" id="modal-save-btn">Salvar</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <div id="modal-overlay" class="hidden" aria-hidden="true">
+    <div id="modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h2 id="modal-title">Adicionar Aniversariante</h2>
+      <form id="modal-form">
+        <input type="hidden" id="modal-person-id">
+        <div class="form-group">
+          <label for="person-name">Nome</label>
+          <input type="text" id="person-name" required>
+        </div>
+        <div class="form-group">
+          <label for="person-sector">Setor</label>
+          <input type="text" id="person-sector" required>
+        </div>
+        <div style="display: flex; gap: 16px;">
+          <div class="form-group" style="flex: 1;">
+            <label for="person-day">Dia</label>
+            <input type="number" id="person-day" required min="1" max="31">
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label for="person-month">Mês</label>
+            <input type="number" id="person-month" required min="1" max="12">
+          </div>
+        </div>
+        <div id="modal-actions">
+          <button type="button" id="modal-cancel-btn">Cancelar</button>
+          <button type="submit" id="modal-save-btn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
-  <!-- ======= SCRIPT PRINCIPAL - versão de produção pronta ======= -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, writeBatch, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // DOM elements
-      const authBtn = document.getElementById('auth-btn');
-      const tabsContainer = document.getElementById('tabs-container');
-      const activeTabUnderline = document.getElementById('active-tab-underline');
-      const todayPanel = document.getElementById('today-panel');
-      const upcomingPanel = document.getElementById('upcoming-panel');
-      const calendarGrid = document.getElementById('calendar-grid');
-      const calendarMonthYear = document.getElementById('calendar-month-year');
-      const prevMonthBtn = document.getElementById('prev-month-btn');
-      const nextMonthBtn = document.getElementById('next-month-btn');
-      const tableBody = document.getElementById('birthday-table-body');
-      const searchInput = document.getElementById('search-input');
-      const noResults = document.getElementById('no-results');
-      const notificationToast = document.getElementById('notification-toast');
-      const themeToggleBtn = document.getElementById('theme-toggle-btn');
-      const confettiCanvas = document.getElementById('confetti-canvas');
-      const celebrationContainer = document.getElementById('fullscreen-celebration');
-      const calendarTooltip = document.getElementById('calendar-tooltip');
-      const loadingIndicator = document.getElementById('loading-indicator');
-      const contentWrapper = document.getElementById('content-wrapper');
+    document.addEventListener('DOMContentLoaded', () => {
+      // DOM elements
+      const authBtn = document.getElementById('auth-btn');
+      const tabsContainer = document.getElementById('tabs-container');
+      const activeTabUnderline = document.getElementById('active-tab-underline');
+      const todayPanel = document.getElementById('today-panel');
+      const upcomingPanel = document.getElementById('upcoming-panel');
+      const calendarGrid = document.getElementById('calendar-grid');
+      const calendarMonthYear = document.getElementById('calendar-month-year');
+      const prevMonthBtn = document.getElementById('prev-month-btn');
+      const nextMonthBtn = document.getElementById('next-month-btn');
+      const tableBody = document.getElementById('birthday-table-body');
+      const searchInput = document.getElementById('search-input');
+      const noResults = document.getElementById('no-results');
+      const notificationToast = document.getElementById('notification-toast');
+      const themeToggleBtn = document.getElementById('theme-toggle-btn');
+      const confettiCanvas = document.getElementById('confetti-canvas');
+      const celebrationContainer = document.getElementById('fullscreen-celebration');
+      const calendarTooltip = document.getElementById('calendar-tooltip');
+      const loadingIndicator = document.getElementById('loading-indicator');
+      const contentWrapper = document.getElementById('content-wrapper');
 
-      // Modal elements
-      const modalOverlay = document.getElementById('modal-overlay');
-      const modalForm = document.getElementById('modal-form');
-      const modalTitle = document.getElementById('modal-title');
-      const modalPersonId = document.getElementById('modal-person-id');
-      const modalCancelBtn = document.getElementById('modal-cancel-btn');
-      const addPersonBtn = document.getElementById('add-person-btn');
-      const tableHeader = document.querySelector('#list-panel thead');
+      // Modal elements
+      const modalOverlay = document.getElementById('modal-overlay');
+      const modalForm = document.getElementById('modal-form');
+      const modalTitle = document.getElementById('modal-title');
+      const modalPersonId = document.getElementById('modal-person-id');
+      const modalCancelBtn = document.getElementById('modal-cancel-btn');
+      const addPersonBtn = document.getElementById('add-person-btn');
+      const tableHeader = document.querySelector('#list-panel thead');
 
-      // CSV elements
-      const importCsvBtn = document.getElementById('import-csv-btn');
-      const exportCsvBtn = document.getElementById('export-csv-btn');
-      const csvFileInput = document.getElementById('csv-file-input');
+      // CSV elements
+      const importCsvBtn = document.getElementById('import-csv-btn');
+      const exportCsvBtn = document.getElementById('export-csv-btn');
+      const csvFileInput = document.getElementById('csv-file-input');
 
-      // Globals
-      const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-      const avatarColors = ['#003366','#009a74','#f0b400','#dc2626','#3b82f6','#f43f5e','#a855f7'];
-      let db = null, auth = null, dbCollection = null, dataUnsub = null;
-      let birthdayData = [];
-      let currentDate = new Date();
-      let isAdmin = false;
-      let sortConfig = { key: 'date', direction: 'ascending' };
-      let pendingDeletes = new Map();
+      // Globals
+      const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+      const avatarColors = ['#003366','#009a74','#f0b400','#dc2626','#3b82f6','#f43f5e','#a855f7'];
+      let db = null, auth = null, dbCollection = null, dataUnsub = null;
+      let birthdayData = [];
+      let currentDate = new Date();
+      let isAdmin = false;
+      let sortConfig = { key: 'date', direction: 'ascending' };
+      let pendingDeletes = new Map();
 
-      // confetti helper (respect prefers-reduced-motion)
-      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const confettiCannon = (!prefersReduced && window.confetti) ? confetti.create(confettiCanvas, { resize: true }) : null;
+      // confetti helper (respect prefers-reduced-motion)
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const confettiCannon = (!prefersReduced && window.confetti) ? confetti.create(confettiCanvas, { resize: true }) : null;
 
-      // Helpers
-      const safeFinallyShowUI = () => {
-        try {
-          loadingIndicator.classList.add('hidden');
-          contentWrapper.classList.remove('hidden');
-          contentWrapper.setAttribute('aria-hidden', 'false');
-        } catch(e) { console.warn('Erro ao mostrar UI:', e); }
-      };
+      // Helpers
+      const safeFinallyShowUI = () => {
+        try {
+          loadingIndicator.classList.add('hidden');
+          contentWrapper.classList.remove('hidden');
+          contentWrapper.setAttribute('aria-hidden', 'false');
+        } catch(e) { console.warn('Erro ao mostrar UI:', e); }
+      };
 
-      // toast with undo support
-      const showNotification = (msg, isError=false, actions=[]) => {
-        notificationToast.innerHTML = ''; // clear
-        notificationToast.style.background = isError ? '#dc2626' : 'linear-gradient(90deg,#003366,#009a74)';
-        notificationToast.style.opacity = '1';
-        notificationToast.style.transform = 'translateY(0)';
-        // create message node safely
-        const msgNode = document.createElement('div');
-        msgNode.style.display = 'inline-block';
-        msgNode.style.marginRight = '8px';
-        msgNode.textContent = msg;
-        notificationToast.appendChild(msgNode);
-        // actions: array [{label, handler}]
-        actions.forEach(a => {
-          const btn = document.createElement('button');
-          btn.textContent = a.label;
-          btn.addEventListener('click', a.handler);
-          notificationToast.appendChild(btn);
-        });
-        // auto-hide
-        setTimeout(() => {
-          notificationToast.style.opacity = '0';
-          notificationToast.style.transform = 'translateY(10px)';
-        }, 6000);
-      };
+      // toast with undo support
+      const showNotification = (msg, isError=false, actions=[]) => {
+        notificationToast.innerHTML = ''; // clear
+        notificationToast.style.background = isError ? '#dc2626' : 'linear-gradient(90deg,#003366,#009a74)';
+        notificationToast.style.opacity = '1';
+        notificationToast.style.transform = 'translateY(0)';
+        // create message node safely
+        const msgNode = document.createElement('div');
+        msgNode.style.display = 'inline-block';
+        msgNode.style.marginRight = '8px';
+        msgNode.textContent = msg;
+        notificationToast.appendChild(msgNode);
+        // actions: array [{label, handler}]
+        actions.forEach(a => {
+          const btn = document.createElement('button');
+          btn.textContent = a.label;
+          btn.addEventListener('click', a.handler);
+          notificationToast.appendChild(btn);
+        });
+        // auto-hide
+        setTimeout(() => {
+          notificationToast.style.opacity = '0';
+          notificationToast.style.transform = 'translateY(10px)';
+        }, 6000);
+      };
 
-      const getInitials = (name='') => {
-        if(!name) return '';
-        const parts = name.trim().split(/\s+/).slice(0,2);
-        return parts.map(p => p[0]?.toUpperCase() || '').join('');
-      };
-      const getColorForName = (name='') => {
-        const i = (name || '').split('').reduce((s,c)=>s + c.charCodeAt(0), 0);
-        return avatarColors[i % avatarColors.length];
-      };
-      const createAvatar = (name='') => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'avatar';
-        wrapper.style.background = getColorForName(name);
-        wrapper.textContent = getInitials(name);
-        return wrapper;
-      };
+      const getInitials = (name='') => {
+        if(!name) return '';
+        const parts = name.trim().split(/\s+/).slice(0,2);
+        return parts.map(p => p[0]?.toUpperCase() || '').join('');
+      };
+      const getColorForName = (name='') => {
+        const i = (name || '').split('').reduce((s,c)=>s + c.charCodeAt(0), 0);
+        return avatarColors[i % avatarColors.length];
+      };
+      const createAvatar = (name='') => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'avatar';
+        wrapper.style.background = getColorForName(name);
+        wrapper.textContent = getInitials(name);
+        return wrapper;
+      };
 
-      const createBalloons = (count=6) => {
-        if (prefersReduced) return;
-        for(let i=0;i<count;i++){
-          const b = document.createElement('div');
-          b.className = 'balloon';
-          b.style.left = `${Math.random() * 90}%`;
-          b.style.background = avatarColors[i % avatarColors.length];
-          b.style.animationDuration = `${7 + Math.random()*4}s`;
-          celebrationContainer.appendChild(b);
-          setTimeout(()=> b.remove(), 11000);
-        }
-      };
+      const createBalloons = (count=6) => {
+        if (prefersReduced) return;
+        for(let i=0;i<count;i++){
+          const b = document.createElement('div');
+          b.className = 'balloon';
+          b.style.left = `${Math.random() * 90}%`;
+          b.style.background = avatarColors[i % avatarColors.length];
+          b.style.animationDuration = `${7 + Math.random()*4}s`;
+          celebrationContainer.appendChild(b);
+          setTimeout(()=> b.remove(), 11000);
+        }
+      };
 
-      const triggerCelebration = () => {
-        try {
-          createBalloons(7);
-          if(confettiCannon) {
-            confettiCannon({ particleCount: 120, spread: 140, origin: { y: 0.6 } });
-          }
-        } catch(e){ console.warn('celebration error', e); }
-      };
+      const triggerCelebration = () => {
+        try {
+          createBalloons(7);
+          if(confettiCannon) {
+            confettiCannon({ particleCount: 120, spread: 140, origin: { y: 0.6 } });
+          }
+        } catch(e){ console.warn('celebration error', e); }
+      };
 
-      const mapFirebaseDoc = (doc) => ({
-        id: doc.id, name: doc.data().name || "", sector: doc.data().sector || "",
-        day: Number(doc.data().day) || 0, month: Number(doc.data().month) || 0,
-      });
+      // [SUBSTITUIÇÃO 1] - Nova função mapFirebaseDoc
+      // Mapeador robusto - lê campos pt/en e gera textoData se necessário
+      const mapFirebaseDoc = (docSnapshot) => {
+        const raw = (docSnapshot && typeof docSnapshot.data === 'function') ? docSnapshot.data() : (docSnapshot || {});
+        const id = (docSnapshot && docSnapshot.id) ? docSnapshot.id : (raw.id || ('local_' + Date.now()));
 
-      // --- Firebase init with graceful fallback (robusto: aceita vários nomes) ---
-      const initFirebase = async () => {
-        try {
-          // aceita window.firebaseConfig ou window.__firebase_config (ou variantes)
-          const fbCfg = window.firebaseConfig || window.__firebase_config || window.__FIREBASE_CONFIG || null;
-          if (fbCfg) {
-            const app = initializeApp(fbCfg);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            dbCollection = collection(db, 'aniversariantes');
-            setupAuthListener();
-            console.info('Firebase inicializado (client).');
-          } else {
-            console.warn('firebaseConfig não encontrado. Usando modo demo (dados mock).');
-            dbCollection = null; // marca modo demo
-          }
-        } catch (err) {
-          console.error('Erro initFirebase', err);
-          dbCollection = null;
-        }
-      };
+        // aceita 'nome' ou 'name'
+        const name = raw.nome ?? raw.name ?? raw.Nome ?? raw.NAME ?? '';
+        // aceita 'setor' ou 'sector'
+        const sector = raw.setor ?? raw.sector ?? raw.Setor ?? raw.SECTOR ?? '';
+        // dia / mes (pode vir string ou number)
+        const day = Number(raw.dia ?? raw.day ?? raw.Dia ?? raw.DAY) || 0;
+        const month = Number(raw.mes ?? raw.month ?? raw.Mes ?? raw.MONTH) || 0;
 
-      // --- Fetch + realtime (tolerant) ---
-      const fetchAndRenderData = async () => {
-        try {
-          if (dbCollection) {
-            try {
-              const snap = await getDocs(dbCollection);
-              birthdayData = snap.docs.map(mapFirebaseDoc);
-            } catch(err) {
-              console.error('Erro getDocs', err);
-              showNotification('Falha ao carregar dados reais; usando modo offline.', true);
-              birthdayData = sampleData();
-            }
-          } else {
-            birthdayData = sampleData();
-          }
-          renderAll();
-        } catch(err) {
-          console.error('fetchAndRenderData erro', err);
-          showNotification('Não foi possível carregar os dados.', true);
-        } finally {
-          safeFinallyShowUI();
-          attachRealtimeListener();
-        }
-      };
+        // textoData: usa o campo se existir, senão monta "15 de Janeiro"
+        const textoData = raw.textoData ?? raw.texto_data ?? raw.texto ?? ((day && month && monthNames[month-1]) ? `${day} de ${monthNames[month-1]}` : '');
 
-      const attachRealtimeListener = () => {
-        try {
-          if (dbCollection) {
-            if (dataUnsub) dataUnsub();
-            dataUnsub = onSnapshot(dbCollection, snap => {
-              birthdayData = snap.docs.map(mapFirebaseDoc);
-              renderAll();
-            }, err => {
-              console.warn('Realtime listener erro', err);
-            });
-          }
-        } catch(e) { console.warn('attachRealtimeListener', e); }
-      };
+        return {
+        id,
+        name: String(name).trim(),
+        sector: String(sector).trim(),
+        day,
+        month,
+        textoData: String(textoData)
+        };
+      };
 
-      const setupAuthListener = () => {
-        try {
-          if (!auth) return;
-          onAuthStateChanged(auth, async (user) => {
-            if (user) {
-              // check claims example (requires admin to set custom claims)
-              try {
-                const token = await user.getIdTokenResult(true);
-                isAdmin = !!token.claims?.admin;
-              } catch(e){ isAdmin = false; }
-              document.body.classList.toggle('admin-mode', !!isAdmin);
-              authBtn.textContent = isAdmin ? '🔓 Sair' : '🔒 Conta';
-            } else {
-              isAdmin = false;
-              document.body.classList.remove('admin-mode');
-              authBtn.textContent = '🔒 Acesso Restrito';
-            }
-          });
-        } catch(e){ console.warn('setupAuthListener', e); }
-      };
+      // --- Firebase init with graceful fallback (robusto: aceita vários nomes) ---
+      const initFirebase = async () => {
+        try {
+          // aceita window.firebaseConfig ou window.__firebase_config (ou variantes)
+          const fbCfg = window.firebaseConfig || window.__firebase_config || window.__FIREBASE_CONFIG || null;
+          if (fbCfg) {
+            const app = initializeApp(fbCfg);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            dbCollection = collection(db, 'aniversariantes');
+            setupAuthListener();
+            console.info('Firebase inicializado (client).');
+          } else {
+            console.warn('firebaseConfig não encontrado. Usando modo demo (dados mock).');
+            dbCollection = null; // marca modo demo
+          }
+        } catch (err) {
+          console.error('Erro initFirebase', err);
+          dbCollection = null;
+        }
+      };
 
-      // --- Demo fallback data ---
-      const sampleData = () => ([
-        { id:'s1', name: 'Ana Silva', sector: 'Engenharia', day: currentDate.getDate(), month: currentDate.getMonth() + 1 },
-        { id:'s2', name: 'Bruno Costa', sector: 'Comercial', day: ((currentDate.getDate()+3)%28)+1, month: currentDate.getMonth() + 1 },
-        { id:'s3', name: 'Carla Nunes', sector: 'RH', day: ((currentDate.getDate()+10)%28)+1, month: currentDate.getMonth() + 1 },
-      ]);
+      // --- Fetch + realtime (tolerant) ---
+      const fetchAndRenderData = async () => {
+        try {
+          if (dbCollection) {
+            try {
+              const snap = await getDocs(dbCollection);
+              birthdayData = snap.docs.map(mapFirebaseDoc);
+            } catch(err) {
+              console.error('Erro getDocs', err);
+              showNotification('Falha ao carregar dados reais; usando modo offline.', true);
+              birthdayData = sampleData();
+            }
+          } else {
+            birthdayData = sampleData();
+          }
+          renderAll();
+        } catch(err) {
+          console.error('fetchAndRenderData erro', err);
+          showNotification('Não foi possível carregar os dados.', true);
+        } finally {
+          safeFinallyShowUI();
+          attachRealtimeListener();
+        }
+      };
 
-      // ===== RENDER =====
-      const renderAll = (searchTerm='') => {
-        try {
-          // sort
-          birthdayData.sort((a,b)=>{
-            const dir = sortConfig.direction === 'ascending' ? 1 : -1;
-            const valA = sortConfig.key === 'date' ? (a.month*100 + a.day) : (a[sortConfig.key] || '');
-            const valB = sortConfig.key === 'date' ? (b.month*100 + b.day) : (b[sortConfig.key] || '');
-            if (typeof valA === 'string') return valA.localeCompare(valB) * dir;
-            if (valA === valB) return (a.name || '').localeCompare(b.name || '') * dir;
-            return (valA - valB) * dir;
-          });
-          renderToday();
-          renderUpcoming();
-          renderTable(searchTerm);
-          renderCalendar();
-          renderCharts();
-        } catch(e) { console.error('renderAll erro', e); }
-      };
+      const attachRealtimeListener = () => {
+        try {
+          if (dbCollection) {
+            if (dataUnsub) dataUnsub();
+            dataUnsub = onSnapshot(dbCollection, snap => {
+              birthdayData = snap.docs.map(mapFirebaseDoc);
+              renderAll();
+            }, err => {
+              console.warn('Realtime listener erro', err);
+            });
+          }
+        } catch(e) { console.warn('attachRealtimeListener', e); }
+      };
 
-      const renderToday = () => {
-        try {
-          todayPanel.innerHTML = '';
-          const today = new Date();
-          const day = today.getDate();
-          const month = today.getMonth() + 1;
-          const todays = birthdayData.filter(p => p.day === day && p.month === month);
-          if (todays.length === 0) {
-            todayPanel.innerHTML = `<div class="bg-card p-4 text-center rounded-lg">Nenhum aniversário hoje.</div>`;
-          } else {
-            const grid = document.createElement('div');
-            grid.id = 'today-panel-grid';
-            todays.forEach(p => {
-              const card = document.createElement('div');
-              card.className = 'birthday-card bg-card';
-              const avatar = createAvatar(p.name);
-              const info = document.createElement('div');
-              info.className = 'card-info';
-              const nameEl = document.createElement('span'); nameEl.className='name'; nameEl.textContent = p.name;
-              const sectorEl = document.createElement('span'); sectorEl.className='sector'; sectorEl.textContent = p.sector;
-              const dateEl = document.createElement('span'); dateEl.className='date'; dateEl.textContent = `Dia: ${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}`;
-              info.append(nameEl, sectorEl, dateEl);
-              card.append(avatar, info);
-              grid.appendChild(card);
-            });
-            todayPanel.appendChild(grid);
-            if (todays.length) triggerCelebration();
-          }
-        } catch(e){ console.warn('renderToday', e); }
-      };
+      const setupAuthListener = () => {
+        try {
+          if (!auth) return;
+          onAuthStateChanged(auth, async (user) => {
+            if (user) {
+              // check claims example (requires admin to set custom claims)
+              try {
+                const token = await user.getIdTokenResult(true);
+                isAdmin = !!token.claims?.admin;
+              } catch(e){ isAdmin = false; }
+              document.body.classList.toggle('admin-mode', !!isAdmin);
+              authBtn.textContent = isAdmin ? '🔓 Sair' : '🔒 Conta';
+            } else {
+              isAdmin = false;
+              document.body.classList.remove('admin-mode');
+              authBtn.textContent = '🔒 Acesso Restrito';
+            }
+          });
+        } catch(e){ console.warn('setupAuthListener', e); }
+      };
 
-      const renderUpcoming = () => {
-        upcomingPanel.innerHTML = '';
-        const today = new Date();
-        const upcomingBdays = [];
-        for(let i=1;i<=15;i++){
-          const futureDate = new Date();
-          futureDate.setDate(today.getDate() + i);
-          const day = futureDate.getDate(), month = futureDate.getMonth() + 1;
-          const match = birthdayData.filter(p => p.day === day && p.month === month);
-          if (match.length) upcomingBdays.push(...match);
-        }
-        if (upcomingBdays.length === 0) {
-          upcomingPanel.innerHTML = `<div class="bg-card p-4 text-center rounded-lg">Nenhum aniversário nos próximos 15 dias.</div>`;
-        } else {
-          const grid = document.createElement('div');
-          grid.id = 'upcoming-panel-grid';
-          upcomingBdays.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'birthday-card bg-card';
-            const avatar = createAvatar(p.name);
-            const info = document.createElement('div');
-            info.className = 'card-info';
-            const nameEl = document.createElement('span'); nameEl.className='name'; nameEl.textContent = p.name;
-            const sectorEl = document.createElement('span'); sectorEl.className='sector'; sectorEl.textContent = p.sector;
-            const dateEl = document.createElement('span'); dateEl.className='date'; dateEl.textContent = `Dia: ${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}`;
-            info.append(nameEl, sectorEl, dateEl);
-            card.append(avatar, info);
-            grid.appendChild(card);
-          });
-          upcomingPanel.appendChild(grid);
-        }
-      };
+      // --- Demo fallback data ---
+      const sampleData = () => ([
+        { id:'s1', name: 'Ana Silva', sector: 'Engenharia', day: currentDate.getDate(), month: currentDate.getMonth() + 1 },
+        { id:'s2', name: 'Bruno Costa', sector: 'Comercial', day: ((currentDate.getDate()+3)%28)+1, month: currentDate.getMonth() + 1 },
+        { id:'s3', name: 'Carla Nunes', sector: 'RH', day: ((currentDate.getDate()+10)%28)+1, month: currentDate.getMonth() + 1 },
+      ]);
 
-      const renderTable = (searchTerm='') => {
-        tableBody.innerHTML = '';
-        const q = (searchTerm || '').toLowerCase();
-        const filtered = q ? birthdayData.filter(p => (p.name || '').toLowerCase().includes(q) || (p.sector||'').toLowerCase().includes(q)) : birthdayData;
-        noResults.classList.toggle('hidden', filtered.length > 0);
-        filtered.forEach(p => {
-          const tr = document.createElement('tr');
+      // ===== RENDER =====
+      const renderAll = (searchTerm='') => {
+        try {
+          // sort
+          birthdayData.sort((a,b)=>{
+            const dir = sortConfig.direction === 'ascending' ? 1 : -1;
+            const valA = sortConfig.key === 'date' ? (a.month*100 + a.day) : (a[sortConfig.key] || '');
+            const valB = sortConfig.key === 'date' ? (b.month*100 + b.day) : (b[sortConfig.key] || '');
+            if (typeof valA === 'string') return valA.localeCompare(valB) * dir;
+            if (valA === valB) return (a.name || '').localeCompare(b.name || '') * dir;
+            return (valA - valB) * dir;
+          });
+          renderToday();
+          renderUpcoming();
+          renderTable(searchTerm);
+          renderCalendar();
+          renderCharts();
+        } catch(e) { console.error('renderAll erro', e); }
+      };
 
-          // name cell
-          const nameCell = document.createElement('td');
-          nameCell.dataset.label = "Nome";
-          nameCell.className = 'table-avatar-cell';
-          const avatar = createAvatar(p.name);
-          const nameSpan = document.createElement('span');
-          nameSpan.textContent = p.name;
-          nameCell.append(avatar, nameSpan);
+      const renderToday = () => {
+        try {
+          todayPanel.innerHTML = '';
+          const today = new Date();
+          const day = today.getDate();
+          const month = today.getMonth() + 1;
+          const todays = birthdayData.filter(p => p.day === day && p.month === month);
+          if (todays.length === 0) {
+            todayPanel.innerHTML = `<div class="bg-card p-4 text-center rounded-lg">Nenhum aniversário hoje.</div>`;
+          } else {
+            const grid = document.createElement('div');
+            grid.id = 'today-panel-grid';
+            todays.forEach(p => {
+              const card = document.createElement('div');
+              card.className = 'birthday-card bg-card';
+              const avatar = createAvatar(p.name);
+              const info = document.createElement('div');
+              info.className = 'card-info';
+              const nameEl = document.createElement('span'); nameEl.className='name'; nameEl.textContent = p.name;
+              const sectorEl = document.createElement('span'); sectorEl.className='sector'; sectorEl.textContent = p.sector;
+              const dateEl = document.createElement('span'); dateEl.className='date'; dateEl.textContent = `Dia: ${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}`;
+              info.append(nameEl, sectorEl, dateEl);
+              card.append(avatar, info);
+              grid.appendChild(card);
+            });
+            todayPanel.appendChild(grid);
+            if (todays.length) triggerCelebration();
+          }
+        } catch(e){ console.warn('renderToday', e); }
+      };
 
-          // sector + date cells
-          const sectorCell = document.createElement('td');
-          sectorCell.dataset.label = "Setor";
-          sectorCell.textContent = p.sector;
-          const dateCell = document.createElement('td');
-          dateCell.dataset.label = "Data";
-          dateCell.textContent = `${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}`;
+      const renderUpcoming = () => {
+        upcomingPanel.innerHTML = '';
+        const today = new Date();
+        const upcomingBdays = [];
+        for(let i=1;i<=15;i++){
+          const futureDate = new Date();
+          futureDate.setDate(today.getDate() + i);
+          const day = futureDate.getDate(), month = futureDate.getMonth() + 1;
+          const match = birthdayData.filter(p => p.day === day && p.month === month);
+          if (match.length) upcomingBdays.push(...match);
+        }
+        if (upcomingBdays.length === 0) {
+          upcomingPanel.innerHTML = `<div class="bg-card p-4 text-center rounded-lg">Nenhum aniversário nos próximos 15 dias.</div>`;
+        } else {
+          const grid = document.createElement('div');
+          grid.id = 'upcoming-panel-grid';
+          upcomingBdays.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'birthday-card bg-card';
+            const avatar = createAvatar(p.name);
+            const info = document.createElement('div');
+            info.className = 'card-info';
+            const nameEl = document.createElement('span'); nameEl.className='name'; nameEl.textContent = p.name;
+            const sectorEl = document.createElement('span'); sectorEl.className='sector'; sectorEl.textContent = p.sector;
+            const dateEl = document.createElement('span'); dateEl.className='date'; dateEl.textContent = `Dia: ${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}`;
+            info.append(nameEl, sectorEl, dateEl);
+            card.append(avatar, info);
+            grid.appendChild(card);
+          });
+          upcomingPanel.appendChild(grid);
+        }
+      };
 
-          // actions cell
-          const actionsCell = document.createElement('td');
-          actionsCell.dataset.label = "Ações";
-          actionsCell.className = 'admin-only-table-cell';
-          const editBtn = document.createElement('button');
-          editBtn.className = 'edit-btn';
-          editBtn.style.color = 'var(--eletro-blue)';
-          editBtn.textContent = 'Editar';
-          editBtn.addEventListener('click', () => openModal(p));
-          const deleteBtn = document.createElement('button');
-          deleteBtn.className = 'delete-btn';
-          deleteBtn.style.color = '#dc2626';
-          deleteBtn.textContent = 'Excluir';
-          deleteBtn.addEventListener('click', () => deletePerson(p.id, p.name));
-          actionsCell.append(editBtn, document.createTextNode(' '), deleteBtn);
+      const renderTable = (searchTerm='') => {
+        tableBody.innerHTML = '';
+        const q = (searchTerm || '').toLowerCase();
+        const filtered = q ? birthdayData.filter(p => (p.name || '').toLowerCase().includes(q) || (p.sector||'').toLowerCase().includes(q)) : birthdayData;
+        noResults.classList.toggle('hidden', filtered.length > 0);
+        filtered.forEach(p => {
+          const tr = document.createElement('tr');
 
-          tr.append(nameCell, sectorCell, dateCell, actionsCell);
-          tableBody.appendChild(tr);
-        });
-        updateSortIndicators();
-      };
+          // name cell
+          const nameCell = document.createElement('td');
+          nameCell.dataset.label = "Nome";
+          nameCell.className = 'table-avatar-cell';
+          const avatar = createAvatar(p.name);
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = p.name;
+          nameCell.append(avatar, nameSpan);
 
-      const renderCalendar = () => {
-        calendarGrid.innerHTML = '';
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth(); // 0-index
-        calendarMonthYear.textContent = `${monthNames[month]} ${year}`;
+          // sector + date cells
+          const sectorCell = document.createElement('td');
+          sectorCell.dataset.label = "Setor";
+          sectorCell.textContent = p.sector;
+          const dateCell = document.createElement('td');
+          dateCell.dataset.label = "Data";
+          dateCell.textContent = `${String(p.day).padStart(2,'0')}/${String(p.month).padStart(2,'0')}`;
 
-        const firstDay = new Date(year, month, 1).getDay(); // 0..6 (Sun..Sat)
-        const daysInMonth = new Date(year, month+1, 0).getDate();
+          // actions cell
+          const actionsCell = document.createElement('td');
+          actionsCell.dataset.label = "Ações";
+          actionsCell.className = 'admin-only-table-cell';
+          const editBtn = document.createElement('button');
+          editBtn.className = 'edit-btn';
+          editBtn.style.color = 'var(--eletro-blue)';
+          editBtn.textContent = 'Editar';
+          editBtn.addEventListener('click', () => openModal(p));
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'delete-btn';
+          deleteBtn.style.color = '#dc2626';
+          deleteBtn.textContent = 'Excluir';
+          deleteBtn.addEventListener('click', () => deletePerson(p.id, p.name));
+          actionsCell.append(editBtn, document.createTextNode(' '), deleteBtn);
 
-        for(let i=0;i<firstDay;i++){
-          const cell = document.createElement('div');
-          cell.className = 'day-cell';
-          cell.style.opacity = '0.25';
-          calendarGrid.appendChild(cell);
-        }
+          tr.append(nameCell, sectorCell, dateCell, actionsCell);
+          tableBody.appendChild(tr);
+        });
+        updateSortIndicators();
+      };
 
-        for(let d=1; d<=daysInMonth; d++){
-          const cell = document.createElement('div');
-          cell.className = 'day-cell bg-card p-2 rounded-lg';
-          const items = birthdayData.filter(b => b.day === d && b.month === month+1);
-          const count = items.length;
-          if (count > 0) cell.dataset.count = String(Math.min(count,3));
-          cell.textContent = d;
+      const renderCalendar = () => {
+        calendarGrid.innerHTML = '';
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth(); // 0-index
+        calendarMonthYear.textContent = `${monthNames[month]} ${year}`;
 
-          cell.addEventListener('mouseenter', (ev) => {
-            if (!items.length) return;
-            calendarTooltip.style.display = 'block';
-            calendarTooltip.innerHTML = '';
-            const title = document.createElement('strong'); title.textContent = `${d} ${monthNames[month]}`; calendarTooltip.appendChild(title);
-            const ul = document.createElement('ul');
-            items.forEach(it => {
-              const li = document.createElement('li');
-              const name = document.createElement('span'); name.className = 'name'; name.textContent = it.name;
-              const sector = document.createElement('span'); sector.className = 'sector'; sector.textContent = ` — ${it.sector}`;
-              li.append(name, sector);
-              ul.appendChild(li);
-            });
-            calendarTooltip.appendChild(ul);
-            // position (clamped)
-            const rect = ev.target.getBoundingClientRect();
-            const x = Math.min(window.innerWidth - calendarTooltip.offsetWidth - 8, rect.left + window.scrollX);
-            const y = rect.bottom + window.scrollY + 6;
-            calendarTooltip.style.left = `${Math.max(8, x)}px`;
-            calendarTooltip.style.top = `${Math.min(window.innerHeight - 40, y)}px`;
-          });
-          cell.addEventListener('mouseleave', () => {
-            calendarTooltip.style.display = 'none';
-          });
+        const firstDay = new Date(year, month, 1).getDay(); // 0..6 (Sun..Sat)
+        const daysInMonth = new Date(year, month+1, 0).getDate();
 
-          calendarGrid.appendChild(cell);
-        }
-      };
+        for(let i=0;i<firstDay;i++){
+          const cell = document.createElement('div');
+          cell.className = 'day-cell';
+          cell.style.opacity = '0.25';
+          calendarGrid.appendChild(cell);
+        }
 
-      const renderCharts = () => {
-        try {
-          const bc = document.getElementById('birthday-chart');
-          const sc = document.getElementById('sector-chart');
-          if (!bc || !sc || typeof Chart === 'undefined') return;
-          // birthdays per month
-          const monthsCount = new Array(12).fill(0);
-          birthdayData.forEach(b => monthsCount[(b.month||1)-1]++);
-          if (window._birthdayChart) window._birthdayChart.destroy();
-          window._birthdayChart = new Chart(bc.getContext('2d'), {
-            type: 'bar',
-            data: { labels: monthNames, datasets: [{ label: 'Aniversariantes', data: monthsCount }] },
-          });
-          // sectors
-          const sectorMap = {};
-          birthdayData.forEach(b => sectorMap[b.sector] = (sectorMap[b.sector]||0)+1);
-          if (window._sectorChart) window._sectorChart.destroy();
-          window._sectorChart = new Chart(sc.getContext('2d'), {
-            type: 'doughnut',
-            data: { labels: Object.keys(sectorMap), datasets: [{ data: Object.values(sectorMap) }] },
-          });
-        } catch(e){ console.warn('renderCharts', e); }
-      };
+        for(let d=1; d<=daysInMonth; d++){
+          const cell = document.createElement('div');
+          cell.className = 'day-cell bg-card p-2 rounded-lg';
+          const items = birthdayData.filter(b => b.day === d && b.month === month+1);
+          const count = items.length;
+          if (count > 0) cell.dataset.count = String(Math.min(count,3));
+          cell.textContent = d;
 
-      // ----- CRUD & Modal (accessible) -----
-      let lastFocusedEl = null;
-      const openModal = (person=null) => {
-        try {
-          modalForm.reset();
-          if (person) {
-            modalTitle.textContent = "Editar Aniversariante";
-            modalPersonId.value = person.id || '';
-            document.getElementById('person-name').value = person.name || '';
-            document.getElementById('person-sector').value = person.sector || '';
-            document.getElementById('person-day').value = person.day || '';
-            document.getElementById('person-month').value = person.month || '';
-          } else {
-            modalTitle.textContent = "Adicionar Aniversariante";
-            modalPersonId.value = '';
-          }
-          lastFocusedEl = document.activeElement;
-          modalOverlay.classList.remove('hidden');
-          modalOverlay.setAttribute('aria-hidden', 'false');
-          const firstInput = modalOverlay.querySelector('input,button,select,textarea');
-          firstInput?.focus();
-          document.addEventListener('keydown', trapTabKey);
-        } catch(e){ console.warn('openModal', e); }
-      };
-      const closeModal = () => {
-        modalOverlay.classList.add('hidden');
-        modalOverlay.setAttribute('aria-hidden', 'true');
-        lastFocusedEl?.focus();
-        document.removeEventListener('keydown', trapTabKey);
-      };
-      function trapTabKey(e) {
-        if (e.key !== 'Tab') return;
-        const focusable = modalOverlay.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if (!focusable.length) return;
-        const first = focusable[0], last = focusable[focusable.length-1];
-        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-      }
+          cell.addEventListener('mouseenter', (ev) => {
+            if (!items.length) return;
+            calendarTooltip.style.display = 'block';
+            calendarTooltip.innerHTML = '';
+            const title = document.createElement('strong'); title.textContent = `${d} ${monthNames[month]}`; calendarTooltip.appendChild(title);
+            const ul = document.createElement('ul');
+            items.forEach(it => {
+              const li = document.createElement('li');
+              const name = document.createElement('span'); name.className = 'name'; name.textContent = it.name;
+              const sector = document.createElement('span'); sector.className = 'sector'; sector.textContent = ` — ${it.sector}`;
+              li.append(name, sector);
+              ul.appendChild(li);
+            });
+            calendarTooltip.appendChild(ul);
+            // position (clamped)
+            const rect = ev.target.getBoundingClientRect();
+            const x = Math.min(window.innerWidth - calendarTooltip.offsetWidth - 8, rect.left + window.scrollX);
+            const y = rect.bottom + window.scrollY + 6;
+            calendarTooltip.style.left = `${Math.max(8, x)}px`;
+            calendarTooltip.style.top = `${Math.min(window.innerHeight - 40, y)}px`;
+          });
+          cell.addEventListener('mouseleave', () => {
+            calendarTooltip.style.display = 'none';
+          });
 
-      const isValidDate = (day, month) => {
-        day = Number(day); month = Number(month);
-        if (!day || !month) return false;
-        const y = 2000; // leap-year safe
-        const d = new Date(y, month-1, day);
-        return d.getMonth() === month-1 && d.getDate() === day;
-      };
+          calendarGrid.appendChild(cell);
+        }
+      };
 
-      const savePerson = async (e) => {
-        e.preventDefault();
-        const id = modalPersonId.value;
-        const personData = {
-          name: document.getElementById('person-name').value.trim(),
-          sector: document.getElementById('person-sector').value.trim(),
-          day: Number(document.getElementById('person-day').value),
-          month: Number(document.getElementById('person-month').value),
-        };
-        if (!personData.name || !personData.sector || !personData.day || !personData.month) {
-          return showNotification("Todos os campos são obrigatórios.", true);
-        }
-        if (!isValidDate(personData.day, personData.month)) {
-          return showNotification("Data inválida.", true);
-        }
-        try {
-          if (dbCollection) {
-            if (id) {
-              await updateDoc(doc(db, 'aniversariantes', id), { ...personData, updatedAt: serverTimestamp() });
-              showNotification('Dados atualizados com sucesso!');
-            } else {
-              await addDoc(dbCollection, { ...personData, createdAt: serverTimestamp() });
-              showNotification('Aniversariante adicionado com sucesso!');
-            }
-          } else {
-            if (id) {
-              const idx = birthdayData.findIndex(x => x.id === id);
-              if (idx >= 0) birthdayData[idx] = { ...birthdayData[idx], ...personData };
-              showNotification('Alteração local (demo).');
-            } else {
-              birthdayData.push({ id: 'local_' + Date.now(), ...personData });
-              showNotification('Adicionado local (demo).');
-            }
-            renderAll(searchInput.value);
-          }
-          closeModal();
-        } catch(err) {
-          console.error('savePerson', err);
-          showNotification('Erro ao salvar. Tente novamente.', true);
-        }
-      };
+      const renderCharts = () => {
+        try {
+          const bc = document.getElementById('birthday-chart');
+          const sc = document.getElementById('sector-chart');
+          if (!bc || !sc || typeof Chart === 'undefined') return;
+          // birthdays per month
+          const monthsCount = new Array(12).fill(0);
+          birthdayData.forEach(b => monthsCount[(b.month||1)-1]++);
+          if (window._birthdayChart) window._birthdayChart.destroy();
+          window._birthdayChart = new Chart(bc.getContext('2d'), {
+            type: 'bar',
+            data: { labels: monthNames, datasets: [{ label: 'Aniversariantes', data: monthsCount }] },
+          });
+          // sectors
+          const sectorMap = {};
+          birthdayData.forEach(b => sectorMap[b.sector] = (sectorMap[b.sector]||0)+1);
+          if (window._sectorChart) window._sectorChart.destroy();
+          window._sectorChart = new Chart(sc.getContext('2d'), {
+            type: 'doughnut',
+            data: { labels: Object.keys(sectorMap), datasets: [{ data: Object.values(sectorMap) }] },
+          });
+        } catch(e){ console.warn('renderCharts', e); }
+      };
 
-      const deletePerson = async (id, name) => {
-        if (!confirm(`Tem certeza que deseja excluir ${name}?`)) return;
-        // optimistic remove + undo
-        const item = birthdayData.find(x => x.id === id);
-        birthdayData = birthdayData.filter(x => x.id !== id);
-        renderAll();
-        let undone = false;
-        const undoHandler = () => {
-          undone = true;
-          birthdayData.push(item);
-          renderAll();
-          showNotification('Exclusão desfeita.');
-        };
-        showNotification(`${name} excluído.`, false, [{ label: 'Desfazer', handler: undoHandler }]);
-        // schedule delete after timeout (and only if not undone)
-        setTimeout(async () => {
-          if (undone) return;
-          try {
-            if (dbCollection) {
-              await deleteDoc(doc(db, 'aniversariantes', id));
-            } else {
-              showNotification(`${name} excluído (demo).`);
-            }
-          } catch(err) {
-            console.error('deletePerson', err);
-            showNotification('Erro ao excluir. Tente novamente.', true);
-          }
-        }, 6000);
-      };
+      // ----- CRUD & Modal (accessible) -----
+      let lastFocusedEl = null;
+      const openModal = (person=null) => {
+        try {
+          modalForm.reset();
+          if (person) {
+            modalTitle.textContent = "Editar Aniversariante";
+            modalPersonId.value = person.id || '';
+            document.getElementById('person-name').value = person.name || '';
+            document.getElementById('person-sector').value = person.sector || '';
+            document.getElementById('person-day').value = person.day || '';
+            document.getElementById('person-month').value = person.month || '';
+          } else {
+            modalTitle.textContent = "Adicionar Aniversariante";
+            modalPersonId.value = '';
+          }
+          lastFocusedEl = document.activeElement;
+          modalOverlay.classList.remove('hidden');
+          modalOverlay.setAttribute('aria-hidden', 'false');
+          const firstInput = modalOverlay.querySelector('input,button,select,textarea');
+          firstInput?.focus();
+          document.addEventListener('keydown', trapTabKey);
+        } catch(e){ console.warn('openModal', e); }
+      };
+      const closeModal = () => {
+        modalOverlay.classList.add('hidden');
+        modalOverlay.setAttribute('aria-hidden', 'true');
+        lastFocusedEl?.focus();
+        document.removeEventListener('keydown', trapTabKey);
+      };
+      function trapTabKey(e) {
+        if (e.key !== 'Tab') return;
+        const focusable = modalOverlay.querySelectorAll('a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focusable.length) return;
+        const first = focusable[0], last = focusable[focusable.length-1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
 
-      // ----- CSV functions (PapaParse + safe export) -----
-      const escapeCSV = s => `"${String(s).replace(/"/g,'""')}"`;
+      const isValidDate = (day, month) => {
+        day = Number(day); month = Number(month);
+        if (!day || !month) return false;
+        const y = 2000; // leap-year safe
+        const d = new Date(y, month-1, day);
+        return d.getMonth() === month-1 && d.getDate() === day;
+      };
 
-      const exportToCSV = () => {
-        let csv = 'Nome,Setor,Dia,Mês\n';
-        birthdayData.forEach(p => {
-          csv += `${escapeCSV(p.name)},${escapeCSV(p.sector)},${p.day},${p.month}\n`;
-        });
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'aniversariantes.csv';
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-        showNotification('Dados exportados para CSV.');
-      };
+      const savePerson = async (e) => {
+        e.preventDefault();
+        const id = modalPersonId.value;
+        const personData = {
+          name: document.getElementById('person-name').value.trim(),
+          sector: document.getElementById('person-sector').value.trim(),
+          day: Number(document.getElementById('person-day').value),
+          month: Number(document.getElementById('person-month').value),
+        };
+        if (!personData.name || !personData.sector || !personData.day || !personData.month) {
+          return showNotification("Todos os campos são obrigatórios.", true);
+        }
+        if (!isValidDate(personData.day, personData.month)) {
+          return showNotification("Data inválida.", true);
+        }
+        try {
+          // [SUBSTITUIÇÃO 2] - Novo bloco de gravação no Firestore
+          if (dbCollection) {
+            // payload no formato PT — mantém compatibilidade com seus docs atuais
+            const payload = {
+              nome: personData.name,
+              setor: personData.sector,
+              dia: personData.day,
+              mes: personData.month,
+              textoData: `${personData.day} de ${monthNames[(personData.month || 1) - 1] || ''}`,
+              updatedAt: serverTimestamp()
+            };
 
-      const importFromCSV = (e) => {
-        const file = e.target.files && e.target.files[0];
-        if (!file) return;
-        Papa.parse(file, {
-          header: true,
-          skipEmptyLines: true,
-          complete: async (results) => {
-            try {
-              const rows = results.data;
-              const valid = rows.map(r => {
-                const name = r['Nome'] || r['name'] || r.nome;
-                const sector = r['Setor'] || r['sector'] || r.setor;
-                const day = Number(r['Dia'] || r['day']);
-                const month = Number(r['Mês'] || r['Mes'] || r.month);
-                return { name, sector, day, month };
-              }).filter(x => x.name && x.sector && !isNaN(x.day) && !isNaN(x.month) && isValidDate(x.day, x.month));
-              if (!valid.length) return showNotification('Nenhum registro válido encontrado.', true);
-              // preview small sample
-              const previewCount = Math.min(6, valid.length);
-              const confirmTxt = `${valid.length} registros válidos encontrados (mostrando ${previewCount}). Deseja importar?`;
-              if (!confirm(confirmTxt)) return;
-              if (dbCollection) {
-                // commit sequentially or use batch (simplified addDoc loop)
-                for (const item of valid) {
-                  await addDoc(dbCollection, { ...item, createdAt: serverTimestamp() });
-                }
-              } else {
-                valid.forEach(v => birthdayData.push({ id: 'local_'+Date.now()+Math.random(), ...v }));
-                renderAll();
-              }
-              showNotification('Importação concluída.');
-            } catch(err) {
-              console.error('importFromCSV parsing', err);
-              showNotification('Erro durante a importação.', true);
-            }
-          },
-          error: (err) => {
-            console.error('PapaParse error', err);
-            showNotification('Erro ao ler CSV.', true);
-          }
-        });
-        e.target.value = '';
-      };
+            if (id) {
+              await updateDoc(doc(db, 'aniversariantes', id), payload);
+              showNotification('Dados atualizados com sucesso!');
+            } else {
+              await addDoc(dbCollection, { ...payload, createdAt: serverTimestamp() });
+              showNotification('Aniversariante adicionado com sucesso!');
+            }
+          } else {
+            // Modo demo: manter estrutura interna (name/sector/day/month) usada pelo app,
+            // mas também incluir textoData para consistência
+            if (id) {
+              const idx = birthdayData.findIndex(x => x.id === id);
+              if (idx >= 0) birthdayData[idx] = { ...birthdayData[idx], ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1] || ''}` };
+              showNotification('Alteração local (demo).');
+            } else {
+              birthdayData.push({ id: 'local_' + Date.now(), ...personData, textoData: `${personData.day} de ${monthNames[(personData.month||1)-1] || ''}` });
+              showNotification('Adicionado local (demo).');
+            }
+            renderAll(searchInput.value);
+          }
+          closeModal();
+        } catch(err) {
+          console.error('savePerson', err);
+          showNotification('Erro ao salvar. Tente novamente.', true);
+        }
+      };
 
-      // ----- Sorting UI -----
-      const updateSortIndicators = () => {
-        if (!tableHeader) return;
-        tableHeader.querySelectorAll('th').forEach(th => {
-          const span = th.querySelector('span');
-          if (!span) return;
-          if (th.dataset.sort === sortConfig.key) {
-            span.textContent = sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
-          } else {
-            span.textContent = '';
-          }
-        });
-      };
+      const deletePerson = async (id, name) => {
+        if (!confirm(`Tem certeza que deseja excluir ${name}?`)) return;
+        // optimistic remove + undo
+        const item = birthdayData.find(x => x.id === id);
+        birthdayData = birthdayData.filter(x => x.id !== id);
+        renderAll();
+        let undone = false;
+        const undoHandler = () => {
+          undone = true;
+          birthdayData.push(item);
+          renderAll();
+          showNotification('Exclusão desfeita.');
+        };
+        showNotification(`${name} excluído.`, false, [{ label: 'Desfazer', handler: undoHandler }]);
+        // schedule delete after timeout (and only if not undone)
+        setTimeout(async () => {
+          if (undone) return;
+          try {
+            if (dbCollection) {
+              await deleteDoc(doc(db, 'aniversariantes', id));
+            } else {
+              showNotification(`${name} excluído (demo).`);
+            }
+          } catch(err) {
+            console.error('deletePerson', err);
+            showNotification('Erro ao excluir. Tente novamente.', true);
+          }
+        }, 6000);
+      };
 
-      // ----- Utilities -----
-      const debounce = (fn, delay=250) => {
-        let t;
-        return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
-      };
+      // ----- CSV functions (PapaParse + safe export) -----
+      const escapeCSV = s => `"${String(s).replace(/"/g,'""')}"`;
 
-      // ----- Event listeners -----
-      prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
-      nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
-      searchInput.addEventListener('input', debounce((e) => renderTable(e.target.value), 220));
+      const exportToCSV = () => {
+        let csv = 'Nome,Setor,Dia,Mês\n';
+        birthdayData.forEach(p => {
+          csv += `${escapeCSV(p.name)},${escapeCSV(p.sector)},${p.day},${p.month}\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'aniversariantes.csv';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        showNotification('Dados exportados para CSV.');
+      };
 
-      tabsContainer.addEventListener('click', (ev) => {
-        const btn = ev.target.closest('.tab-btn');
-        if (!btn) return;
-        const tab = btn.dataset.tab;
-        document.querySelectorAll('#tab-panels-container .tab-panel').forEach(p => p.classList.add('hidden'));
-        document.querySelectorAll('#tabs-container .tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const panelMap = { today: '#today-panel', upcoming: '#upcoming-panel', calendar: '#calendar-panel', list: '#list-panel', chart: '#chart-panel' };
-        const sel = panelMap[tab];
-        if (sel) document.querySelector(sel).classList.remove('hidden');
-        // animate underline
-        activeTabUnderline.style.width = `${btn.offsetWidth}px`;
-        activeTabUnderline.style.left = `${btn.offsetLeft}px`;
-        if (tab === 'chart') renderCharts();
-      });
+      const importFromCSV = (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: async (results) => {
+            try {
+              const rows = results.data;
+              const valid = rows.map(r => {
+                const name = r['Nome'] || r['name'] || r.nome;
+                const sector = r['Setor'] || r['sector'] || r.setor;
+                const day = Number(r['Dia'] || r['day']);
+                const month = Number(r['Mês'] || r['Mes'] || r.month);
+                return { name, sector, day, month };
+              }).filter(x => x.name && x.sector && !isNaN(x.day) && !isNaN(x.month) && isValidDate(x.day, x.month));
+              if (!valid.length) return showNotification('Nenhum registro válido encontrado.', true);
+              // preview small sample
+              const previewCount = Math.min(6, valid.length);
+              const confirmTxt = `${valid.length} registros válidos encontrados (mostrando ${previewCount}). Deseja importar?`;
+              if (!confirm(confirmTxt)) return;
+              if (dbCollection) {
+                // commit sequentially or use batch (simplified addDoc loop)
+                for (const item of valid) {
+                  await addDoc(dbCollection, { ...item, createdAt: serverTimestamp() });
+                }
+              } else {
+                valid.forEach(v => birthdayData.push({ id: 'local_'+Date.now()+Math.random(), ...v }));
+                renderAll();
+              }
+              showNotification('Importação concluída.');
+            } catch(err) {
+              console.error('importFromCSV parsing', err);
+              showNotification('Erro durante a importação.', true);
+            }
+          },
+          error: (err) => {
+            console.error('PapaParse error', err);
+            showNotification('Erro ao ler CSV.', true);
+          }
+        });
+        e.target.value = '';
+      };
 
-      const initTheme = () => {
-        try {
-          const saved = localStorage.getItem('theme');
-          if (saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-          }
-        } catch(e){ console.warn('initTheme', e); }
-      };
-      themeToggleBtn.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      });
+      // ----- Sorting UI -----
+      const updateSortIndicators = () => {
+        if (!tableHeader) return;
+        tableHeader.querySelectorAll('th').forEach(th => {
+          const span = th.querySelector('span');
+          if (!span) return;
+          if (th.dataset.sort === sortConfig.key) {
+            span.textContent = sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
+          } else {
+            span.textContent = '';
+          }
+        });
+      };
 
-      // modal & CSV listeners
-      addPersonBtn && addPersonBtn.addEventListener('click', () => openModal());
-      modalCancelBtn.addEventListener('click', closeModal);
-      modalOverlay.addEventListener('click', (ev) => { if (ev.target === modalOverlay) closeModal(); });
-      modalForm.addEventListener('submit', savePerson);
+      // ----- Utilities -----
+      const debounce = (fn, delay=250) => {
+        let t;
+        return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), delay); };
+      };
 
-      importCsvBtn && importCsvBtn.addEventListener('click', () => csvFileInput.click());
-      csvFileInput && csvFileInput.addEventListener('change', importFromCSV);
-      exportCsvBtn && exportCsvBtn.addEventListener('click', exportToCSV);
+      // ----- Event listeners -----
+      prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
+      nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+      searchInput.addEventListener('input', debounce((e) => renderTable(e.target.value), 220));
 
-      tableHeader && tableHeader.addEventListener('click', (e) => {
-        const th = e.target.closest('th');
-        if (!th || th.dataset.sort === 'none') return;
-        const key = th.dataset.sort;
-        if (sortConfig.key === key) sortConfig.direction = sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
-        else { sortConfig.key = key; sortConfig.direction = 'ascending'; }
-        renderAll(searchInput.value);
-      });
+      tabsContainer.addEventListener('click', (ev) => {
+        const btn = ev.target.closest('.tab-btn');
+        if (!btn) return;
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('#tab-panels-container .tab-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('#tabs-container .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const panelMap = { today: '#today-panel', upcoming: '#upcoming-panel', calendar: '#calendar-panel', list: '#list-panel', chart: '#chart-panel' };
+        const sel = panelMap[tab];
+        if (sel) document.querySelector(sel).classList.remove('hidden');
+        // animate underline
+        activeTabUnderline.style.width = `${btn.offsetWidth}px`;
+        activeTabUnderline.style.left = `${btn.offsetLeft}px`;
+        if (tab === 'chart') renderCharts();
+      });
 
-      // calendar tooltip follow
-      calendarGrid.addEventListener('mousemove', debounce((e) => {
-        if (calendarTooltip.style.display === 'block') {
-          const x = Math.min(window.innerWidth - calendarTooltip.offsetWidth - 8, e.pageX + 12);
-          calendarTooltip.style.left = `${x}px`;
-        }
-      }, 20));
+      const initTheme = () => {
+        try {
+          const saved = localStorage.getItem('theme');
+          if (saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch(e){ console.warn('initTheme', e); }
+      };
+      themeToggleBtn.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
 
-      // underline sizing on resize
-      const updateUnderline = () => {
-        const active = document.querySelector('.tab-btn.active');
-        if (active) {
-          activeTabUnderline.style.width = `${active.offsetWidth}px`;
-          activeTabUnderline.style.left = `${active.offsetLeft}px`;
-        }
-      };
-      window.addEventListener('resize', debounce(updateUnderline, 120));
-      try {
-        const ro = new ResizeObserver(debounce(updateUnderline, 120));
-        ro.observe(tabsContainer);
-      } catch(e){ /* ignore if ResizeObserver not available */ }
+      // modal & CSV listeners
+      addPersonBtn && addPersonBtn.addEventListener('click', () => openModal());
+      modalCancelBtn.addEventListener('click', closeModal);
+      modalOverlay.addEventListener('click', (ev) => { if (ev.target === modalOverlay) closeModal(); });
+      modalForm.addEventListener('submit', savePerson);
 
-      // initial activation
-      const firstTab = tabsContainer.querySelector('.tab-btn');
-      if (firstTab) {
-        firstTab.click();
-        requestAnimationFrame(()=> {
-          activeTabUnderline.style.width = `${firstTab.offsetWidth}px`;
-          activeTabUnderline.style.left = `${firstTab.offsetLeft}px`;
-        });
-      }
+      importCsvBtn && importCsvBtn.addEventListener('click', () => csvFileInput.click());
+      csvFileInput && csvFileInput.addEventListener('change', importFromCSV);
+      exportCsvBtn && exportCsvBtn.addEventListener('click', exportToCSV);
 
-      // init flow
-      initTheme();
-      (async () => {
-        await initFirebase();
-        await fetchAndRenderData();
-      })();
+      tableHeader && tableHeader.addEventListener('click', (e) => {
+        const th = e.target.closest('th');
+        if (!th || th.dataset.sort === 'none') return;
+        const key = th.dataset.sort;
+        if (sortConfig.key === key) sortConfig.direction = sortConfig.direction === 'ascending' ? 'descending' : 'ascending';
+        else { sortConfig.key = key; sortConfig.direction = 'ascending'; }
+        renderAll(searchInput.value);
+      });
 
-      // global error handler: ensure loader not stuck
-      window.addEventListener('error', (ev) => {
-        console.error('Global error:', ev.error || ev.message);
-        safeFinallyShowUI();
-      });
-      window.addEventListener('unhandledrejection', (ev) => {
-        console.error('Unhandled rejection:', ev.reason);
-        safeFinallyShowUI();
-      });
+      // calendar tooltip follow
+      calendarGrid.addEventListener('mousemove', debounce((e) => {
+        if (calendarTooltip.style.display === 'block') {
+          const x = Math.min(window.innerWidth - calendarTooltip.offsetWidth - 8, e.pageX + 12);
+          calendarTooltip.style.left = `${x}px`;
+        }
+      }, 20));
 
-      // debug helper
-      window.__reRenderBirthdays = () => renderAll();
+      // underline sizing on resize
+      const updateUnderline = () => {
+        const active = document.querySelector('.tab-btn.active');
+        if (active) {
+          activeTabUnderline.style.width = `${active.offsetWidth}px`;
+          activeTabUnderline.style.left = `${active.offsetLeft}px`;
+        }
+      };
+      window.addEventListener('resize', debounce(updateUnderline, 120));
+      try {
+        const ro = new ResizeObserver(debounce(updateUnderline, 120));
+        ro.observe(tabsContainer);
+      } catch(e){ /* ignore if ResizeObserver not available */ }
 
-    });
-  </script>
+      // initial activation
+      const firstTab = tabsContainer.querySelector('.tab-btn');
+      if (firstTab) {
+        firstTab.click();
+        requestAnimationFrame(()=> {
+          activeTabUnderline.style.width = `${firstTab.offsetWidth}px`;
+          activeTabUnderline.style.left = `${firstTab.offsetLeft}px`;
+        });
+      }
+
+      // init flow
+      initTheme();
+      (async () => {
+        await initFirebase();
+        await fetchAndRenderData();
+      })();
+
+      // global error handler: ensure loader not stuck
+      window.addEventListener('error', (ev) => {
+        console.error('Global error:', ev.error || ev.message);
+        safeFinallyShowUI();
+      });
+      window.addEventListener('unhandledrejection', (ev) => {
+        console.error('Unhandled rejection:', ev.reason);
+        safeFinallyShowUI();
+      });
+
+      // debug helper
+      window.__reRenderBirthdays = () => renderAll();
+
+    });
+  </script>
 </body>
 </html>
