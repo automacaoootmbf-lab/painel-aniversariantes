@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel de Aniversariantes — Dashboard (v1.0.1)</title>
+  <title>Painel de Aniversariantes — Dashboard (v1.0.2)</title>
   <meta name="description" content="Painel responsivo de aniversariantes com tema claro/escuro, export/import CSV, calendário e celebração com confetes + balões." />
-  <meta name="version" content="1.0.1">
+  <meta name="version" content="1.0.2">
   <meta name="theme-color" content="#10b981">
 
   <style>
@@ -13,11 +13,11 @@
       --bg-light: #f7fefa;
       --card-light: #ffffff;
       --text-light: #06121a;
-      --muted-light: #32474f; /* increased contrast */
+      --muted-light: #32474f;
       --bg-dark: #06121a;
-      --card-dark: #0b1b24;   /* slightly lighter for better card contrast */
+      --card-dark: #0b1b24;
       --text-dark: #e8faf5;
-      --muted-dark: #9fbfc7;  /* increased contrast */
+      --muted-dark: #9fbfc7;
       --accent-green: #10b981;
       --accent-blue: #0ea5e9;
       --danger: #ef4444;
@@ -26,7 +26,6 @@
       --elevation: 0 10px 36px rgba(2,6,23,0.18);
       --radius-lg: 16px;
       --radius-md: 10px;
-      --focus-glow: 4px;
     }
 
     [data-theme="light"]{
@@ -87,10 +86,8 @@
     .skeleton{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));border-radius:8px;height:14px}
     .fade-in{animation:fadeIn .36s ease both}
     @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-    /* admin-only helper (hidden by default until auth) */
     .admin-only{display:none}
     .admin-visible{display:inline-flex}
-    /* make important small text more legible in dark */
     [data-theme="dark"] .small{color:var(--muted-dark)}
   </style>
 </head>
@@ -163,7 +160,6 @@
               <p class="small" id="actions-sub">Importe, exporte ou adicione manualmente.</p>
             </div>
             <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-              <!-- import is admin-only -->
               <input id="csv-file" class="admin-only" type="file" accept=".csv" aria-label="Importar CSV" />
               <div style="display:flex;gap:8px">
                 <button id="import-sample" class="btn ghost small admin-only">Importar Exemplo</button>
@@ -188,7 +184,7 @@
         <div class="bg-card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
           <div>
             <h4 style="margin:0">Versão</h4>
-            <div class="small" id="ver-info">v1.0.1 • Internacionalização pronta</div>
+            <div class="small" id="ver-info">v1.0.2 • Internacionalização pronta</div>
           </div>
           <div style="text-align:right">
             <div class="small">Tema: <span id="current-theme">Claro</span></div>
@@ -228,7 +224,9 @@
 
   <script>
     /* -------------------------
-       App: controls auth visibility, i18n, contrast, admin gating
+       App script (v1.0.2)
+       - confetti with side reflection, slower balloons
+       - i18n, admin gating, Firebase dynamic init
        ------------------------- */
 
     const DEFAULT_LOCALE = 'pt-BR';
@@ -244,7 +242,7 @@
     let firebaseDb = null;
     let firebaseAuth = null;
 
-    // translations
+    // translations minimal
     const i18n = {
       "pt-BR": {
         title: "Painel de Aniversariantes",
@@ -322,7 +320,7 @@
     function initials(name){ return (name||'').split(' ').map(p=>p.charAt(0)).join('').slice(0,2).toUpperCase(); }
     function nextDate(rec, from=new Date()){ const y = from.getFullYear(); let d = new Date(y, rec.mes-1, rec.dia, 12); if(d<from) d = new Date(y+1, rec.mes-1, rec.dia, 12); return d; }
 
-    /* ------------- renders ------------- */
+    /* -------- renders -------- */
     function renderToday(){
       const el = document.getElementById('today-content');
       const now = new Date();
@@ -358,7 +356,7 @@
       const todayKey = new Date().toISOString().slice(0,10);
       if(matches.length > 0 && celebratedDate !== todayKey){
         celebratedDate = todayKey;
-        setTimeout(()=> { celebrateNow(); }, 700);
+        setTimeout(()=> { celebrateNow({ sideBurst: true, auto: true }); }, 700);
       }
     }
 
@@ -397,7 +395,6 @@
       calendarPanel.appendChild(wrap);
     }
 
-    // list render: include admin buttons only when auth
     function renderList(reset=false){
       if(reset) page = 0;
       const start = page*PAGE_SIZE; const end = start+PAGE_SIZE;
@@ -420,16 +417,12 @@
       html += '</tbody></table>';
       wrapper.innerHTML = html;
 
-      // events for admin buttons
       if(userLogged){
         wrapper.querySelectorAll('.del-btn').forEach(b=> b.addEventListener('click', async (e)=>{
           const id = e.currentTarget.dataset.id;
           if(!confirm('Excluir?')) return;
           if(firebaseInitialized && firebaseDb){
-            try{
-              await firebaseDb.collection('aniversariantes').doc(id).delete();
-              toast('Registro excluído');
-            }catch(err){ toast('Erro ao excluir: ' + err.message, true); }
+            try{ await firebaseDb.collection('aniversariantes').doc(id).delete(); toast('Registro excluído'); }catch(err){ toast('Erro ao excluir: ' + err.message, true); }
           } else {
             dataArr = dataArr.filter(x=>x.id!==id);
             renderList(true); renderToday(); renderFuture(); renderStats();
@@ -446,10 +439,7 @@
           const mes = parseInt(prompt('Mês (1-12):', rec.mes),10);
           if(!nome || isNaN(dia) || isNaN(mes)) { toast('Dados inválidos', true); return; }
           if(firebaseInitialized && firebaseDb){
-            try{
-              await firebaseDb.collection('aniversariantes').doc(id).set({ nome, setor, dia, mes }, { merge: true });
-              toast('Atualizado');
-            }catch(err){ toast('Erro ao atualizar: ' + err.message, true); }
+            try{ await firebaseDb.collection('aniversariantes').doc(id).set({ nome, setor, dia, mes }, { merge: true }); toast('Atualizado'); }catch(err){ toast('Erro ao atualizar: ' + err.message, true); }
           } else {
             Object.assign(rec,{ nome, setor, dia, mes });
             renderList(true); renderToday(); renderFuture(); renderStats();
@@ -477,45 +467,146 @@
       });
     }
 
-    /* ------------- effects ------------- */
+    /* ------------- confetti with reflection ------------- */
     function setupCanvasSize(){ const c = document.getElementById('confetti-canvas'); c.width = window.innerWidth; c.height = window.innerHeight; }
     window.addEventListener('resize', setupCanvasSize);
     setupCanvasSize();
 
-    function launchConfetti(pcount = 300){
-      const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d');
+    function isMobileWidth(){ return window.innerWidth <= 768; }
+
+    function launchConfettiWithReflection(desiredCount = 320, options = { sideBurst: true }) {
+      const canvas = document.getElementById('confetti-canvas');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width = window.innerWidth;
+      const height = canvas.height = window.innerHeight;
       const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
+
+      // adapt density for mobile
+      const particleCount = isMobileWidth() ? Math.max(60, Math.floor(desiredCount * 0.28)) : desiredCount;
+
       const pieces = [];
-      for(let i=0;i<pcount;i++){
-        pieces.push({ x: Math.random()*canvas.width, y: -10 - Math.random()*canvas.height*0.4, vx: (Math.random()-0.5)*9, vy: 2 + Math.random()*7, r: 6 + Math.random()*8, color: colors[Math.floor(Math.random()*colors.length)], rot: Math.random()*360, vr: (Math.random()-0.5)*12 });
+      // physics params tuned for slower motion and lively bounces
+      const gravity = 0.22;
+      const maxBounces = 3;
+      for(let i=0;i<particleCount;i++){
+        const sideRoll = Math.random();
+        let x,y,vx,vy;
+        // spawn near sides or occasionally from top center
+        if(options.sideBurst && sideRoll < 0.46){
+          // left edge
+          x = -8 - Math.random()*40;
+          y = Math.random() * height * 0.9;
+          vx = 0.9 + Math.random()*2.2; // initial push to the right
+          vy = -0.6 + Math.random()*2.4;
+        } else if(options.sideBurst && sideRoll < 0.92){
+          // right edge
+          x = width + 8 + Math.random()*40;
+          y = Math.random() * height * 0.9;
+          vx = -(0.9 + Math.random()*2.2); // push left
+          vy = -0.6 + Math.random()*2.4;
+        } else {
+          // top rain
+          x = Math.random() * width;
+          y = -10 - Math.random()*140;
+          vx = (Math.random()-0.5) * 1.4;
+          vy = 0.6 + Math.random()*2.2;
+        }
+        pieces.push({
+          x, y, vx, vy,
+          r: 5 + Math.random()*7,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          rot: Math.random()*360,
+          vr: (Math.random()-0.5) * 8,
+          bounces: 0,
+          life: 0
+        });
       }
-      const gravity = 0.35;
+
+      let running = true;
       function frame(){
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        for(const p of pieces){ p.vy += gravity; p.x += p.vx; p.y += p.vy; p.rot += p.vr; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle = p.color; ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6); ctx.restore(); }
-        if(pieces.every(p=>p.y > canvas.height + 60)){ ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+        ctx.clearRect(0,0,width,height);
+        for(const p of pieces){
+          // physics
+          p.vy += gravity * (0.9 + p.r*0.003);
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr * 0.5;
+          p.life++;
+
+          // side reflection (bounce) behavior
+          const leftBound = -6;
+          const rightBound = width + 6;
+
+          if(p.x < leftBound && p.bounces < maxBounces){
+            p.x = leftBound;
+            p.vx = -p.vx * (0.64 + Math.random()*0.18); // invert and dampen
+            p.vy = p.vy * 0.8 - (0.5 + Math.random()*0.6); // slight upward impulse
+            p.bounces++;
+          } else if(p.x > rightBound && p.bounces < maxBounces){
+            p.x = rightBound;
+            p.vx = -p.vx * (0.64 + Math.random()*0.18);
+            p.vy = p.vy * 0.8 - (0.5 + Math.random()*0.6);
+            p.bounces++;
+          }
+
+          // gentle air drag
+          p.vx *= 0.999;
+
+          // draw
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot * Math.PI/180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6);
+          ctx.restore();
+        }
+
+        // stop when almost all pieces are off-screen
+        const alive = pieces.some(p => !(p.y > height + 80 && (p.x < -160 || p.x > width + 160)));
+        if(!alive){
+          ctx.clearRect(0,0,width,height);
+          running = false;
+          return;
+        }
         requestAnimationFrame(frame);
       }
       frame();
     }
 
-    function launchBalloons(count = 28){
+    /* slightly slower, graceful balloons (keeps existing behavior) */
+    function launchBalloons(count = 22){
       const wrap = document.getElementById('balloon-wrap');
       const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
-      for(let i=0;i<count;i++){
+      const actualCount = isMobileWidth() ? Math.max(6, Math.floor(count*0.5)) : count;
+      for(let i=0;i<actualCount;i++){
         const el = document.createElementNS('http://www.w3.org/2000/svg','svg');
-        el.setAttribute('width','60'); el.setAttribute('height','84'); el.setAttribute('viewBox','0 0 48 68');
-        el.style.position = 'fixed'; el.style.left = Math.random()*100 + '%'; el.style.bottom = '-140px'; el.style.pointerEvents = 'none'; el.style.zIndex = 9980;
-        const color = colors[i%colors.length];
-        el.innerHTML = `<ellipse cx="24" cy="24" rx="18" ry="22" fill="${color}" opacity="0.98"></ellipse><path d="M24 46 L24 62" stroke="#222" stroke-opacity="0.06" stroke-width="1"/>`;
+        el.setAttribute('width','58'); el.setAttribute('height','86'); el.setAttribute('viewBox','0 0 48 68');
+        el.style.position = 'fixed';
+        // position with bias so some come from sides
+        const sideBias = Math.random() < 0.5 ? (Math.random()*20 + '%') : (50 + Math.random()*50) + '%';
+        el.style.left = sideBias;
+        el.style.bottom = '-140px';
+        el.style.pointerEvents = 'none';
+        el.style.zIndex = 9980;
+        const color = colors[i % colors.length];
+        el.innerHTML = `<ellipse cx="24" cy="24" rx="18" ry="22" fill="${color}" opacity="0.98"></ellipse><path d="M24 46 L24 74" stroke="#111" stroke-opacity="0.06" stroke-width="1"/>`;
         wrap.appendChild(el);
-        const duration = 4200 + Math.random()*1600; const delay = Math.random()*500; const rotate = Math.random()*60 - 30;
-        el.animate([{ transform: 'translateY(0) scale(1)', opacity:1 }, { transform: `translateY(-120vh) rotate(${rotate}deg) scale(1.03)`, opacity:0 }], { duration, easing: 'cubic-bezier(.2,.9,.2,1)', delay });
-        setTimeout(()=> el.remove(), duration + delay + 400);
+        const duration = 10000 + Math.random()*9000; // 10s - 19s
+        const delay = Math.random()*700;
+        const rotate = Math.random()*60 - 30;
+        el.animate([{ transform: 'translateY(0) scale(1)', opacity:1 }, { transform: `translateY(-120vh) rotate(${rotate}deg) scale(1.02)`, opacity:0.02 }], { duration, easing: 'cubic-bezier(.2,.9,.2,1)', delay });
+        setTimeout(()=> el.remove(), duration + delay + 500);
       }
     }
 
-    function celebrateNow(){ launchConfetti(360); launchBalloons(34); toast(i18n[locale].celebrate || '🎉 Parabéns!'); }
+    function celebrateNow(opts = { sideBurst: true, auto: false }){
+      const side = !!opts.sideBurst;
+      const desired = side ? 380 : 220;
+      launchConfettiWithReflection(desired, { sideBurst: side });
+      launchBalloons(side ? 28 : 18);
+      toast(i18n[locale].celebrate || '🎉 Parabéns!');
+    }
 
     /* ------------ CSV helpers ------------ */
     function quoteCSV(s){ return '"' + String(s||'').replace(/"/g,'""') + '"'; }
@@ -551,7 +642,6 @@
         firebaseDb = firebase.firestore();
         firebaseAuth = firebase.auth();
 
-        // realtime listener
         firebaseDb.collection('aniversariantes').onSnapshot(snapshot=>{
           const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
           dataArr = docs.map(r => ({ ...r, dia: Number(r.dia), mes: Number(r.mes) }));
@@ -564,12 +654,10 @@
           }).catch(()=>{ seedDemo(); syncRenderAll(); });
         });
 
-        // auth state -> update UI permissions
         firebaseAuth.onAuthStateChanged(user=>{
           updateAuthUI(!!user);
           const authBtn = document.getElementById('auth-btn');
           if(authBtn) authBtn.textContent = user ? (i18n[locale].logout || 'Sair') : (i18n[locale].login || 'Entrar');
-          // if logged in and no data yet, ensure data loaded
           if(user && !dataArr.length){
             firebaseDb.collection('aniversariantes').get().then(snap=>{ dataArr = snap.docs.map(d=>({ id:d.id, ...d.data() })).map(r=>({ ...r, dia: Number(r.dia), mes: Number(r.mes) })); syncRenderAll(); }).catch(()=>{});
           }
@@ -581,21 +669,17 @@
         return false;
       }
     }
-
     function loadScript(src){ return new Promise((res, rej)=>{ const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
 
     /* ------------- Auth UI gating ------------- */
     function updateAuthUI(loggedIn){
-      // admin-only elements: add-btn, csv-file, import-sample, edit/delete (rendered dynamically), maybe edit/delete show based on loggedIn
       document.querySelectorAll('.admin-only').forEach(el=>{
         if(loggedIn){ el.style.display = ''; el.classList.remove('admin-only'); el.classList.add('admin-visible'); }
         else { el.style.display = 'none'; el.classList.remove('admin-visible'); el.classList.add('admin-only'); }
       });
-      // re-render list so action buttons adapt
       renderList(true);
     }
 
-    /* ------------- Sync helper ------------- */
     function seedDemo(){
       dataArr = [
         { id: 'local1', nome: 'Eliomar', setor: 'Ambiental', dia: 15, mes: 1 },
@@ -608,19 +692,15 @@
 
     /* -------------------- Wiring -------------------- */
     document.addEventListener('DOMContentLoaded', async ()=>{
-      // translations init
       document.getElementById('locale-select').value = locale;
       document.getElementById('locale-select').addEventListener('change', (e)=>{ locale = e.target.value; localStorage.setItem('locale', locale); applyTranslations(); renderList(true); renderToday(); renderFuture(); renderStats(); });
-
       applyTranslations();
 
-      // theme toggle
       const themeToggle = document.getElementById('theme-toggle');
       function setTheme(t){ document.body.setAttribute('data-theme', t); document.getElementById('current-theme').textContent = t==='dark' ? 'Escuro' : 'Claro'; localStorage.setItem('theme',t); themeToggle.setAttribute('aria-pressed', t==='dark'); renderStats(); }
       setTheme(localStorage.getItem('theme')||'light');
       themeToggle.addEventListener('click', ()=> setTheme(document.body.getAttribute('data-theme')==='dark' ? 'light' : 'dark'));
 
-      // CSV events
       document.getElementById('export-csv').addEventListener('click', exportCSV);
       document.getElementById('csv-file').addEventListener('change', (e)=>{
         const f = e.target.files[0]; if(!f) return;
@@ -630,7 +710,6 @@
       });
       document.getElementById('import-sample').addEventListener('click', ()=>{ const sample = 'nome,setor,dia,mes\n"Maria Silva",RH,5,11\n"João Pereira",Financeiro,12,3\n"Luiza Costa",Vendas,28,12'; const recs = parseCSV(sample); if(firebaseInitialized && firebaseDb){ recs.forEach(async r=>{ try{ await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes }); }catch(e){ console.error(e); } }); } else { dataArr = dataArr.concat(recs); renderList(true); renderStats(); } toast('Exemplo importado'); });
 
-      // add new (admin-only)
       document.getElementById('add-btn').addEventListener('click', async ()=>{
         const nome = prompt('Nome completo:'); if(!nome) return;
         const setor = prompt('Setor (opcional):','');
@@ -644,22 +723,16 @@
         }
       });
 
-      // celebrate
-      document.getElementById('celebrate-btn').addEventListener('click', celebrateNow);
+      document.getElementById('celebrate-btn').addEventListener('click', ()=> celebrateNow({ sideBurst: false, auto: false }));
 
-      // search & pagination
       document.getElementById('search-input').addEventListener('input', ()=> renderList(true));
       document.getElementById('load-more').addEventListener('click', ()=>{ page++; renderList(); });
-
-      // future refresh
       document.getElementById('refresh-future').addEventListener('click', ()=> renderFuture());
 
-      // tabs
       document.querySelectorAll('.tab').forEach(btn=> btn.addEventListener('click', ()=>{
         document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
         btn.setAttribute('aria-selected','true');
         const tab = btn.dataset.tab;
-        // hide all main panels
         document.getElementById('today-panel').style.display = 'none';
         document.getElementById('future-panel').style.display = 'none';
         document.getElementById('stats-panel').style.display = 'none';
@@ -673,7 +746,6 @@
         if(tab === 'stats'){ document.getElementById('stats-panel').style.display = 'block'; renderStats(); }
       }));
 
-      // login modal / auth
       const loginModal = document.getElementById('login-modal');
       document.getElementById('auth-btn').addEventListener('click', ()=>{
         if(firebaseInitialized && firebaseAuth && firebaseAuth.currentUser){
@@ -692,29 +764,24 @@
         } else { toast('Firebase não configurado (modo demo)', true); loginModal.close(); }
       });
 
-      // keyboard shortcuts
       document.addEventListener('keydown', (e)=>{
         if(document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
-        if(e.key === 'c' || e.key === 'C'){ celebrateNow(); }
+        if(e.key === 'c' || e.key === 'C'){ celebrateNow({ sideBurst: false, auto: false }); }
         if(e.key === '/'){ e.preventDefault(); document.getElementById('search-input').focus(); }
       });
 
-      // try to init firebase
       const ok = await tryInitFirebase();
       if(!ok){
-        // fallback demo
         seedDemo();
         syncRenderAll();
-        updateAuthUI(false); // ensure admin controls hidden in demo
-      } else {
-        // auth state will call updateAuthUI via tryInitFirebase
+        updateAuthUI(false);
       }
     });
 
     function nextUpcoming(){ if(!dataArr.length) return null; const now = new Date(); const list = dataArr.map(p=> ({ ...p, date: nextDate(p, now) })); list.sort((a,b)=>a.date-b.date); return list[0]; }
     function formatDate(d){ try{ return new Intl.DateTimeFormat(locale, { day:'2-digit', month:'2-digit', year:'numeric' }).format(d); }catch(e){ return d.toLocaleDateString(); } }
 
-    // expose debug
+    // debug
     window.__painel = { getData: ()=> dataArr, renderList, renderStats, celebrateNow };
   </script>
 </body>
