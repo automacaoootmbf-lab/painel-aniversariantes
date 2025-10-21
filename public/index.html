@@ -829,7 +829,7 @@
         const name = raw.nome ?? raw.name ?? '';
         const sector = raw.setor ?? raw.sector ?? '';
         const day = Number(raw.dia ?? raw.day) || 0;
-  S     const month = Number(raw.mes ?? raw.month) || 0;
+        const month = Number(raw.mes ?? raw.month) || 0;
         const year = raw.ano ?? raw.year ?? raw.yearOfBirth ?? null;
         const textoData = raw.textoData ?? `${day} de ${monthNames[month-1] || ''}`;
         return { id, name: String(name).trim(), sector: String(sector).trim(), day, month, year: year ? Number(year) : null, textoData };
