@@ -1,0 +1,12 @@
+mkdir -p vendor
+# Chart.js UMD bundle (ex: v4.3.0)
+curl -L -o vendor/chart.umd.min.js "https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"
+
+# PapaParse (v5.4.1)
+curl -L -o vendor/papaparse.min.js "https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"
+
+# canvas-confetti (1.9.3)
+curl -L -o vendor/confetti.browser.min.js "https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"
+
+# Tailwind CDN standalone (small runtime) — opcional (recomendo gerar um css build com purge em prod).
+curl -L -o vendor/tailwind-cdn.js "https://cdn.tailwindcss.com"
