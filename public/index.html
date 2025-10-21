@@ -2,63 +2,61 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Painel de Aniversariantes — Dashboard Completo</title>
 
-  <!-- Estilo base + tema claro/escuro -->
+  <!-- Estilos base + Tema Claro/Escuro + Cores vivas -->
   <style>
     :root {
       --bg-light: #f0fdfa;
       --card-light: #ffffff;
       --text-light: #0f172a;
       --muted-light: #64748b;
-      --accent-light: #22c55e;
-      --accent2-light: #0ea5e9;
+      --accent-green-light: #10b981;
+      --accent-blue-light: #0ea5e9;
+
       --bg-dark: #0f172a;
       --card-dark: #1e293b;
-      --text-dark: #f8fafc;
+      --text-dark: #e0e7ff;
       --muted-dark: #94a3b8;
-      --accent-dark: #22d3ee;
-      --accent2-dark: #4ade80;
+      --accent-green-dark: #22d3ee;
+      --accent-blue-dark: #4ade80;
     }
     [data-theme="light"] {
       --bg: var(--bg-light);
       --card: var(--card-light);
       --text: var(--text-light);
       --muted: var(--muted-light);
-      --accent: var(--accent-light);
-      --accent2: var(--accent2-light);
+      --accent: var(--accent-green-light);
+      --accent2: var(--accent-blue-light);
     }
     [data-theme="dark"] {
       --bg: var(--bg-dark);
       --card: var(--card-dark);
       --text: var(--text-dark);
       --muted: var(--muted-dark);
-      --accent: var(--accent-dark);
-      --accent2: var(--accent2-dark);
+      --accent: var(--accent-green-dark);
+      --accent2: var(--accent-blue-dark);
     }
     * { box-sizing: border-box; transition: background-color .4s, color .3s; }
-    html, body {
-      height:100%; margin:0; background:var(--bg); color:var(--text);
-      font-family:"Inter", system-ui, sans-serif;
-    }
+    html, body { margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font-family:"Inter", system-ui, sans-serif; }
     .container { max-width:1100px; margin:20px auto; padding:18px; }
     header {
       display:flex; justify-content:space-between; align-items:center;
-      background:var(--card); border-radius:16px; padding:14px 18px;
-      box-shadow:0 6px 18px rgba(0,0,0,.08);
+      background: var(--card); border-radius:16px; padding:14px 18px;
+      box-shadow: 0 6px 18px rgba(0,0,0,.08);
     }
     h1 { margin:0; font-size:20px; color:var(--accent2); }
-    .sub { color:var(--muted); font-size:13px; margin:0; }
+    .sub { margin:0; font-size:13px; color:var(--muted); }
     .btn {
-      border:none; cursor:pointer; border-radius:10px; padding:8px 12px;
-      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      border:none; cursor:pointer; border-radius:10px;
+      padding:8px 12px; background: linear-gradient(90deg, var(--accent2), var(--accent));
       color:#fff; font-weight:500; box-shadow:0 2px 8px rgba(0,0,0,.2);
     }
-    .btn:hover { opacity:.9; transform:scale(1.02); }
+    .btn:hover { opacity:.92; transform: scale(1.02); }
     .bg-card {
-      background:var(--card); border-radius:16px; padding:16px;
-      box-shadow:0 4px 14px rgba(0,0,0,.08);
+      background: var(--card); border-radius:16px; padding:16px;
+      box-shadow: 0 4px 14px rgba(0,0,0,.08);
     }
     .tab-btn {
       background: var(--card); color: var(--text);
@@ -73,9 +71,8 @@
     }
     .day-cell {
       min-height:100px; border-radius:10px;
-      background:rgba(255,255,255,0.1); color:var(--text);
-      border:1px dashed rgba(0,0,0,.05); position:relative;
-      padding:8px;
+      background: rgba(255,255,255,0.1); color:var(--text);
+      border:1px dashed rgba(0,0,0,.05); position:relative; padding:8px;
     }
     .day-number {
       position:absolute; top:8px; right:10px;
@@ -87,38 +84,42 @@
       color:#fff; display:flex; align-items:center; justify-content:center;
       font-weight:700; font-size:20px;
     }
-    table { width:100%; border-collapse:collapse; }
+    table { width:100%; border-collapse:collapse; margin-top:8px; }
     th, td { padding:10px; border-bottom:1px solid rgba(0,0,0,.05); }
-    th { color:var(--accent); text-align:left; }
-    tr:hover { background:rgba(0,0,0,.05); }
+    th { color: var(--accent); text-align:left; }
+    tr:hover { background: rgba(0,0,0,.05); }
+
     #notification-toast {
-      position:fixed; right:20px; bottom:20px;
-      background:var(--accent); color:#fff; padding:10px 16px;
+      position: fixed; right:20px; bottom:20px;
+      background: var(--accent); color:#fff; padding:12px 16px;
       border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.2);
       opacity:0; transform:translateY(8px);
-      transition:opacity .3s, transform .3s;
+      transition: opacity .3s, transform .3s;
+      z-index:10000;
     }
     #theme-toggle {
-      background: none; border:1px solid var(--accent);
-      color: var(--accent); border-radius:10px;
+      background:none; border:1px solid var(--accent);
+      color:var(--accent); border-radius:10px;
       padding:6px 10px; cursor:pointer;
     }
     #theme-toggle:hover { background:var(--accent); color:#fff; }
 
-    /* Balões de festa */
+    /* Balões de festa e animação */
     .balloon {
-      position: fixed; bottom: -100px;
-      border-radius:50%;
-      width:30px; height:40px;
-      animation: rise 6s linear infinite;
+      position: fixed; bottom: -100px; border-radius:50%;
+      width:30px; height:40px; animation: rise 6s linear infinite;
       opacity:0.8;
     }
     @keyframes rise {
-      0% { transform:translateY(0) scale(1); }
-      100% { transform:translateY(-120vh) scale(1.1); opacity:0; }
+      0% { transform: translateY(0) scale(1); }
+      100% { transform: translateY(-120vh) scale(1.1); opacity:0; }
     }
-    canvas.chartjs-chart {
-      max-width:100%; height:auto !important;
+
+    /* Responsividade */
+    @media (max-width: 800px) {
+      .calendar-grid { grid-template-columns: repeat(2,1fr); }
+      .avatar { width:48px; height:48px; font-size:18px; }
+      .btn { padding:6px 10px; }
     }
   </style>
 </head>
@@ -132,7 +133,7 @@
         <div class="avatar">AA</div>
         <div>
           <h1>Painel de Aniversariantes</h1>
-          <p class="sub">Dashboard completo com gráficos e controle</p>
+          <p class="sub">Dashboard completo com gráficos & controle</p>
         </div>
       </div>
       <div style="display:flex; gap:8px; align-items:center">
@@ -142,19 +143,24 @@
       </div>
     </header>
 
-    <div style="margin-top:20px">
+    <div style="margin-top:24px">
       <div style="display:flex; gap:8px; margin-bottom:12px">
         <button data-tab="today" class="tab-btn active">🎂 Hoje</button>
         <button data-tab="calendar" class="tab-btn">🗓️ Calendário</button>
         <button data-tab="list" class="tab-btn">📋 Lista</button>
+        <button data-tab="future" class="tab-btn">🔮 Futuros</button>
         <button data-tab="stats" class="tab-btn">📊 Gráficos</button>
       </div>
 
       <section id="today-panel" class="bg-card" style="min-height:120px">Carregando...</section>
       <section id="calendar-panel" class="bg-card" style="display:none; min-height:300px;"></section>
       <section id="list-panel" class="bg-card" style="display:none; min-height:200px;"></section>
-      <section id="stats-panel" class="bg-card" style="display:none;">
-        <canvas id="chart-monthly" class="chartjs-chart"></canvas>
+      <section id="future-panel" class="bg-card" style="display:none; min-height:200px;">
+        <h3 style="margin-top:0; color:var(--accent2)">Próximos aniversariantes</h3>
+        <div id="future-list">Carregando...</div>
+      </section>
+      <section id="stats-panel" class="bg-card" style="display:none; min-height:250px;">
+        <canvas id="chart-monthly" style="width:100%; height:260px;"></canvas>
       </section>
     </div>
   </div>
@@ -164,103 +170,104 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, addDoc, setDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, setDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    // Utilitários UI
-    const toast = msg => {
+    const cfg = window.__firebase_config || null;
+    let app, auth, db, col;
+    let dataArr = [];
+
+    const toast = (msg, error=false) => {
       const el = document.getElementById("notification-toast");
       el.textContent = msg;
+      el.style.background = error ? '#b91c1c' : 'var(--accent)';
       el.style.opacity = 1;
       el.style.transform = "translateY(0)";
-      setTimeout(()=>{
-        el.style.opacity = 0;
-        el.style.transform = "translateY(8px)";
-      }, 3000);
+      setTimeout(()=>{ el.style.opacity = 0; el.style.transform = "translateY(8px)"; }, 3000);
     };
 
-    // Confetti + balões
-    function confettiAndBalloons(count=50) {
-      for(let i=0;i<count;i++){
+    function confettiAndBalloons(count=80) {
+      for (let i=0; i<count; i++){
         const c = document.createElement("div");
-        c.style.position="fixed";
+        c.style.position = "fixed";
         c.style.left = (Math.random()*100) + "%";
         c.style.top = "-10px";
         c.style.width = "8px";
         c.style.height = "12px";
-        c.style.background = ["#22c55e","#0ea5e9","#4ade80","#38bdf8","#16a34a"][Math.floor(Math.random()*5)];
-        c.style.borderRadius="2px";
-        c.style.zIndex=9999;
+        c.style.background = ["#10b981","#0ea5e9","#4ade80","#38bdf8","#16a34a"][Math.floor(Math.random()*5)];
+        c.style.borderRadius = "2px";
+        c.style.zIndex = 9999;
         document.body.appendChild(c);
         const endY = window.innerHeight + 100;
+        const duration = 1800 + Math.random()*800;
         c.animate([
           { transform: "translateY(0)", opacity:1 },
-          { transform: `translateY(${endY}px) rotate(720deg)`, opacity:0 }
-        ], { duration: 2000 + Math.random()*1000, easing:"ease-out" });
-        setTimeout(()=>c.remove(), 3000);
+          { transform: `translateY(${endY}px) rotate(${360 + Math.random()*720}deg)`, opacity:0 }
+        ], { duration, easing:"ease-out" });
+        setTimeout(()=>c.remove(), duration + 200);
       }
-      createBalloons();
+      setTimeout(()=> {
+        for (let i=0; i<12; i++){
+          const b = document.createElement("div");
+          b.className = "balloon";
+          b.style.left = (Math.random()*100) + "%";
+          b.style.background = ["#16a34a","#22c55e","#0ea5e9","#38bdf8","#4ade80"][i % 5];
+          b.style.animationDelay = (i*0.4) + "s";
+          b.style.zIndex = 9980;
+          document.body.appendChild(b);
+          setTimeout(()=>b.remove(), 6500);
+        }
+      }, 400);
     }
 
-    function createBalloons() {
-      const colors = ["#16a34a","#22c55e","#0ea5e9","#38bdf8","#4ade80"];
-      for(let i=0;i<8;i++){
-        const b = document.createElement("div");
-        b.className="balloon";
-        b.style.left = (Math.random()*100) + "%";
-        b.style.background = colors[i % colors.length];
-        b.style.animationDelay = (i*0.3)+"s";
-        document.body.appendChild(b);
-        setTimeout(()=>b.remove(), 6000);
-      }
-    }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    // Variáveis Firebase
-    const cfg = window.__firebase_config;
-    let app, auth, db, col;
-    let dataArr = [];
-
-    const renderToday = () => {
-      const now = new Date();
-      const d = now.getDate(), m = now.getMonth()+1;
-      const matches = dataArr.filter(x=>x.dia===d && x.mes===m);
-      const container = document.getElementById("today-panel");
-      container.innerHTML = "";
-      if(matches.length === 0) {
-        container.innerHTML = "<p>Nenhum aniversariante hoje.</p>";
+    function renderToday(){
+      const panel = document.getElementById("today-panel");
+      const now = new Date(), d = now.getDate(), m = now.getMonth()+1;
+      const matches = dataArr.filter(p=>p.dia===d && p.mes===m);
+      panel.innerHTML = "";
+      if (matches.length === 0) {
+        const next = dataArr.filter(p=> {
+          const d2 = new Date(now.getFullYear(), p.mes-1, p.dia);
+          return d2 > now;
+        })[0];
+        if (next) {
+          panel.innerHTML = `<p>Nenhum hoje. Próximo: <strong>${escapeHtml(next.nome)}</strong> em ${next.dia}/${next.mes}</p>`;
+        } else {
+          panel.innerHTML = "<p>Nenhum aniversariante encontrado.</p>";
+        }
       } else {
         matches.forEach(p=>{
           const el = document.createElement("div");
-          el.style.display="flex"; el.style.alignItems="center"; el.style.gap="12px"; el.style.marginBottom="10px";
+          el.style.display="flex"; el.style.gap="12px"; el.style.alignItems="center"; el.style.marginBottom="10px";
           const av = document.createElement("div");
-          av.className="avatar";
+          av.className = "avatar";
           av.textContent = p.nome.split(" ").map(s=>s.charAt(0)).join("").toUpperCase().slice(0,2);
           const info = document.createElement("div");
-          info.innerHTML = `<b>${escapeHtml(p.nome)}</b><br><span style="color:var(--muted)">${escapeHtml(p.setor||'')}</span>`;
+          info.innerHTML = `<strong>${escapeHtml(p.nome)}</strong><br><span style="color:var(--muted)">${escapeHtml(p.setor||'')}</span>`;
           el.append(av, info);
-          container.appendChild(el);
+          panel.appendChild(el);
         });
       }
-    };
+    }
 
-    const renderCalendar = () => {
-      const now = new Date();
-      const month = now.getMonth()+1, year = now.getFullYear();
+    function renderCalendar(){
+      const panel = document.getElementById("calendar-panel");
+      const now = new Date(), month = now.getMonth()+1, year = now.getFullYear();
       const daysInMonth = new Date(year, month, 0).getDate();
       let html = "<div class='calendar-grid'>";
       for(let d=1; d<=daysInMonth; d++){
-        const matches = dataArr.filter(x=>x.dia===d && x.mes===month);
+        const matches = dataArr.filter(p=>p.dia===d && p.mes===month);
         html += `<div class="day-cell"><div class="day-number">${d}</div>`;
-        matches.forEach(p=> {
-          html += `<div>🎂 ${escapeHtml(p.nome)}</div>`;
-        });
+        matches.forEach(p=>{ html += `<div>🎂 ${escapeHtml(p.nome)}</div>`; });
         html += `</div>`;
       }
       html += "</div>";
-      document.getElementById("calendar-panel").innerHTML = html;
-    };
+      panel.innerHTML = html;
+    }
 
-    const renderList = () => {
-      const container = document.getElementById("list-panel");
+    function renderList(){
+      const panel = document.getElementById("list-panel");
       let html = `<table><thead><tr><th>Nome</th><th>Setor</th><th>Data</th><th>Ações</th></tr></thead><tbody>`;
       dataArr.forEach(p=>{
         html += `<tr>
@@ -274,124 +281,156 @@
         </tr>`;
       });
       html += `</tbody></table>`;
-      container.innerHTML = html;
-
-      container.querySelectorAll(".btn-delete").forEach(btn=> {
-        btn.addEventListener("click", ()=> {
+      panel.innerHTML = html;
+      panel.querySelectorAll(".btn-delete").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
           const id = btn.getAttribute("data-id");
           if(confirm("Confirma exclusão?")) {
-            deleteDoc(doc(db, "aniversariantes", id))
-              .then(()=>{ toast("Registro excluído."); })
-              .catch(err=>{ toast("Erro: "+err.message); });
+            try {
+              await deleteDoc(doc(db, "aniversariantes", id));
+              toast("Registro excluído.");
+            } catch(e){
+              toast("Erro ao excluir: " + e.message, true);
+            }
           }
         });
       });
-      container.querySelectorAll(".btn-edit").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
+      panel.querySelectorAll(".btn-edit").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
           const id = btn.getAttribute("data-id");
-          const rec = dataArr.find(x=>x.id===id);
-          const nome = prompt("Nome:", rec.nome);
-          const setor = prompt("Setor:", rec.setor || '');
+          const rec = dataArr.find(x=>x.id === id);
+          const nome = prompt("Nome completo:", rec.nome);
+          const setor = prompt("Setor (opcional):", rec.setor || '');
           const dia = parseInt(prompt("Dia (1-31):", rec.dia),10);
           const mes = parseInt(prompt("Mês (1-12):", rec.mes),10);
           if(nome && dia>=1 && dia<=31 && mes>=1 && mes<=12){
-            setDoc(doc(db, "aniversariantes", id), { nome, setor, dia, mes }, { merge:true })
-              .then(()=>toast("Registro atualizado."))
-              .catch(e=>toast("Erro: "+e.message));
+            try {
+              await setDoc(doc(db, "aniversariantes", id), { nome, setor, dia, mes }, { merge:true });
+              toast("Registro atualizado.");
+            } catch(e){
+              toast("Erro na atualização: " + e.message, true);
+            }
           } else { toast("Data inválida.", true); }
         });
       });
-    };
+    }
 
-    const renderStats = () => {
+    function renderFuture(daysAhead=30) {
+      const panel = document.getElementById("future-list");
+      const now = new Date();
+      const futureDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysAhead);
+      const arr = dataArr.filter(p => {
+        const d2 = new Date(now.getFullYear(), p.mes -1, p.dia);
+        return d2 > now && d2 <= futureDate;
+      }).sort((a,b) => {
+        const da = new Date(now.getFullYear(), a.mes -1, a.dia);
+        const db = new Date(now.getFullYear(), b.mes -1, b.dia);
+        return da - db;
+      });
+      if (arr.length === 0) {
+        panel.innerHTML = `<p>Nenhum aniversário nos próximos ${daysAhead} dias.</p>`;
+      } else {
+        panel.innerHTML = arr.map(p=>`
+          <div style="padding:8px 0; border-bottom:1px solid rgba(0,0,0,.05)">
+            <strong>${escapeHtml(p.nome)}</strong> &middot; ${escapeHtml(p.setor||'')} &middot; ${p.dia}/${p.mes}
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderStats(){
       const ctx = document.getElementById("chart-monthly").getContext("2d");
       const months = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
       const counts = Array(12).fill(0);
       dataArr.forEach(p => { if(p.mes>=1 && p.mes<=12) counts[p.mes-1]++; });
       new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: months,
-          datasets: [{
-            label: 'Aniversariantes por mês',
-            data: counts,
-            backgroundColor: counts.map((_,i)=> i%2===0? varColor('--accent'): varColor('--accent2')),
-            borderColor: counts.map((_,i)=> i%2===0? varColor('--accent2'): varColor('--accent')),
-            borderWidth: 1
+        type:'bar',
+        data:{
+          labels:months,
+          datasets:[{
+            label:'Aniversariantes por mês',
+            data:counts,
+            backgroundColor: counts.map((_,i)=> i%2===0 ? getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() : getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()),
+            borderColor: counts.map((_,i)=> i%2===0 ? getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim() : getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()),
+            borderWidth:1
           }]
         },
-        options: {
-          responsive: true,
-          scales: { y: { beginAtZero:true, ticks:{precision:0} } },
-          plugins:{legend:{display:false}}
+        options:{
+          responsive:true,
+          scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } },
+          plugins:{ legend:{ display:false } }
         }
       });
-    };
-
-    function varColor(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-
-    function escapeHtml(str){
-      return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
     }
 
-    function initFirebase(){
-      if(!cfg){ toast("Config Firebase não encontrada — rodando em modo demo."); dataArr = []; renderToday(); renderCalendar(); renderList(); renderStats(); return; }
+    async function init(){
+      if(!cfg) {
+        toast("Configuração Firebase não encontrada — modo demo ativado.");
+        dataArr = [
+          { id:"local1", nome:"Eliomar", setor:"Ambiental", dia:15, mes:1 },
+          { id:"local2", nome:"Ana Silva", setor:"TI", dia:20, mes:1 }
+        ];
+        renderToday(); renderCalendar(); renderList(); renderFuture(); renderStats();
+        return;
+      }
       app = initializeApp(cfg);
       auth = getAuth(app);
       db = getFirestore(app);
       col = collection(db, "aniversariantes");
 
       onSnapshot(col, snap=>{
-        dataArr = snap.docs.map(d=>({ id:d.id, ...d.data() }));
-        renderToday(); renderCalendar(); renderList(); renderStats();
+        dataArr = snap.docs.map(d=>({ id: d.id, ...d.data() }));
+        renderToday(); renderCalendar(); renderList(); renderFuture(); renderStats();
       }, err=>{
-        toast("Erro sincronização: "+err.message, true);
+        toast("Falha ao sincronizar dados: " + err.message, true);
       });
 
-      onAuthStateChanged(auth, user => {
-        document.getElementById("auth-btn").textContent = user?"Sair":"🔒 Entrar";
+      onAuthStateChanged(auth, user=>{
+        document.getElementById("auth-btn").textContent = user ? "Sair" : "🔒 Entrar";
       });
 
       document.getElementById("auth-btn").addEventListener("click", async ()=>{
-        if(auth.currentUser){
+        if(auth.currentUser) {
           await signOut(auth);
           toast("Logout realizado.");
         } else {
           const email = prompt("E-mail:");
           const pass = prompt("Senha:");
-          try{ await signInWithEmailAndPassword(auth, email, pass); toast("Bem-vindo."); }
-          catch(e){ toast("Erro no login: "+e.message); }
+          try {
+            await signInWithEmailAndPassword(auth, email, pass);
+            toast("Bem-vindo admin!");
+          } catch(e) {
+            toast("Erro no login: " + e.message, true);
+          }
         }
       });
     }
 
     document.addEventListener("DOMContentLoaded", ()=>{
-      // tab switching
       document.querySelectorAll(".tab-btn").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const tab = btn.getAttribute("data-tab");
           document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
           btn.classList.add("active");
           document.querySelectorAll("section").forEach(s=>s.style.display="none");
-          document.getElementById(tab+"-panel").style.display = "block";
+          document.getElementById(tab + "-panel").style.display = "block";
         });
       });
 
       document.getElementById("theme-toggle").addEventListener("click", ()=>{
         const body = document.body;
-        const current = body.getAttribute("data-theme")==="dark"?"light":"dark";
-        body.setAttribute("data-theme", current);
-        document.getElementById("theme-toggle").textContent = current==="dark"?"☀️":"🌙";
+        const newTheme = (body.getAttribute("data-theme")==="dark") ? "light" : "dark";
+        body.setAttribute("data-theme", newTheme);
+        document.getElementById("theme-toggle").textContent = (newTheme==="dark") ? "☀️" : "🌙";
       });
 
       document.getElementById("celebrate-now-btn").addEventListener("click", ()=>{
-        confettiAndBalloons(80);
+        confettiAndBalloons(90);
         toast("🎉 Parabéns aos aniversariantes!");
       });
 
-      initFirebase();
+      init();
     });
   </script>
 </body>
 </html>
-
