@@ -1,436 +1,529 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Painel de Aniversariantes — Dashboard Completo</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Painel de Aniversariantes — Dashboard (v1.0.0)</title>
+  <meta name="description" content="Painel responsivo de aniversariantes com tema claro/escuro, export/import CSV, calendário, gráficos e celebração com confetes + balões." />
+  <meta name="version" content="1.0.0">
+  <meta name="theme-color" content="#10b981">
 
-  <!-- Estilos base + Tema Claro/Escuro + Cores vivas -->
+  <!-- Paleta limitada e consistente (acentos verde/azul) -->
   <style>
-    :root {
-      --bg-light: #f0fdfa;
+    :root{
+      --bg-light: #f7fefa;    /* Very light green tint */
       --card-light: #ffffff;
-      --text-light: #0f172a;
-      --muted-light: #64748b;
-      --accent-green-light: #10b981;
-      --accent-blue-light: #0ea5e9;
+      --text-light: #06121a;  /* dark navy for contrast */
+      --muted-light: #4b5563;
 
-      --bg-dark: #0f172a;
-      --card-dark: #1e293b;
-      --text-dark: #e0e7ff;
-      --muted-dark: #94a3b8;
-      --accent-green-dark: #22d3ee;
-      --accent-blue-dark: #4ade80;
+      --bg-dark: #06121a;     /* deep navy */
+      --card-dark: #071426;   /* slightly lighter than bg */
+      --text-dark: #e6f7f2;   /* soft off-white */
+      --muted-dark: #9aa8b1;
+
+      /* Accents limited to two colors for consistency */
+      --accent-green: #10b981; /* primary */
+      --accent-blue: #0ea5e9;  /* secondary */
+
+      --danger: #ef4444;
+      --glass: rgba(255,255,255,0.06);
+      --elevation: 0 8px 30px rgba(2,6,23,0.16);
+
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-sm: 8px;
     }
-    [data-theme="light"] {
+
+    /* light / dark theme vars */
+    [data-theme="light"]{
       --bg: var(--bg-light);
       --card: var(--card-light);
       --text: var(--text-light);
       --muted: var(--muted-light);
-      --accent: var(--accent-green-light);
-      --accent2: var(--accent-blue-light);
+      --accent: var(--accent-green);
+      --accent2: var(--accent-blue);
+      --contrast-border: rgba(2,6,23,0.06);
     }
-    [data-theme="dark"] {
+    [data-theme="dark"]{
       --bg: var(--bg-dark);
       --card: var(--card-dark);
       --text: var(--text-dark);
       --muted: var(--muted-dark);
-      --accent: var(--accent-green-dark);
-      --accent2: var(--accent-blue-dark);
-    }
-    * { box-sizing: border-box; transition: background-color .4s, color .3s; }
-    html, body { margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font-family:"Inter", system-ui, sans-serif; }
-    .container { max-width:1100px; margin:20px auto; padding:18px; }
-    header {
-      display:flex; justify-content:space-between; align-items:center;
-      background: var(--card); border-radius:16px; padding:14px 18px;
-      box-shadow: 0 6px 18px rgba(0,0,0,.08);
-    }
-    h1 { margin:0; font-size:20px; color:var(--accent2); }
-    .sub { margin:0; font-size:13px; color:var(--muted); }
-    .btn {
-      border:none; cursor:pointer; border-radius:10px;
-      padding:8px 12px; background: linear-gradient(90deg, var(--accent2), var(--accent));
-      color:#fff; font-weight:500; box-shadow:0 2px 8px rgba(0,0,0,.2);
-    }
-    .btn:hover { opacity:.92; transform: scale(1.02); }
-    .bg-card {
-      background: var(--card); border-radius:16px; padding:16px;
-      box-shadow: 0 4px 14px rgba(0,0,0,.08);
-    }
-    .tab-btn {
-      background: var(--card); color: var(--text);
-      border:1px solid rgba(0,0,0,.08); border-radius:8px;
-      padding:8px 14px; cursor:pointer; font-weight:500;
-    }
-    .tab-btn.active {
-      background: var(--accent); color:#fff;
-    }
-    .calendar-grid {
-      display:grid; grid-template-columns:repeat(7,1fr); gap:8px;
-    }
-    .day-cell {
-      min-height:100px; border-radius:10px;
-      background: rgba(255,255,255,0.1); color:var(--text);
-      border:1px dashed rgba(0,0,0,.05); position:relative; padding:8px;
-    }
-    .day-number {
-      position:absolute; top:8px; right:10px;
-      font-size:12px; color:var(--muted);
-    }
-    .avatar {
-      width:56px; height:56px; border-radius:12px;
-      background: linear-gradient(135deg, var(--accent2), var(--accent));
-      color:#fff; display:flex; align-items:center; justify-content:center;
-      font-weight:700; font-size:20px;
-    }
-    table { width:100%; border-collapse:collapse; margin-top:8px; }
-    th, td { padding:10px; border-bottom:1px solid rgba(0,0,0,.05); }
-    th { color: var(--accent); text-align:left; }
-    tr:hover { background: rgba(0,0,0,.05); }
-
-    #notification-toast {
-      position: fixed; right:20px; bottom:20px;
-      background: var(--accent); color:#fff; padding:12px 16px;
-      border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.2);
-      opacity:0; transform:translateY(8px);
-      transition: opacity .3s, transform .3s;
-      z-index:10000;
-    }
-    #theme-toggle {
-      background:none; border:1px solid var(--accent);
-      color:var(--accent); border-radius:10px;
-      padding:6px 10px; cursor:pointer;
-    }
-    #theme-toggle:hover { background:var(--accent); color:#fff; }
-
-    /* Balões de festa e animação */
-    .balloon {
-      position: fixed; bottom: -100px; border-radius:50%;
-      width:30px; height:40px; animation: rise 6s linear infinite;
-      opacity:0.8;
-    }
-    @keyframes rise {
-      0% { transform: translateY(0) scale(1); }
-      100% { transform: translateY(-120vh) scale(1.1); opacity:0; }
+      --accent: var(--accent-green);
+      --accent2: var(--accent-blue);
+      --contrast-border: rgba(255,255,255,0.06);
     }
 
-    /* Responsividade */
-    @media (max-width: 800px) {
-      .calendar-grid { grid-template-columns: repeat(2,1fr); }
-      .avatar { width:48px; height:48px; font-size:18px; }
-      .btn { padding:6px 10px; }
+    /* Base */
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;line-height:1.35;text-rendering:optimizeLegibility}
+
+    :focus{outline:3px solid color-mix(in srgb, var(--accent) 40%, transparent);outline-offset:3px}
+
+    /* Accessibility: prefer-reduced-motion */
+    @media (prefers-reduced-motion: reduce){
+      *{animation-duration:0.001ms !important; transition-duration:0.001ms !important}
     }
+
+    .container{max-width:1150px;margin:20px auto;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border-radius:var(--radius-lg);background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);box-shadow:var(--elevation);border:1px solid var(--contrast-border)}
+    .branding{display:flex;gap:12px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent2),var(--accent));color:white;font-weight:700;font-size:18px}
+
+    h1{margin:0;font-size:18px}
+    .sub{margin:0;color:var(--muted);font-size:13px}
+
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn{appearance:none;border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(90deg,var(--accent2),var(--accent));color:white;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(2,6,23,0.08)}
+    .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--contrast-border);box-shadow:none}
+    .btn.icon{padding:8px 10px;border-radius:10px}
+    .tab-row{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}
+    .tab{padding:8px 14px;border-radius:10px;background:transparent;border:1px solid transparent;cursor:pointer}
+    .tab[aria-selected="true"]{background:var(--accent);color:white;box-shadow:0 8px 24px rgba(2,6,23,0.08)}
+
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
+
+    .bg-card{background:var(--card);border-radius:var(--radius-md);padding:16px;border:1px solid var(--contrast-border);box-shadow:0 6px 18px rgba(0,0,0,0.04)}
+
+    /* cards */
+    .card{border-radius:12px;padding:12px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.01));border:1px solid var(--contrast-border)}
+    .card h3{margin:0 0 8px 0;font-size:14px}
+
+    /* calendar */
+    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+    .day{min-height:100px;border-radius:10px;padding:8px;border:1px dashed var(--contrast-border);background:linear-gradient(180deg,transparent,rgba(0,0,0,0.01))}
+    .day .num{position:absolute;right:8px;top:8px;color:var(--muted);font-size:12px}
+
+    /* list */
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid var(--contrast-border);text-align:left}
+    th{color:var(--accent);font-weight:600}
+    tr:hover{background:linear-gradient(90deg,rgba(0,0,0,0.02),transparent)}
+
+    /* responsive widgets */
+    .small{font-size:13px}
+
+    /* toast */
+    #toast{position:fixed;right:20px;bottom:20px;padding:12px 16px;border-radius:12px;background:var(--accent);color:white;box-shadow:0 6px 24px rgba(0,0,0,0.25);transform:translateY(12px);opacity:0;transition:all .28s}
+    #toast.show{opacity:1;transform:translateY(0)}
+
+    /* modal */
+    dialog{border:none}
+    .dialog{padding:16px;background:var(--card);border-radius:12px;min-width:300px}
+
+    /* confetti canvas should be full-bleed and pointer-events:none */
+    #confetti-canvas{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+
+    /* balloons (svg) container */
+    #balloon-wrap{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9980}
+
+    /* loading skeleton */
+    .skeleton{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));border-radius:8px;height:14px}
+
+    /* small accessibility helpers */
+    .visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+
+    /* subtle animations */
+    .fade-in{animation:fadeIn .36s ease both}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+    /* high-contrast tweaks for dark mode */
+    [data-theme="dark"] h1, [data-theme="dark"] .logo{filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5))}
   </style>
 </head>
-
-<body data-theme="light">
-  <div id="notification-toast" role="status" aria-live="polite"></div>
+<body data-theme="light" lang="pt-BR">
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+  <div id="balloon-wrap" aria-hidden="true"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
 
   <div class="container">
     <header>
-      <div style="display:flex; gap:12px; align-items:center">
-        <div class="avatar">AA</div>
+      <div class="branding">
+        <div class="logo" aria-hidden="true">AA</div>
         <div>
           <h1>Painel de Aniversariantes</h1>
-          <p class="sub">Dashboard completo com gráficos & controle</p>
+          <p class="sub">Visão rápida • Calendário • Estatísticas • Export/Import</p>
         </div>
       </div>
-      <div style="display:flex; gap:8px; align-items:center">
-        <button id="theme-toggle">🌙</button>
-        <button id="celebrate-now-btn" class="btn">🎉 Celebrar</button>
-        <button id="auth-btn" class="btn">🔒 Entrar</button>
+
+      <div class="controls">
+        <button id="theme-toggle" class="btn ghost icon" aria-pressed="false" title="Alternar modo claro/escuro">🌙</button>
+        <button id="celebrate-btn" class="btn" title="Celebrar aniversariantes">🎉 Celebrar</button>
+        <button id="auth-btn" class="btn ghost" title="Entrar/Admin">🔒 Entrar</button>
       </div>
     </header>
 
-    <div style="margin-top:24px">
-      <div style="display:flex; gap:8px; margin-bottom:12px">
-        <button data-tab="today" class="tab-btn active">🎂 Hoje</button>
-        <button data-tab="calendar" class="tab-btn">🗓️ Calendário</button>
-        <button data-tab="list" class="tab-btn">📋 Lista</button>
-        <button data-tab="future" class="tab-btn">🔮 Futuros</button>
-        <button data-tab="stats" class="tab-btn">📊 Gráficos</button>
-      </div>
+    <nav class="tab-row" role="tablist" aria-label="Navegação do painel">
+      <button class="tab" role="tab" aria-selected="true" data-tab="today">🎂 Hoje</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="calendar">🗓 Calendário</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="list">📋 Lista</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="future">🔮 Futuros</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="stats">📊 Gráficos</button>
+    </nav>
 
-      <section id="today-panel" class="bg-card" style="min-height:120px">Carregando...</section>
-      <section id="calendar-panel" class="bg-card" style="display:none; min-height:300px;"></section>
-      <section id="list-panel" class="bg-card" style="display:none; min-height:200px;"></section>
-      <section id="future-panel" class="bg-card" style="display:none; min-height:200px;">
-        <h3 style="margin-top:0; color:var(--accent2)">Próximos aniversariantes</h3>
-        <div id="future-list">Carregando...</div>
+    <main class="grid" id="main-grid">
+      <section id="left-col">
+        <div id="today-panel" class="bg-card fade-in" role="region" aria-labelledby="today-title">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h2 id="today-title">Hoje</h2>
+            <div class="small" id="today-count">—</div>
+          </div>
+          <div id="today-content" style="margin-top:12px">Carregando...</div>
+        </div>
+
+        <div id="future-panel" class="bg-card fade-in" style="margin-top:14px;" role="region" aria-labelledby="future-title">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3 id="future-title">Próximos aniversariantes</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <label for="days-ahead" class="small">Próximos</label>
+              <input id="days-ahead" type="number" min="1" max="365" value="30" style="width:70px;padding:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)" />
+              <button id="refresh-future" class="btn ghost small">Atualizar</button>
+            </div>
+          </div>
+          <div id="future-list" style="margin-top:12px">Carregando...</div>
+        </div>
+
+        <div id="stats-panel" class="bg-card fade-in" style="margin-top:14px;" role="region" aria-labelledby="stats-title">
+          <h3 id="stats-title">Distribuição por mês</h3>
+          <canvas id="chart-monthly" style="width:100%;height:220px;margin-top:10px"></canvas>
+        </div>
       </section>
-      <section id="stats-panel" class="bg-card" style="display:none; min-height:250px;">
-        <canvas id="chart-monthly" style="width:100%; height:260px;"></canvas>
-      </section>
-    </div>
+
+      <aside id="right-col">
+        <div class="card bg-card" style="margin-bottom:12px" aria-labelledby="actions-title">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h3 id="actions-title">Ações rápidas</h3>
+              <p class="small">Importe, exporte ou adicione manualmente.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+              <input id="csv-file" type="file" accept=".csv" aria-label="Importar CSV" />
+              <div style="display:flex;gap:8px">
+                <button id="import-sample" class="btn ghost small">Importar Exemplo</button>
+                <button id="export-csv" class="btn ghost small">Exportar CSV</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="list-panel" class="bg-card" role="region" aria-labelledby="list-title">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <h3 id="list-title">Lista completa</h3>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="search-input" type="search" placeholder="Buscar por nome ou setor" aria-label="Buscar aniversariantes" style="padding:8px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)" />
+              <button id="add-btn" class="btn ghost small">➕ Novo</button>
+            </div>
+          </div>
+          <div id="list-wrapper">Carregando...</div>
+          <div style="display:flex;justify-content:center;margin-top:8px"><button id="load-more" class="btn ghost small">Carregar mais</button></div>
+        </div>
+
+        <div class="bg-card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h4 style="margin:0">Versão</h4>
+            <div class="small">v1.0.0 • Internacionalização pronta</div>
+          </div>
+          <div style="text-align:right">
+            <div class="small">Tema: <span id="current-theme">Claro</span></div>
+            <div class="small">Locale: <select id="locale-select" aria-label="Selecionar idioma"><option value="pt-BR">pt-BR</option><option value="en-US">en-US</option></select></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <!-- login modal -->
+    <dialog id="login-modal" aria-labelledby="login-heading">
+      <div class="dialog">
+        <h3 id="login-heading">Login Admin</h3>
+        <form id="login-form">
+          <label class="small">E-mail<input id="login-email" type="email" required style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)"></label>
+          <label class="small" style="margin-top:8px">Senha<input id="login-pass" type="password" required style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)"></label>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+            <button type="button" id="close-login" class="btn ghost">Fechar</button>
+            <button type="submit" class="btn">Entrar</button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
   </div>
 
-  <script src="./firebase-config.js"></script>
+  <!-- Dependência Chart.js (CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, addDoc, setDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const cfg = window.__firebase_config || null;
-    let app, auth, db, col;
-    let dataArr = [];
+  <script>
+    /* Painel completo: comportamento JS
+       - Modo demo quando não houver Firebase
+       - Gera confetes em canvas + balões SVG fortes e performáticos
+       - Carregamento incremental (paginado)
+       - Feedback acessível via aria-live + toast
+       - i18n básico via Intl
+    */
 
-    const toast = (msg, error=false) => {
-      const el = document.getElementById("notification-toast");
-      el.textContent = msg;
-      el.style.background = error ? '#b91c1c' : 'var(--accent)';
-      el.style.opacity = 1;
-      el.style.transform = "translateY(0)";
-      setTimeout(()=>{ el.style.opacity = 0; el.style.transform = "translateY(8px)"; }, 3000);
-    };
+    const APP_VERSION = '1.0.0';
+    const DEFAULT_LOCALE = 'pt-BR';
+    let locale = localStorage.getItem('locale') || DEFAULT_LOCALE;
 
-    function confettiAndBalloons(count=80) {
-      for (let i=0; i<count; i++){
-        const c = document.createElement("div");
-        c.style.position = "fixed";
-        c.style.left = (Math.random()*100) + "%";
-        c.style.top = "-10px";
-        c.style.width = "8px";
-        c.style.height = "12px";
-        c.style.background = ["#10b981","#0ea5e9","#4ade80","#38bdf8","#16a34a"][Math.floor(Math.random()*5)];
-        c.style.borderRadius = "2px";
-        c.style.zIndex = 9999;
-        document.body.appendChild(c);
-        const endY = window.innerHeight + 100;
-        const duration = 1800 + Math.random()*800;
-        c.animate([
-          { transform: "translateY(0)", opacity:1 },
-          { transform: `translateY(${endY}px) rotate(${360 + Math.random()*720}deg)`, opacity:0 }
-        ], { duration, easing:"ease-out" });
-        setTimeout(()=>c.remove(), duration + 200);
-      }
-      setTimeout(()=> {
-        for (let i=0; i<12; i++){
-          const b = document.createElement("div");
-          b.className = "balloon";
-          b.style.left = (Math.random()*100) + "%";
-          b.style.background = ["#16a34a","#22c55e","#0ea5e9","#38bdf8","#4ade80"][i % 5];
-          b.style.animationDelay = (i*0.4) + "s";
-          b.style.zIndex = 9980;
-          document.body.appendChild(b);
-          setTimeout(()=>b.remove(), 6500);
-        }
-      }, 400);
+    // State
+    let dataArr = []; // { id, nome, setor, dia, mes }
+    let page = 0;
+    const PAGE_SIZE = 20;
+
+    // DOM
+    const toastEl = document.getElementById('toast');
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const balloonWrap = document.getElementById('balloon-wrap');
+    const mainGrid = document.getElementById('main-grid');
+
+    // Chart
+    let chart = null;
+
+    // Accessibility helper
+    function announce(msg){ toast(msg); }
+
+    function toast(msg, error=false){
+      toastEl.textContent = msg;
+      toastEl.style.background = error ? 'var(--danger)' : 'var(--accent)';
+      toastEl.classList.add('show');
+      setTimeout(()=> toastEl.classList.remove('show'), 3000);
     }
 
-    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    // Simple ID
+    function uid(){ return 'id-'+Math.random().toString(36).slice(2,9); }
 
+    // DEMO data
+    function seedDemo(){
+      dataArr = [
+        { id: 'local1', nome: 'Eliomar', setor: 'Ambiental', dia: 15, mes: 1 },
+        { id: 'local2', nome: 'Ana Silva', setor: 'TI', dia: 20, mes: 1 },
+        { id: 'local3', nome: 'Gabriel Dutra', setor: 'Engenharia', dia: 21, mes: 10 },
+        // ... gerar alguns demos
+      ];
+      // generate additional demo entries for pagination
+      for(let i=0;i<60;i++){ dataArr.push({ id: 'demo-'+i, nome: 'User '+(i+1), setor: ['RH','TI','Vendas'][i%3], dia: (i%28)+1, mes: ((i%12)+1) }); }
+    }
+
+    // Date formatting i18n
+    function formatDate(date){
+      try{
+        return new Intl.DateTimeFormat(locale, { day:'2-digit', month:'2-digit', year:'numeric' }).format(date);
+      }catch(e){ return date.toLocaleDateString(); }
+    }
+
+    // Rendering
     function renderToday(){
-      const panel = document.getElementById("today-panel");
-      const now = new Date(), d = now.getDate(), m = now.getMonth()+1;
-      const matches = dataArr.filter(p=>p.dia===d && p.mes===m);
-      panel.innerHTML = "";
-      if (matches.length === 0) {
-        const next = dataArr.filter(p=> {
-          const d2 = new Date(now.getFullYear(), p.mes-1, p.dia);
-          return d2 > now;
-        })[0];
-        if (next) {
-          panel.innerHTML = `<p>Nenhum hoje. Próximo: <strong>${escapeHtml(next.nome)}</strong> em ${next.dia}/${next.mes}</p>`;
-        } else {
-          panel.innerHTML = "<p>Nenhum aniversariante encontrado.</p>";
-        }
-      } else {
-        matches.forEach(p=>{
-          const el = document.createElement("div");
-          el.style.display="flex"; el.style.gap="12px"; el.style.alignItems="center"; el.style.marginBottom="10px";
-          const av = document.createElement("div");
-          av.className = "avatar";
-          av.textContent = p.nome.split(" ").map(s=>s.charAt(0)).join("").toUpperCase().slice(0,2);
-          const info = document.createElement("div");
-          info.innerHTML = `<strong>${escapeHtml(p.nome)}</strong><br><span style="color:var(--muted)">${escapeHtml(p.setor||'')}</span>`;
-          el.append(av, info);
-          panel.appendChild(el);
-        });
-      }
-    }
-
-    function renderCalendar(){
-      const panel = document.getElementById("calendar-panel");
-      const now = new Date(), month = now.getMonth()+1, year = now.getFullYear();
-      const daysInMonth = new Date(year, month, 0).getDate();
-      let html = "<div class='calendar-grid'>";
-      for(let d=1; d<=daysInMonth; d++){
-        const matches = dataArr.filter(p=>p.dia===d && p.mes===month);
-        html += `<div class="day-cell"><div class="day-number">${d}</div>`;
-        matches.forEach(p=>{ html += `<div>🎂 ${escapeHtml(p.nome)}</div>`; });
-        html += `</div>`;
-      }
-      html += "</div>";
-      panel.innerHTML = html;
-    }
-
-    function renderList(){
-      const panel = document.getElementById("list-panel");
-      let html = `<table><thead><tr><th>Nome</th><th>Setor</th><th>Data</th><th>Ações</th></tr></thead><tbody>`;
-      dataArr.forEach(p=>{
-        html += `<tr>
-          <td>${escapeHtml(p.nome)}</td>
-          <td>${escapeHtml(p.setor||'')}</td>
-          <td>${p.dia}/${p.mes}</td>
-          <td style="text-align:right">
-            <button class="btn btn-edit" data-id="${p.id}">Editar</button>
-            <button class="btn btn-delete" data-id="${p.id}">Excluir</button>
-          </td>
-        </tr>`;
-      });
-      html += `</tbody></table>`;
-      panel.innerHTML = html;
-      panel.querySelectorAll(".btn-delete").forEach(btn=>{
-        btn.addEventListener("click", async ()=>{
-          const id = btn.getAttribute("data-id");
-          if(confirm("Confirma exclusão?")) {
-            try {
-              await deleteDoc(doc(db, "aniversariantes", id));
-              toast("Registro excluído.");
-            } catch(e){
-              toast("Erro ao excluir: " + e.message, true);
-            }
-          }
-        });
-      });
-      panel.querySelectorAll(".btn-edit").forEach(btn=>{
-        btn.addEventListener("click", async ()=>{
-          const id = btn.getAttribute("data-id");
-          const rec = dataArr.find(x=>x.id === id);
-          const nome = prompt("Nome completo:", rec.nome);
-          const setor = prompt("Setor (opcional):", rec.setor || '');
-          const dia = parseInt(prompt("Dia (1-31):", rec.dia),10);
-          const mes = parseInt(prompt("Mês (1-12):", rec.mes),10);
-          if(nome && dia>=1 && dia<=31 && mes>=1 && mes<=12){
-            try {
-              await setDoc(doc(db, "aniversariantes", id), { nome, setor, dia, mes }, { merge:true });
-              toast("Registro atualizado.");
-            } catch(e){
-              toast("Erro na atualização: " + e.message, true);
-            }
-          } else { toast("Data inválida.", true); }
-        });
-      });
-    }
-
-    function renderFuture(daysAhead=30) {
-      const panel = document.getElementById("future-list");
+      const el = document.getElementById('today-content');
       const now = new Date();
-      const futureDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysAhead);
-      const arr = dataArr.filter(p => {
-        const d2 = new Date(now.getFullYear(), p.mes -1, p.dia);
-        return d2 > now && d2 <= futureDate;
-      }).sort((a,b) => {
-        const da = new Date(now.getFullYear(), a.mes -1, a.dia);
-        const db = new Date(now.getFullYear(), b.mes -1, b.dia);
-        return da - db;
-      });
-      if (arr.length === 0) {
-        panel.innerHTML = `<p>Nenhum aniversário nos próximos ${daysAhead} dias.</p>`;
-      } else {
-        panel.innerHTML = arr.map(p=>`
-          <div style="padding:8px 0; border-bottom:1px solid rgba(0,0,0,.05)">
-            <strong>${escapeHtml(p.nome)}</strong> &middot; ${escapeHtml(p.setor||'')} &middot; ${p.dia}/${p.mes}
-          </div>
-        `).join('');
+      const d = now.getDate(), m = now.getMonth()+1;
+      const matches = dataArr.filter(p => Number(p.dia) === d && Number(p.mes) === m);
+      document.getElementById('today-count').textContent = matches.length + ' encontrado(s)';
+      if(!matches.length){
+        // find next
+        const next = nextUpcoming();
+        if(next){
+          const days = Math.ceil((next.date - now)/(1000*60*60*24));
+          el.innerHTML = `<p>Nenhum hoje — próximo: <strong>${escape(next.nome)}</strong> em ${String(next.dia).padStart(2,'0')}/${String(next.mes).padStart(2,'0')} (${days} dias)</p>`;
+        } else el.innerHTML = '<p>Nenhum aniversariante cadastrado.</p>';
+        return;
       }
+      el.innerHTML = '';
+      matches.forEach(p => {
+        const row = document.createElement('div');
+        row.style.display = 'flex'; row.style.gap = '12px'; row.style.alignItems = 'center'; row.style.marginBottom = '12px';
+        const avatar = document.createElement('div'); avatar.className='logo'; avatar.style.width='48px'; avatar.style.height='48px'; avatar.style.borderRadius='10px'; avatar.style.fontSize='16px'; avatar.textContent = initials(p.nome);
+        const info = document.createElement('div'); info.innerHTML = `<strong>${escape(p.nome)}</strong><div class="small" style="color:var(--muted)">${escape(p.setor||'')}</div>`;
+        row.appendChild(avatar); row.appendChild(info);
+        el.appendChild(row);
+      });
+    }
+
+    function renderFuture(){
+      const daysAhead = Number(document.getElementById('days-ahead').value || 30);
+      const now = new Date(); const end = new Date(now.getTime()+daysAhead*24*60*60*1000);
+      const arr = dataArr.map(p=>({...p, date: nextDate(p, now)})).filter(x=>x.date>now && x.date<=end).sort((a,b)=>a.date-b.date);
+      const wrap = document.getElementById('future-list');
+      document.getElementById('future-count')?.textContent = arr.length + ' encontrados';
+      if(!arr.length){ wrap.innerHTML = `<p>Nenhum nos próximos ${daysAhead} dias.</p>`; return; }
+      wrap.innerHTML = '';
+      arr.forEach(p=>{
+        const row = document.createElement('div'); row.style.padding='8px 0'; row.style.borderBottom='1px solid var(--contrast-border)';
+        row.innerHTML = `<strong>${escape(p.nome)}</strong> · ${escape(p.setor||'')} · ${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}<div class="small" style="color:var(--muted)">Em ${Math.ceil((p.date-new Date())/(1000*60*60*24))} dia(s) — ${formatDate(p.date)}</div>`;
+        wrap.appendChild(row);
+      });
+    }
+
+    function renderCalendar(month = (new Date()).getMonth(), year = (new Date()).getFullYear()){
+      const wrap = document.querySelector('#left-col .calendar-grid') || document.createElement('div');
+      wrap.className = 'calendar-grid';
+      const daysInMonth = new Date(year, month+1, 0).getDate();
+      wrap.innerHTML = '';
+      for(let d=1;d<=daysInMonth;d++){
+        const day = document.createElement('div'); day.className='day'; day.setAttribute('tabindex',0);
+        const num = document.createElement('div'); num.className='num'; num.textContent = d; day.appendChild(num);
+        const matches = dataArr.filter(p=>Number(p.dia)===d && Number(p.mes)===month+1);
+        matches.forEach(m=>{ const el = document.createElement('div'); el.textContent = `🎂 ${m.nome}`; el.title = m.nome; day.appendChild(el); });
+        wrap.appendChild(day);
+      }
+      // attach
+      const calendarPanel = document.getElementById('calendar-panel');
+      if(!calendarPanel){
+        const node = document.createElement('section'); node.id = 'calendar-panel'; node.className='bg-card fade-in'; node.style.marginTop='14px';
+        node.appendChild(wrap); document.getElementById('left-col').appendChild(node);
+      } else calendarPanel.innerHTML = '', calendarPanel.appendChild(wrap);
+    }
+
+    function renderList(reset=false){
+      if(reset) page = 0;
+      const start = page*PAGE_SIZE; const end = start+PAGE_SIZE;
+      const filtered = (document.getElementById('search-input').value||'').toLowerCase();
+      let items = dataArr.filter(p => { if(!filtered) return true; return (p.nome||'').toLowerCase().includes(filtered) || (p.setor||'').toLowerCase().includes(filtered); });
+      const slice = items.slice(0,end);
+      const wrapper = document.getElementById('list-wrapper');
+      if(!slice.length){ wrapper.innerHTML = '<p>Nenhum registro.</p>'; return; }
+      let html = '<table role="table" aria-label="Tabela de aniversariantes"><thead><tr><th>Nome</th><th>Setor</th><th>Data</th><th style="text-align:right">Ações</th></tr></thead><tbody>';
+      slice.forEach(p=> html += `<tr><td>${escape(p.nome)}</td><td>${escape(p.setor||'')}</td><td>${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}</td><td style="text-align:right"><button data-id="${p.id}" class="edit-btn btn ghost small">✏️</button> <button data-id="${p.id}" class="del-btn btn ghost small">🗑️</button></td></tr>`);
+      html += '</tbody></table>';
+      wrapper.innerHTML = html;
+      // actions
+      wrapper.querySelectorAll('.del-btn').forEach(b=> b.addEventListener('click', (e)=>{ const id = e.currentTarget.dataset.id; if(confirm('Excluir?')){ dataArr = dataArr.filter(x=>x.id!==id); renderList(true); toast('Registro excluído'); } }));
+      wrapper.querySelectorAll('.edit-btn').forEach(b=> b.addEventListener('click', (e)=>{ const id = e.currentTarget.dataset.id; const rec = dataArr.find(x=>x.id===id); if(!rec) return; const nome = prompt('Nome:', rec.nome); const setor = prompt('Setor:', rec.setor||''); const dia = parseInt(prompt('Dia (1-31):', rec.dia),10); const mes = parseInt(prompt('Mês (1-12):', rec.mes),10); if(nome && !isNaN(dia) && !isNaN(mes)){ Object.assign(rec,{nome,setor,dia,mes}); renderList(true); toast('Atualizado'); } }));
+      // load more button
+      const loadMore = document.getElementById('load-more');
+      loadMore.style.display = items.length > end ? 'inline-block' : 'none';
     }
 
     function renderStats(){
-      const ctx = document.getElementById("chart-monthly").getContext("2d");
-      const months = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-      const counts = Array(12).fill(0);
-      dataArr.forEach(p => { if(p.mes>=1 && p.mes<=12) counts[p.mes-1]++; });
-      new Chart(ctx, {
-        type:'bar',
-        data:{
-          labels:months,
-          datasets:[{
-            label:'Aniversariantes por mês',
-            data:counts,
-            backgroundColor: counts.map((_,i)=> i%2===0 ? getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() : getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim()),
-            borderColor: counts.map((_,i)=> i%2===0 ? getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim() : getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()),
-            borderWidth:1
-          }]
-        },
-        options:{
-          responsive:true,
-          scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } },
-          plugins:{ legend:{ display:false } }
-        }
-      });
+      const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const counts = new Array(12).fill(0); dataArr.forEach(p=>{ if(p.mes>=1 && p.mes<=12) counts[p.mes-1]++; });
+      const ctx = document.getElementById('chart-monthly').getContext('2d');
+      if(chart) chart.destroy();
+      chart = new Chart(ctx, { type: 'bar', data: { labels: months, datasets: [{ label:'Aniversariantes', data: counts, backgroundColor: counts.map((_,i)=> i%2? getComputedStyle(document.body).getPropertyValue('--accent2'): getComputedStyle(document.body).getPropertyValue('--accent')), borderWidth:1 }] }, options: { responsive:true, scales:{y:{beginAtZero:true, ticks:{precision:0}}}, plugins:{legend:{display:false}} } });
     }
 
-    async function init(){
-      if(!cfg) {
-        toast("Configuração Firebase não encontrada — modo demo ativado.");
-        dataArr = [
-          { id:"local1", nome:"Eliomar", setor:"Ambiental", dia:15, mes:1 },
-          { id:"local2", nome:"Ana Silva", setor:"TI", dia:20, mes:1 }
-        ];
-        renderToday(); renderCalendar(); renderList(); renderFuture(); renderStats();
-        return;
+    // Helpers
+    function escape(s){ return String(s||'').replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c])); }
+    function initials(name){ return (name||'').split(' ').map(n=>n.charAt(0)).join('').slice(0,2).toUpperCase(); }
+    function nextDate(rec, from=new Date()){ const year = from.getFullYear(); let d = new Date(year, rec.mes-1, rec.dia, 12); if(d<from) d = new Date(year+1, rec.mes-1, rec.dia, 12); return d; }
+
+    // CONFETTI implementation (canvas) - strengthened
+    function launchConfetti(particleCount = 180){
+      const canvas = confettiCanvas; const ctx = canvas.getContext('2d');
+      canvas.width = innerWidth; canvas.height = innerHeight;
+      const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
+      const pieces = [];
+      for(let i=0;i<particleCount;i++){
+        pieces.push({ x: Math.random()*canvas.width, y: -10 - Math.random()*300, vx: (Math.random()-0.5)*6, vy: 2 + Math.random()*6, r: 6+Math.random()*6, color: colors[Math.floor(Math.random()*colors.length)], rot: Math.random()*360, vr: (Math.random()-0.5)*10 });
       }
-      app = initializeApp(cfg);
-      auth = getAuth(app);
-      db = getFirestore(app);
-      col = collection(db, "aniversariantes");
-
-      onSnapshot(col, snap=>{
-        dataArr = snap.docs.map(d=>({ id: d.id, ...d.data() }));
-        renderToday(); renderCalendar(); renderList(); renderFuture(); renderStats();
-      }, err=>{
-        toast("Falha ao sincronizar dados: " + err.message, true);
-      });
-
-      onAuthStateChanged(auth, user=>{
-        document.getElementById("auth-btn").textContent = user ? "Sair" : "🔒 Entrar";
-      });
-
-      document.getElementById("auth-btn").addEventListener("click", async ()=>{
-        if(auth.currentUser) {
-          await signOut(auth);
-          toast("Logout realizado.");
-        } else {
-          const email = prompt("E-mail:");
-          const pass = prompt("Senha:");
-          try {
-            await signInWithEmailAndPassword(auth, email, pass);
-            toast("Bem-vindo admin!");
-          } catch(e) {
-            toast("Erro no login: " + e.message, true);
-          }
-        }
-      });
+      let active = true; const gravity = 0.25;
+      function frame(){ ctx.clearRect(0,0,canvas.width,canvas.height); for(const p of pieces){ p.vy += gravity; p.x += p.vx; p.y += p.vy; p.rot += p.vr; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle = p.color; ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6); ctx.restore(); }
+        // remove off-screen
+        if(pieces.every(p=>p.y > canvas.height+50)) { active=false; ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+        requestAnimationFrame(frame);
+      }
+      frame();
     }
 
-    document.addEventListener("DOMContentLoaded", ()=>{
-      document.querySelectorAll(".tab-btn").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const tab = btn.getAttribute("data-tab");
-          document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-          btn.classList.add("active");
-          document.querySelectorAll("section").forEach(s=>s.style.display="none");
-          document.getElementById(tab + "-panel").style.display = "block";
-        });
-      });
+    // BALLOONS: create SVG balloons that float up (stronger effect)
+    function launchBalloons(count = 12){
+      const wrap = balloonWrap; const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
+      for(let i=0;i<count;i++){
+        const id = 'ball-'+uid(); const el = document.createElementNS('http://www.w3.org/2000/svg','svg'); el.setAttribute('width','48'); el.setAttribute('height','68'); el.setAttribute('viewBox','0 0 48 68'); el.style.position='fixed'; el.style.left = Math.random()*100+'%'; el.style.bottom = '-100px'; el.style.pointerEvents='none'; el.style.zIndex = 9980; el.setAttribute('aria-hidden','true');
+        const color = colors[i%colors.length];
+        el.innerHTML = `<ellipse cx="24" cy="24" rx="18" ry="22" fill="${color}" opacity="0.95"></ellipse><path d="M24 46 L24 60" stroke="#222" stroke-opacity="0.08" stroke-width="1"/>`;
+        wrap.appendChild(el);
+        const duration = 3800 + Math.random()*1200; const delay = Math.random()*800;
+        el.animate([{ transform:`translateY(0)`, opacity:1 },{ transform:`translateY(-120vh) rotate(${Math.random()*60-30}deg)`, opacity:0 }], { duration, easing:'cubic-bezier(.2,.8,.2,1)', delay });
+        setTimeout(()=>el.remove(), duration + delay + 200);
+      }
+    }
 
-      document.getElementById("theme-toggle").addEventListener("click", ()=>{
-        const body = document.body;
-        const newTheme = (body.getAttribute("data-theme")==="dark") ? "light" : "dark";
-        body.setAttribute("data-theme", newTheme);
-        document.getElementById("theme-toggle").textContent = (newTheme==="dark") ? "☀️" : "🌙";
-      });
+    // stronger celebrate that uses both
+    function celebrateNow(){ launchConfetti(220); launchBalloons(18); toast('🎉 Parabéns!'); announce('Eventos de celebração disparados'); }
 
-      document.getElementById("celebrate-now-btn").addEventListener("click", ()=>{
-        confettiAndBalloons(90);
-        toast("🎉 Parabéns aos aniversariantes!");
-      });
+    // CSV helpers - export
+    function exportCSV(){ if(!dataArr.length){ toast('Sem dados para exportar', true); return; } const header = ['nome','setor','dia','mes']; const rows = dataArr.map(r => `${quote(r.nome)},${quote(r.setor||'')},${r.dia},${r.mes}`); const csv = [header.join(','),...rows].join('\n'); const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'aniversariantes.csv'; document.body.appendChild(a); a.click(); a.remove(); toast('CSV exportado'); }
+    function quote(s){ return '"' + String(s||'').replace(/"/g,'""') + '"'; }
 
-      init();
+    // CSV import (simple parser)
+    function parseCSV(text){ const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); if(!lines.length) return []; const header = lines.shift().split(',').map(h=>h.trim().toLowerCase()); const idxNome = header.indexOf('nome'); const idxSetor = header.indexOf('setor'); const idxDia = header.indexOf('dia'); const idxMes = header.indexOf('mes'); if(idxNome<0 || idxDia<0 || idxMes<0) { toast('CSV precisa ter colunas nome,dia,mes', true); return []; } const out = []; lines.forEach((ln,i)=>{ const parts = ln.match(/(".*?"|[^,]+)/g) || []; const nome = (parts[idxNome]||'').replace(/^"|"$/g,'').trim(); const setor = (parts[idxSetor]||'').replace(/^"|"$/g,'').trim(); const dia = parseInt((parts[idxDia]||'').replace(/^"|"$/g,''),10); const mes = parseInt((parts[idxMes]||'').replace(/^"|"$/g,''),10); if(nome && !isNaN(dia) && !isNaN(mes)) out.push({ id: uid(), nome, setor, dia, mes }); }); return out; }
+
+    // File input
+    document.getElementById('csv-file').addEventListener('change', (e)=>{
+      const f = e.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = ()=>{ const recs = parseCSV(reader.result); if(!recs.length) return; dataArr = dataArr.concat(recs); renderList(true); renderStats(); toast('Importado '+recs.length+' registros'); }; reader.readAsText(f,'utf-8'); e.target.value = '';
     });
+
+    document.getElementById('export-csv').addEventListener('click', exportCSV);
+    document.getElementById('import-sample').addEventListener('click', ()=>{ const sample = 'nome,setor,dia,mes\n"Maria Silva",RH,5,11\n"João Pereira",Financeiro,12,3\n"Luiza Costa",Vendas,28,12'; const recs = parseCSV(sample); dataArr = dataArr.concat(recs); renderList(true); renderStats(); toast('Exemplo importado'); });
+
+    // add new
+    document.getElementById('add-btn').addEventListener('click', ()=>{
+      const nome = prompt('Nome completo:'); if(!nome) return; const setor = prompt('Setor (opcional):',''); const dia = parseInt(prompt('Dia (1-31):','1'),10); const mes = parseInt(prompt('Mês (1-12):','1'),10); if(isNaN(dia)||isNaN(mes)){ toast('Data inválida', true); return; } dataArr.push({ id: uid(), nome, setor, dia, mes }); renderList(true); renderToday(); renderFuture(); renderStats(); toast('Adicionado');
+    });
+
+    // celebration wiring
+    document.getElementById('celebrate-btn').addEventListener('click', celebrateNow);
+
+    // theme wiring
+    const themeToggle = document.getElementById('theme-toggle');
+    function setTheme(t){ document.body.setAttribute('data-theme', t); document.getElementById('current-theme').textContent = t==='dark' ? 'Escuro' : 'Claro'; localStorage.setItem('theme',t); themeToggle.setAttribute('aria-pressed', t==='dark'); }
+    themeToggle.addEventListener('click', ()=>{ const newT = document.body.getAttribute('data-theme')==='dark' ? 'light' : 'dark'; setTheme(newT); renderStats(); });
+    // init theme
+    setTheme(localStorage.getItem('theme')||'light');
+
+    // pagination
+    document.getElementById('load-more').addEventListener('click', ()=>{ page++; renderList(); });
+
+    // search
+    document.getElementById('search-input').addEventListener('input', ()=>{ renderList(true); });
+
+    // future refresh
+    document.getElementById('refresh-future').addEventListener('click', ()=> renderFuture());
+
+    // login modal
+    const loginModal = document.getElementById('login-modal');
+    document.getElementById('auth-btn').addEventListener('click', ()=>{
+      if(confirm('Simular login? (demo)')){ toast('Logado (demo)'); } else loginModal.showModal();
+    });
+    document.getElementById('close-login').addEventListener('click', ()=> loginModal.close());
+
+    // tab behavior
+    document.querySelectorAll('.tab').forEach(btn=> btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
+      btn.setAttribute('aria-selected','true');
+      const tab = btn.dataset.tab;
+      // hide all panels
+      document.querySelectorAll('#left-col > section, #right-col > .bg-card, #right-col > .card').forEach(s=>s.style.display='none');
+      // show per tab (we keep main layout but scroll to sections)
+      if(tab==='today'){ document.getElementById('today-panel').style.display = 'block'; document.getElementById('future-panel').style.display='block'; document.getElementById('stats-panel').style.display='block'; document.getElementById('list-panel').style.display='none'; document.getElementById('calendar-panel')?.remove(); }
+      if(tab==='calendar'){ // generate calendar inside left-col
+        document.getElementById('today-panel').style.display='none'; document.getElementById('future-panel').style.display='none'; document.getElementById('stats-panel').style.display='none'; renderCalendar(); }
+      if(tab==='list'){ document.getElementById('list-panel').style.display='block'; document.getElementById('today-panel').style.display='none'; document.getElementById('future-panel').style.display='none'; document.getElementById('stats-panel').style.display='none'; }
+      if(tab==='future'){ document.getElementById('list-panel').style.display='none'; document.getElementById('today-panel').style.display='none'; document.getElementById('future-panel').style.display='block'; }
+      if(tab==='stats'){ document.getElementById('today-panel').style.display='none'; document.getElementById('future-panel').style.display='none'; document.getElementById('stats-panel').style.display='block'; }
+    }));
+
+    // initial seed
+    seedDemo(); renderList(true); renderToday(); renderFuture(); renderStats();
+
+    // keyboard shortcuts: c => celebrate, / => focus search
+    document.addEventListener('keydown', (e)=>{
+      if(document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+      if(e.key === 'c' || e.key === 'C'){ celebrateNow(); }
+      if(e.key === '/'){ e.preventDefault(); document.getElementById('search-input').focus(); }
+    });
+
+    // locale select
+    document.getElementById('locale-select').value = locale; document.getElementById('locale-select').addEventListener('change',(e)=>{ locale = e.target.value; localStorage.setItem('locale', locale); renderFuture(); renderToday(); renderStats(); });
+
+    // window resize to keep canvas size up to date
+    window.addEventListener('resize', ()=>{ confettiCanvas.width = innerWidth; confettiCanvas.height = innerHeight; });
+
+    // small helper to compute next upcoming overall
+    function nextUpcoming(){ if(!dataArr.length) return null; const now = new Date(); const list = dataArr.map(p=>({ ...p, date: nextDate(p, now) })); list.sort((a,b)=>a.date-b.date); return list[0]; }
+
+    // expose for quick debugging
+    window.__painel = { dataArr, renderList, renderStats, celebrateNow };
   </script>
 </body>
 </html>
