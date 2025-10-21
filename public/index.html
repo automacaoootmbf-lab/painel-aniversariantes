@@ -3,136 +3,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel de Aniversariantes — Produção</title>
+  <title>Painel de Aniversariantes — Self-contained</title>
 
-  <!-- Fonts & libs (produção: podem ser substituídos por bundling/bundles locais) -->
-  <script src="./vendor/chart.umd.min.js" defer></script>
-  <script src="./vendor/papaparse.min.js" defer></script>
-  <script src="./vendor/confetti.browser.min.js" defer></script>
-  <script src="./vendor/tailwind-cdn.js" defer></script>
-
-
-  <!-- Tailwind via CDN kept for convenience (in produção recomendo gerar CSS com purge) -->
-  <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp" defer></script>
-
+  <!-- Simple CSS (compact substitute for Tailwind runtime) -->
   <style>
-    /* ---------- Variables & Base ---------- */
-    :root{
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --muted: #6b7280;
-      --text: #0f172a;
-      --accent: #003366;
-      --accent-2: #ef4444;
-      --radius: 12px;
-      --shadow: 0 6px 18px rgba(10,10,10,0.06);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    html.dark { --bg:#0b1220; --card:#071026; --muted:#94a3b8; --text:#e6eef8; --accent:#2dd4bf; }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
-    a{color:inherit}
-    .container{max-width:1200px;margin:24px auto;padding:20px}
-
-    /* ---------- Layout ---------- */
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-    .title-group{display:flex;gap:12px;align-items:center}
-    .logo-svg{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#ffffff, #f1f5f9);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow)}
-    h1{margin:0;font-size:20px;font-weight:600}
-    p.sub{margin:0;color:var(--muted);font-size:13px}
-
-    .header-actions{display:flex;gap:8px;align-items:center}
-    button, .btn {background:var(--card);border:1px solid #e6eef8;padding:8px 10px;border-radius:8px;cursor:pointer}
-    button:focus, .btn:focus{outline:2px solid rgba(0,0,0,0.08)}
-    .tertiary{background:transparent;border:1px dashed #e6eef8}
-
-    /* ---------- Tabs ---------- */
-    #tabs-container{display:flex;gap:8px;margin-bottom:18px;position:relative}
-    .tab-btn{padding:8px 12px;border-radius:9999px;background:transparent;border:1px solid transparent;cursor:pointer}
-    .tab-btn.active{background:var(--card);box-shadow:var(--shadow)}
-    #active-tab-underline{height:4px;background:linear-gradient(90deg,var(--accent),#0ea5e9);border-radius:9999px;position:absolute;bottom:-6px;transition:left .18s,width .18s;}
-
-    /* ---------- Panels ---------- */
-    .tab-panel{background:transparent}
-    .hidden{display:none}
-
-    /* ---------- Cards ---------- */
-    .bg-card{background:var(--card);border-radius:12px;padding:14px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.03)}
-    .birthday-card{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px}
-    .avatar{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#e2e8f0,#fff);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
-    .card-info{display:flex;flex-direction:column}
-    .card-info .name{font-weight:600}
-    .small{font-size:13px;color:var(--muted)}
-
-    /* ---------- Calendar grid ---------- */
-    .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-    .day-cell{min-height:92px;border-radius:8px;padding:8px;border:1px dashed rgba(0,0,0,0.03);position:relative;background:transparent}
-    .day-number{position:absolute;top:8px;right:8px;font-weight:600;color:var(--muted);font-size:12px}
-    .day-badge{display:inline-block;background:#efefef;border-radius:999px;padding:6px 8px;font-size:12px}
-    .day-cell:focus{outline:2px solid rgba(14,165,233,0.2)}
-
-    /* ---------- Toast/Snackbar ---------- */
-    #notification-toast{position:fixed;right:20px;bottom:20px;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;z-index:9999;transform:translateY(10px);opacity:0;transition:opacity .3s,transform .3s}
-    #undo-snackbar{position:fixed;left:20px;bottom:20px;background:var(--card);padding:10px;border-radius:10px;display:flex;align-items:center;gap:8px;box-shadow:var(--shadow);z-index:9999}
-
-    /* ---------- Fullscreen celebration canvas ---------- */
-    #confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:2000}
-
-    /* ---------- Responsive ---------- */
-    @media (max-width:768px){
-      .calendar-grid{grid-template-columns:repeat(7,1fr);gap:6px}
-      .avatar{width:48px;height:48px}
-    }
+  :root{--bg:#f8fafc;--card:#ffffff;--muted:#6b7280;--text:#0f172a;--accent:#0ea5e9}
+  *{box-sizing:border-box}html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial}
+  .container{max-width:1100px;margin:20px auto;padding:18px}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+  h1{margin:0;font-size:18px}
+  .sub{color:var(--muted);font-size:13px;margin:0}
+  .btn{background:var(--card);border:1px solid rgba(0,0,0,0.06);padding:8px 10px;border-radius:8px;cursor:pointer}
+  .bg-card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(10,10,10,0.06)}
+  .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+  .day-cell{min-height:92px;border-radius:8px;padding:8px;border:1px dashed rgba(0,0,0,0.04);position:relative;background:transparent}
+  .day-number{position:absolute;top:8px;right:8px;font-weight:600;color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;text-align:left;border-bottom:1px solid #f1f5f9}
+  .avatar{width:56px;height:56px;border-radius:10px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-weight:700}
+  #notification-toast{position:fixed;right:20px;bottom:20px;background:#111827;color:#fff;padding:10px 14px;border-radius:10px;z-index:9999;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s}
+  #undo-snackbar{position:fixed;left:20px;bottom:20px;background:var(--card);padding:10px;border-radius:10px;display:none;box-shadow:0 6px 18px rgba(0,0,0,0.06);z-index:9999}
+  #login-modal{display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6000;background:#fff;padding:18px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.12)}
+  input[type="text"],input[type="password"]{width:100%;padding:8px;border:1px solid #e6eef8;border-radius:8px;margin-bottom:8px}
+  .flex{display:flex;gap:8px;align-items:center}
+  @media (max-width:800px){ .calendar-grid{grid-template-columns:repeat(7,1fr)} .avatar{width:48px;height:48px} }
   </style>
 </head>
 <body>
-  <!-- Fullscreen confetti canvas -->
-  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+  <div id="notification-toast" role="status" aria-live="polite"></div>
+  <div id="undo-snackbar"><div id="undo-snackbar-text"></div><button id="undo-snackbar-btn" class="btn">Desfazer</button></div>
 
-  <!-- Tooltip -->
-  <div id="calendar-tooltip" role="tooltip" aria-hidden="true" style="position:fixed;display:none;z-index:3000;background:var(--card);padding:8px;border-radius:8px;box-shadow:var(--shadow)"></div>
-
-  <!-- Announcer for screen readers -->
-  <div id="celebration-announcer" aria-live="polite" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;"></div>
-
-  <!-- Undo snackbar -->
-  <div id="undo-snackbar" style="display:none" role="status" aria-live="polite">
-    <div id="undo-snackbar-text"></div>
-    <button id="undo-snackbar-btn" class="btn">Desfazer</button>
+  <!-- Login modal -->
+  <div id="login-modal" aria-hidden="true">
+    <h3>Entrar</h3>
+    <input id="login-email" placeholder="email" type="text" />
+    <input id="login-pass" placeholder="senha" type="password" />
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button id="login-cancel" class="btn">Cancelar</button>
+      <button id="login-submit" class="btn">Entrar</button>
+    </div>
   </div>
 
   <div class="container">
     <header>
-      <div class="title-group">
-        <div class="logo-svg" aria-hidden="true">
-          <!-- simple logo -->
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
-            <path d="M12 12a4 4 0 100-8 4 4 0 000 8z" fill="#111827"/>
-            <path d="M4 20a8 8 0 0116 0" stroke="#111827" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="avatar" aria-hidden="true">AA</div>
         <div>
           <h1>Painel de Aniversariantes</h1>
-          <p class="sub">Gerencie aniversariantes, celebre e exporte listas. Produção segura.</p>
+          <p class="sub">Gerencie aniversariantes — auto-contido</p>
         </div>
       </div>
 
-      <div class="header-actions">
-        <button id="theme-toggle-btn" class="btn" title="Alternar tema">🌓</button>
-        <button id="celebrate-now-btn" class="btn" title="Celebrar agora">🎉 Celebrar</button>
-        <label style="display:flex;align-items:center;gap:6px"><input id="auto-celebrate-toggle" type="checkbox" /> <span class="small">Auto Celebrar</span></label>
-        <button id="sound-toggle-btn" class="btn" title="Som">🔊</button>
-        <button id="auth-btn" class="btn" title="Login">🔒 Entrar</button>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="celebrate-now-btn" class="btn">🎉 Celebrar</button>
+        <button id="auth-btn" class="btn">🔒 Entrar</button>
       </div>
     </header>
 
     <div id="tabs-container">
-      <button data-tab="today" class="tab-btn active">🎂 Hoje</button>
-      <button data-tab="upcoming" class="tab-btn">📅 Próximos</button>
-      <button data-tab="calendar" class="tab-btn">🗓️ Calendário</button>
-      <button data-tab="list" class="tab-btn">📋 Lista</button>
-      <button data-tab="admin" class="tab-btn" style="display:none">⚙️ Gestão</button>
-      <div id="active-tab-underline"></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <button data-tab="today" class="btn tab-btn">🎂 Hoje</button>
+        <button data-tab="calendar" class="btn tab-btn">🗓️ Calendário</button>
+        <button data-tab="list" class="btn tab-btn">📋 Lista</button>
+      </div>
     </div>
 
     <main id="tab-panels-container">
@@ -140,17 +73,13 @@
         <div id="today-cards" class="bg-card" style="min-height:120px">Carregando...</div>
       </section>
 
-      <section id="upcoming-panel" class="tab-panel hidden">
-        <div id="upcoming-cards" class="bg-card" style="min-height:120px">Carregando...</div>
-      </section>
-
-      <section id="calendar-panel" class="tab-panel hidden">
+      <section id="calendar-panel" class="tab-panel" style="display:none">
         <div id="calendar-grid" class="calendar-grid bg-card" style="padding:12px"></div>
       </section>
 
-      <section id="list-panel" class="tab-panel hidden">
+      <section id="list-panel" class="tab-panel" style="display:none">
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-          <input id="search-input" placeholder="Buscar por nome ou setor" class="btn" style="flex:1"/>
+          <input id="search-input" placeholder="Buscar por nome ou setor" />
           <button id="add-btn" class="btn">+ Adicionar</button>
           <button id="import-btn" class="btn">Importar CSV</button>
           <button id="export-btn" class="btn">Exportar CSV</button>
@@ -158,598 +87,387 @@
         </div>
         <div id="list-table" class="bg-card" style="min-height:160px">Carregando...</div>
       </section>
-
-      <section id="admin-panel" class="tab-panel hidden">
-        <div class="bg-card">
-          <h3>Relatórios</h3>
-          <canvas id="chart-month" style="height:260px"></canvas>
-          <canvas id="chart-sector" style="height:260px;margin-top:12px"></canvas>
-        </div>
-      </section>
     </main>
   </div>
 
-  <!-- load firebase-config.js (external) -->
+  <!-- firebase-config.js MUST exist in same folder and define window.__firebase_config as OBJECT -->
   <script src="./firebase-config.js"></script>
 
+  <!-- Firebase SDK (CDN official) -->
   <script type="module">
-  /* -------------- Imports -------------- */
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getAuth,
-    GoogleAuthProvider,
-    signInWithPopup,
-    signInWithRedirect,
-    getRedirectResult,
-    onAuthStateChanged,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import {
-    getFirestore,
-    collection,
-    addDoc,
-    setDoc,
-    doc,
-    deleteDoc,
-    updateDoc,
-    serverTimestamp,
-    onSnapshot,
-    getDocs
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getFirestore, collection, addDoc, setDoc, doc, deleteDoc, onSnapshot, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  /* -------------- App State -------------- */
-  const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-  let firebaseApp = null;
-  let auth = null;
-  let db = null;
-  let dbCollection = null; // reference to collection('aniversariantes') if firestore available
-  let isAdmin = false;
-  let lastDeleted = null;
-  window.birthdayData = window.birthdayData || []; // internal array of {id,name,sector,day,month,year,textoData}
+  // ----- Lightweight inlined libs (compact, functional) -----
+  // PapaParse-like (parse string/File with header true/false) - lightweight
+  window.Papa = (function(){
+    function parseText(txt, opts, cb){
+      opts = opts || {}; const header = !!opts.header;
+      const lines = txt.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n').filter(Boolean);
+      const rows = lines.map(l => l.split(',').map(c=>c.trim()));
+      if (header && rows.length>0){
+        const keys = rows[0];
+        const data = rows.slice(1).map(r=>{const o={}; for(let i=0;i<keys.length;i++)o[keys[i]] = r[i]!==undefined? r[i] : ''; return o;});
+        cb && cb({ data, meta:{fields: keys}, errors:[] });
+      } else {
+        cb && cb({ data: rows, meta:{}, errors:[] });
+      }
+    }
+    return {
+      parse: function(input, opts){
+        opts = opts || {};
+        const complete = opts.complete || function(){};
+        try {
+          if (typeof File !== 'undefined' && input instanceof File){
+            const reader = new FileReader();
+            reader.onload = e=> parseText(String(e.target.result||''), opts, complete);
+            reader.onerror = ()=> complete({ data:[], meta:{}, errors:[{message:'file-read-error'}] });
+            reader.readAsText(input);
+          } else if (typeof input === 'string'){
+            parseText(input, opts, complete);
+          } else {
+            // array fallback
+            complete({ data: input, meta:{}, errors:[] });
+          }
+        } catch(err){ complete({ data:[], meta:{}, errors:[{message: String(err)}] }); }
+      },
+      unparse: function(arr){
+        if (!arr) return '';
+        if (Array.isArray(arr) && arr.length>0 && typeof arr[0]==='object'){
+          const keys = Object.keys(arr[0]);
+          const lines = [keys.join(',')];
+          for(const r of arr) lines.push(keys.map(k=> r[k] !== undefined ? String(r[k]) : '').join(','));
+          return lines.join('\n');
+        } else if (Array.isArray(arr)) return arr.map(r=> Array.isArray(r)? r.join(',') : Object.values(r).join(',')).join('\n');
+        return String(arr);
+      }
+    };
+  })();
 
-  /* -------------- DOM refs -------------- */
+  // Lightweight confetti (canvas-based)
+  window.confetti = (function(){
+    function rand(min,max){return Math.random()*(max-min)+min;}
+    function doConfetti(opts){
+      opts = opts||{};
+      const count = Math.max(8, Math.min(200, opts.particleCount || 40));
+      const container = document.createElement('div');
+      container.style.position = 'fixed'; container.style.left=0; container.style.top=0;
+      container.style.width='100%'; container.style.height='100%'; container.style.pointerEvents='none';
+      container.style.zIndex=2000;
+      document.body.appendChild(container);
+      const colors = opts.colors || ['#ef4444','#f97316','#f59e0b','#10b981','#06b6d4','#3b82f6','#7c3aed'];
+      for(let i=0;i<count;i++){
+        const el = document.createElement('div'); const s = Math.round(rand(6,14));
+        el.style.width = s+'px'; el.style.height = (s*0.6)+'px'; el.style.background = colors[i % colors.length];
+        el.style.position = 'absolute'; el.style.left = (rand(0,100))+'%'; el.style.top = (rand(-10,20))+'%';
+        el.style.opacity = '0.95'; el.style.borderRadius='2px'; el.style.transform = `rotate(${rand(0,360)}deg)`;
+        container.appendChild(el);
+        const dur = rand(1200, 2600);
+        el.animate([{ transform: el.style.transform, opacity:1 }, { transform: `translateY(${rand(80,600)}px) rotate(${rand(360,720)}deg)`, opacity:0.6 }], { duration: dur, easing:'cubic-bezier(.2,.8,.2,1)' });
+        setTimeout(()=>{ try{ el.remove(); }catch(e){} }, dur+200);
+      }
+      setTimeout(()=>{ try{ container.remove(); }catch(e){} }, 4500);
+    }
+    return doConfetti;
+  })();
+
+  // Lightweight Chart mock - simple bar/doughnut drawing to canvas
+  // Sufficient for small summary charts in admin panel
+  window.Chart = (function(){
+    function drawBar(ctx, labels, data){
+      try{
+        const cvs = ctx.canvas; const w = cvs.width = cvs.clientWidth || 600; const h = cvs.height = cvs.clientHeight || 260;
+        ctx.clearRect(0,0,w,h);
+        const padding = 20; const max = Math.max(1, ...data.map(v=>Number(v)||0));
+        const bw = Math.max(8, (w - padding*2) / Math.max(1, data.length*1.5));
+        for(let i=0;i<data.length;i++){
+          const v = Number(data[i]||0);
+          const x = padding + i*(bw+8);
+          const vh = v / max * (h - padding*2);
+          ctx.fillStyle = '#2563eb'; ctx.fillRect(x, h - padding - vh, bw, vh);
+          ctx.fillStyle = '#111827'; ctx.font='12px Inter, sans-serif'; ctx.fillText(String(labels[i]||''), x, h - 4);
+        }
+      }catch(e){ console.warn('drawBar error', e); }
+    }
+    function drawDoughnut(ctx, labels, data){
+      try{
+        const cvs = ctx.canvas; const w = cvs.width = cvs.clientWidth || 400; const h = cvs.height = cvs.clientHeight || 260;
+        ctx.clearRect(0,0,w,h);
+        const cx = w/2, cy = h/2, r = Math.min(w,h)/3; const total = data.reduce((s,v)=>s+Number(v||0),0)||1;
+        let a = -Math.PI/2; const colors=['#06b6d4','#7c3aed','#f97316','#ef4444','#10b981'];
+        for(let i=0;i<data.length;i++){ const v=Number(data[i]||0); const slice = v/total * Math.PI*2; ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,a,a+slice); ctx.closePath(); ctx.fillStyle = colors[i%colors.length]; ctx.fill(); a+=slice; }
+      }catch(e){}
+    }
+    return function(ctx, cfg){
+      const c2d = (ctx && ctx.getContext)? ctx.getContext('2d') : ctx;
+      const type = (cfg && cfg.type) || 'bar';
+      const labels = (cfg && cfg.data && cfg.data.labels) || [];
+      const data = (cfg && cfg.data && cfg.data.datasets && cfg.data.datasets[0] && cfg.data.datasets[0].data) || [];
+      if(type==='doughnut') drawDoughnut(c2d, labels, data); else drawBar(c2d, labels, data);
+      return { destroy: ()=>{}, update: (newCfg)=>{ const nl = (newCfg && newCfg.data && newCfg.data.labels) || labels; const nd = (newCfg && newCfg.data && newCfg.data.datasets && newCfg.data.datasets[0] && newCfg.data.datasets[0].data) || data; if((newCfg && newCfg.type)==='doughnut') drawDoughnut(c2d, nl, nd); else drawBar(c2d, nl, nd); } };
+    };
+  })();
+
+  // ----- App code -----
+  let firebaseApp=null, auth=null, db=null, dbCollection=null;
+  let isAdmin=false;
+  window.birthdayData = window.birthdayData || [];
+
+  // DOM refs
   const authBtn = document.getElementById('auth-btn');
   const celebrateNowBtn = document.getElementById('celebrate-now-btn');
-  const autoCelebrateToggle = document.getElementById('auto-celebrate-toggle');
-  const soundToggleBtn = document.getElementById('sound-toggle-btn');
-  const themeToggleBtn = document.getElementById('theme-toggle-btn');
-  const tabsContainer = document.getElementById('tabs-container');
-  const activeTabUnderline = document.getElementById('active-tab-underline');
   const csvFileInput = document.getElementById('csv-file-input');
   const searchInput = document.getElementById('search-input');
   const addBtn = document.getElementById('add-btn');
   const importBtn = document.getElementById('import-btn');
   const exportBtn = document.getElementById('export-btn');
 
-  /* -------------- Utilities -------------- */
-  const showNotification = (msg, isError=false) => {
-    let t = document.getElementById('notification-toast');
-    if (!t) {
-      t = document.createElement('div');
-      t.id = 'notification-toast';
-      document.body.appendChild(t);
-    }
+  // notifications
+  function showNotification(msg, isError){
+    const t = document.getElementById('notification-toast');
     t.textContent = msg;
     t.style.background = isError ? '#b91c1c' : '#111827';
-    t.style.color = isError ? '#fff' : '#fff';
-    t.style.opacity = '1';
-    t.style.transform = 'translateY(0)';
-    setTimeout(()=> { t.style.opacity= '0'; t.style.transform= 'translateY(8px)'; }, 3000);
-  };
-
-  const debounce = (fn, delay = 250) => {
-    let t;
-    return (...args) => {
-      clearTimeout(t);
-      t = setTimeout(() => fn(...args), delay);
-    };
-  };
-
-  // Validate day-month pair considering month length and leapyear
-  function isValidDayForMonth(day, month, year = null) {
-    if (!Number.isInteger(day) || !Number.isInteger(month)) return false;
-    if (month < 1 || month > 12) return false;
-    const yearCheck = year ? Number(year) : 2000;
-    const daysInMonth = new Date(yearCheck, month, 0).getDate(); // 0 => last day of previous month
-    return day >= 1 && day <= daysInMonth;
+    t.style.color = '#fff';
+    t.style.opacity = '1'; t.style.transform='translateY(0)';
+    setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(8px)'; }, 3200);
   }
 
-  // Normalize data from various sources (Firestore PT/EN or CSV)
-  function normalizeToInternal(raw) {
-    if (!raw) return null;
-    const r = raw.data ? raw.data() : raw; // if doc snapshot
-    const id = raw.id || r.id || ('local_' + Date.now() + Math.random().toString(36).slice(2,9));
+  // normalize doc snapshot or raw
+  function normalizeToInternal(raw){
+    if(!raw) return null;
+    const r = raw.data ? raw.data() : raw;
+    const id = raw.id || r.id || ('local_' + Date.now() + Math.random().toString(36).slice(2,8));
     const name = String(r.nome || r.name || r.nome_completo || '').trim();
-    const sector = String(r.setor || r.sector || r.depto || '').trim();
-    const day = Number(r.dia ?? r.day ?? r.dayOfMonth ?? 0) || 0;
+    const sector = String(r.setor || r.sector || '').trim();
+    const day = Number(r.dia ?? r.day ?? 0) || 0;
     const month = Number(r.mes ?? r.month ?? 0) || 0;
-    const year = r.ano ?? r.year ?? null;
-    const textoData = r.textoData || (day && month ? `${day} de ${monthNames[month-1] || ''}` : '');
-    return { id, name, sector, day, month, year: year ? Number(year) : null, textoData };
+    const textoData = r.textoData || (day && month ? `${day} de ${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][month-1] || ''}` : '');
+    return { id, name, sector, day, month, textoData };
   }
 
-  function mapSnapshotToInternal(docSnap) { return normalizeToInternal(docSnap); }
-
-  /* -------------- Renderers -------------- */
-  function renderToday() {
+  function renderToday(){
     const container = document.getElementById('today-cards');
-    if (!container) return;
-    const now = new Date(); const d = now.getDate(); const m = now.getMonth()+1;
+    const now = new Date(); const d = now.getDate(), m = now.getMonth()+1;
     const matches = window.birthdayData.filter(b => b.day === d && b.month === m);
     container.innerHTML = '';
-    if (!matches.length) {
-      container.textContent = 'Nenhum aniversariante hoje.';
-      return;
-    }
+    if(!matches.length){ container.textContent = 'Nenhum aniversariante hoje.'; return; }
     const frag = document.createDocumentFragment();
-    matches.forEach(p => {
-      const el = document.createElement('div'); el.className = 'birthday-card';
-      const av = document.createElement('div'); av.className = 'avatar';
-      av.textContent = (p.name || '??').split(' ').map(s=>s.slice(0,1)).slice(0,2).join('').toUpperCase();
-      const info = document.createElement('div'); info.className='card-info';
-      info.innerHTML = `<div class="name">${p.name}</div><div class="small">${p.sector || ''}</div><div class="small">${p.textoData}</div>`;
-      el.append(av, info);
-      frag.appendChild(el);
+    matches.forEach(p=>{
+      const el = document.createElement('div'); el.className='birthday-card'; el.style.display='flex'; el.style.gap='12px'; el.style.alignItems='center';
+      const av = document.createElement('div'); av.className='avatar'; av.textContent = (p.name||'??').split(' ').map(s=>s.slice(0,1)).slice(0,2).join('').toUpperCase();
+      const info = document.createElement('div'); info.innerHTML = `<div style="font-weight:600">${p.name}</div><div style="color:var(--muted)">${p.sector||''}</div><div style="color:var(--muted)">${p.textoData||''}</div>`;
+      el.append(av, info); frag.appendChild(el);
     });
     container.appendChild(frag);
   }
 
-  function renderUpcoming() {
-    const container = document.getElementById('upcoming-cards');
-    if (!container) return;
-    const today = new Date();
-    const upcoming = [];
-    for (let i=1;i<=15;i++){
-      const d = new Date(today); d.setDate(today.getDate() + i);
-      const day = d.getDate(), month = d.getMonth()+1;
-      window.birthdayData.filter(b => b.day === day && b.month === month).forEach(p => upcoming.push({ when:d, person:p }));
-    }
-    container.innerHTML = '';
-    if (!upcoming.length) { container.textContent = 'Nenhum aniversariante nos próximos 15 dias.'; return; }
-    const frag = document.createDocumentFragment();
-    upcoming.forEach(it => {
-      const el = document.createElement('div'); el.className = 'birthday-card';
-      el.innerHTML = `<div class="card-info"><div class="name">${it.person.name}</div><div class="small">${it.person.sector || ''}</div><div class="small">${it.person.textoData}</div></div>`;
-      frag.appendChild(el);
-    });
-    container.appendChild(frag);
-  }
-
-  function renderCalendar() {
+  function renderCalendar(){
     const grid = document.getElementById('calendar-grid');
-    if (!grid) return;
     grid.innerHTML = '';
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth(); // 0-index
-    // First day of month (day of week 0..6)
-    const first = new Date(year, month, 1);
-    const startWeekday = first.getDay(); // 0 (Sun) .. 6 (Sat)
-    const daysInMonth = new Date(year, month+1, 0).getDate();
-    // fill leading blanks
-    for (let i=0;i<startWeekday;i++){
-      const blank = document.createElement('div'); blank.className='day-cell'; blank.setAttribute('aria-hidden','true'); grid.appendChild(blank);
-    }
-    for (let d=1; d<=daysInMonth; d++){
+    const today = new Date(); const year = today.getFullYear(); const month = today.getMonth();
+    const first = new Date(year, month, 1); const startWeekday = first.getDay(); const daysInMonth = new Date(year, month+1, 0).getDate();
+    for(let i=0;i<startWeekday;i++){ const blank=document.createElement('div'); blank.className='day-cell'; grid.appendChild(blank); }
+    for(let d=1; d<=daysInMonth; d++){
       const cell = document.createElement('button'); cell.className='day-cell'; cell.type='button';
-      cell.tabIndex = 0;
       cell.innerHTML = `<div class="day-number">${d}</div>`;
-      const matches = window.birthdayData.filter(b=>b.day===d && b.month===month+1);
-      if (matches.length){
-        const badge = document.createElement('div'); badge.className='day-badge'; badge.textContent = `${matches.length} anivers.`;
-        cell.appendChild(badge);
-      }
-      // tooltip accessible on focus/hover
-      cell.addEventListener('mouseenter', (e)=> showDayTooltip(e, d, month+1));
-      cell.addEventListener('mouseleave', hideDayTooltip);
-      cell.addEventListener('focus', (e)=> showDayTooltip(e, d, month+1));
-      cell.addEventListener('blur', hideDayTooltip);
+      const matches = window.birthdayData.filter(b => b.day===d && b.month===month+1);
+      if(matches.length){ const badge = document.createElement('div'); badge.textContent = `${matches.length} anivers.`; badge.style.display='inline-block'; badge.style.padding='6px 8px'; badge.style.borderRadius='999px'; badge.style.background='#efefef'; cell.appendChild(badge); }
       grid.appendChild(cell);
     }
   }
 
-  function showDayTooltip(evt, day, month) {
-    const tp = document.getElementById('calendar-tooltip');
-    if (!tp) return;
-    const matches = window.birthdayData.filter(b => b.day===day && b.month===month);
-    if (!matches.length) { tp.style.display = 'none'; return; }
-    tp.innerHTML = matches.map(m => `<div style="font-weight:600">${m.name}</div><div class="small">${m.sector||''}</div>`).join('<hr style="border:none;margin:6px 0;border-top:1px solid #efefef">');
-    tp.style.display = 'block';
-    const rect = evt.target.getBoundingClientRect();
-    tp.style.left = `${rect.right + 8}px`;
-    tp.style.top = `${rect.top}px`;
-  }
-  function hideDayTooltip(){ const tp = document.getElementById('calendar-tooltip'); if (tp) tp.style.display='none'; }
-
-  function renderList(filter='') {
+  function renderList(filter=''){
     const container = document.getElementById('list-table');
-    if (!container) return;
-    const f = (filter||'').toLowerCase();
+    const f=(filter||'').toLowerCase();
     const rows = window.birthdayData.filter(b => !f || (b.name||'').toLowerCase().includes(f) || (b.sector||'').toLowerCase().includes(f));
-    rows.sort((a,b) => (a.month - b.month) || (a.day - b.day) || a.name.localeCompare(b.name));
-    const table = document.createElement('table'); table.style.width = '100%';
-    table.innerHTML = `<thead><tr><th style="text-align:left">Nome</th><th style="text-align:left">Setor</th><th style="text-align:left">Data</th><th style="text-align:right">Ações</th></tr></thead>`;
+    rows.sort((a,b)=> (a.month - b.month) || (a.day - b.day) || a.name.localeCompare(b.name));
+    const table = document.createElement('table'); table.innerHTML = `<thead><tr><th>Nome</th><th>Setor</th><th>Data</th><th style="text-align:right">Ações</th></tr></thead>`;
     const tbody = document.createElement('tbody');
-    rows.forEach(r => {
+    rows.forEach(r=>{
       const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.sector||'')}</td><td>${escapeHtml(r.textoData)}</td><td style="text-align:right">
-        ${isAdmin ? `<button class="btn btn-edit" data-id="${r.id}">Editar</button> <button class="btn btn-delete" data-id="${r.id}">Excluir</button>` : ''}</td>`;
+      tr.innerHTML = `<td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.sector||'')}</td><td>${escapeHtml(r.textoData)}</td><td style="text-align:right">${isAdmin?`<button class="btn btn-edit" data-id="${r.id}">Editar</button> <button class="btn btn-delete" data-id="${r.id}">Excluir</button>`:''}</td>`;
       tbody.appendChild(tr);
     });
-    table.appendChild(tbody);
-    container.innerHTML = ''; container.appendChild(table);
-
-    container.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', ()=> deletePerson(btn.dataset.id)));
-    container.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', ()=> openEditModal(btn.dataset.id)));
+    table.appendChild(tbody); container.innerHTML=''; container.appendChild(table);
+    container.querySelectorAll('.btn-delete').forEach(btn=>btn.addEventListener('click', ()=> deletePerson(btn.dataset.id)));
+    container.querySelectorAll('.btn-edit').forEach(btn=>btn.addEventListener('click', ()=> openEditModal(btn.dataset.id)));
   }
 
-  function renderCharts() {
-    if (typeof Chart === 'undefined') return;
-    const monthsCount = new Array(12).fill(0);
-    const sectorMap = {};
-    window.birthdayData.forEach(b => {
-      if (b.month) monthsCount[b.month-1]++;
-      const k = b.sector && b.sector.trim() ? b.sector.trim() : 'Sem setor';
-      sectorMap[k] = (sectorMap[k]||0) + 1;
-    });
-    // Month chart
-    const cm = document.getElementById('chart-month');
-    if (cm) {
-      if (window._monthChart) window._monthChart.destroy();
-      window._monthChart = new Chart(cm.getContext('2d'), {
-        type: 'bar',
-        data: { labels: monthNames, datasets: [{ label: 'Aniversariantes', data: monthsCount }] },
-        options: { responsive:true, maintainAspectRatio:false }
-      });
-    }
-    // Sector chart
-    const cs = document.getElementById('chart-sector');
-    if (cs) {
-      if (window._sectorChart) window._sectorChart.destroy();
-      window._sectorChart = new Chart(cs.getContext('2d'), {
-        type: 'doughnut',
-        data: { labels: Object.keys(sectorMap), datasets: [{ data: Object.values(sectorMap) }] },
-        options: { responsive:true, maintainAspectRatio:false }
-      });
-    }
-  }
+  function escapeHtml(str){ if(!str && str!==0) return ''; return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
 
-  /* -------------- Escaped HTML helper -------------- */
-  function escapeHtml(str) { if (!str && str!==0) return ''; return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
-
-  /* -------------- Celebration (confetti + sound) -------------- */
-  function doCelebrate(count=1, options={}) {
-    // respect prefers-reduced-motion unless forced
+  function doCelebrate(count=1, options={}){
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced && !options.force) { showNotification('Animações reduzidas (prefers-reduced-motion).'); return; }
+    if(prefersReduced && !options.force){ showNotification('Animações reduzidas'); return; }
     try {
-      confetti({ particleCount: Math.min(200, 40 * Math.max(1, count)), spread: 70, origin: { y: 0.6 } });
+      if(typeof window.confetti === 'function') window.confetti({ particleCount: Math.min(200, 40 * Math.max(1, count)), spread: options.spread || 70 });
+      else console.warn('confetti não disponível — fallback visual');
     } catch(e){ console.warn('confetti error', e); }
-    // optional sound implemented with WebAudio for short beep (no external file)
-    if (soundEnabled()) playTinySound();
-    const announcer = document.getElementById('celebration-announcer'); if (announcer) announcer.textContent = `Celebrando ${count} aniversariante${count>1?'s':''}`;
   }
 
-  // simple loudness / toggle via localStorage
-  function soundEnabled(){ return localStorage.getItem('soundEnabled') === '1'; }
-  function toggleSound(){ localStorage.setItem('soundEnabled', soundEnabled() ? '0' : '1'); showNotification('Som ' + (soundEnabled() ? 'ativado' : 'desativado')); }
-
-  function playTinySound(){
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const o = ctx.createOscillator(); const g = ctx.createGain();
-      o.type = 'sine'; o.frequency.value = 600; g.gain.value = 0.0001;
-      o.connect(g); g.connect(ctx.destination);
-      o.start();
-      g.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.03);
-      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.45);
-      o.stop(ctx.currentTime + 0.5);
-    } catch(e){ /* ignore */ }
-  }
-
-  /* -------------- CRUD & Modal (basic modal using prompt for simplicity) -------------- */
-  function openEditModal(id=null) {
-    const person = id ? window.birthdayData.find(x=>x.id===id) : null;
-    const name = prompt('Nome completo:', person ? person.name : '');
-    if (!name) return;
-    const setor = prompt('Setor (opcional):', person ? person.sector : '');
-    const day = Number(prompt('Dia (1-31):', person ? person.day : '1'));
-    const month = Number(prompt('Mês (1-12):', person ? person.month : '1'));
-    if (!isValidDayForMonth(day, month)) { alert('Data inválida para o mês/ano.'); return; }
-    const internal = { name: name.trim(), sector: setor.trim(), day: Number(day), month: Number(month), year: null, textoData: `${day} de ${monthNames[month-1]}` };
-    savePerson(internal, id);
-  }
-
-  async function savePerson(internalObj, editingId = null) {
-    if (!internalObj || !internalObj.name || !internalObj.day || !internalObj.month) {
-      showNotification('Nome, dia e mês são obrigatórios', true); return;
-    }
-    // Build Firestore payload with PT keys (adjust to your rules)
-    const firestorePayload = {
+  // CRUD, savePerson - uses Firestore if configured, otherwise local demo
+  async function savePerson(internalObj, editingId=null){
+    if(!internalObj || !internalObj.name || !internalObj.day || !internalObj.month){ showNotification('Nome, dia e mês são obrigatórios', true); return; }
+    const payload = {
       nome: internalObj.name,
       setor: internalObj.sector || '',
       dia: Number(internalObj.day),
       mes: Number(internalObj.month),
-      ano: internalObj.year || null,
-      textoData: internalObj.textoData || `${internalObj.day} de ${monthNames[(internalObj.month||1)-1]}`,
-      updatedAt: serverTimestamp()
+      textoData: internalObj.textoData || `${internalObj.day} de ${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][(internalObj.month||1)-1]}`
     };
-    try {
-      if (dbCollection) {
-        if (editingId) {
-          await setDoc(doc(db, 'aniversariantes', editingId), firestorePayload, { merge: true });
-          showNotification('Registro atualizado.');
-        } else {
-          await addDoc(dbCollection, firestorePayload);
-          showNotification('Registro criado.');
-        }
+    try{
+      if(dbCollection){
+        if(editingId) await setDoc(doc(db,'aniversariantes', editingId), payload, { merge:true });
+        else await addDoc(dbCollection, payload);
+        showNotification('Registro salvo');
       } else {
-        // demo: normalized internal object
-        const id = editingId || ('local_' + Date.now() + Math.random().toString(36).slice(2,8));
-        const obj = { id, ...internalObj };
-        if (editingId) {
-          const idx = window.birthdayData.findIndex(x => x.id === editingId);
-          if (idx >= 0) window.birthdayData[idx] = { ...window.birthdayData[idx], ...obj };
-        } else {
-          window.birthdayData.push(obj);
-        }
+        const id = editingId || ('local_' + Date.now().toString(36).slice(2,8));
+        if(editingId){ const idx = window.birthdayData.findIndex(x=>x.id===editingId); if(idx>=0) window.birthdayData[idx] = {...window.birthdayData[idx], ...payload, name: payload.nome, sector: payload.setor, day: payload.dia, month: payload.mes}; }
+        else window.birthdayData.push({ id, name: payload.nome, sector: payload.setor, day: payload.dia, month: payload.mes, textoData: payload.textoData });
         renderAll();
-        showNotification('Operação simulada (demo).');
+        showNotification('Operação simulada (demo)');
       }
-    } catch (err) {
-      console.error('savePerson error', err);
-      showNotification('Erro ao salvar: ' + (err.message || err), true);
-    }
+    }catch(err){ console.error('save error', err); showNotification('Erro ao salvar: ' + (err.message||err), true); }
   }
 
-  async function deletePerson(id) {
-    if (!confirm('Confirma exclusão?')) return;
-    try {
-      const full = window.birthdayData.find(x => x.id === id) || { id, name: '', sector:'', day:0, month:0, textoData:'' };
-      lastDeleted = JSON.parse(JSON.stringify(full));
-      if (dbCollection) {
-        await deleteDoc(doc(db, 'aniversariantes', id));
-        showNotification('Registro excluído.');
-      } else {
-        window.birthdayData = window.birthdayData.filter(x => x.id !== id);
-        renderAll();
-        showNotification('Registro excluído (demo).');
+  async function deletePerson(id){
+    if(!confirm('Confirma exclusão?')) return;
+    try{
+      const found = window.birthdayData.find(x=>x.id===id) || { id, name:'(sem nome)', sector:'', day:0, month:0, textoData:'' };
+      if(dbCollection){ await deleteDoc(doc(db,'aniversariantes', id)); showNotification('Registro excluído'); }
+      else { window.birthdayData = window.birthdayData.filter(x=>x.id!==id); renderAll(); showNotification('Registro excluído (demo)'); }
+    }catch(err){ console.error('delete error', err); showNotification('Erro ao excluir: ' + (err.message||err), true); }
+  }
+
+  // CSV import/export using our Papa stub
+  function importCsvFile(file){
+    if(!file) return;
+    Papa.parse(file, { header: true, complete: async (res) => {
+      const data = res.data || [];
+      let added=0, duplicates=0, invalid=0;
+      for(const row of data){
+        const name = row.name || row.nome || ''; const day = Number(row.day || row.dia || 0); const month = Number(row.month || row.mes || 0);
+        if(!name || !day || !month){ invalid++; continue; }
+        const exists = window.birthdayData.some(b => (b.name||'').toLowerCase() === name.toLowerCase() && b.day===day && b.month===month);
+        if(exists){ duplicates++; continue; }
+        if(dbCollection) await addDoc(dbCollection, { nome: name, setor: row.sector || row.setor || '', dia: day, mes: month, textoData: `${day} de ${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][month-1]}` });
+        else window.birthdayData.push({ id:'local_'+Date.now().toString(36).slice(2,6), name, sector: row.sector || row.setor || '', day, month, textoData: `${day} de ${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][month-1]}` });
+        added++;
       }
-      showUndoSnackbar(`${full.name || '(sem nome)'} excluído`);
-    } catch (err) {
-      console.error('deletePerson error', err);
-      showNotification('Erro ao excluir: ' + (err.message || err), true);
-    }
+      renderAll();
+      showNotification(`Import: ${added} adicionados, ${duplicates} duplicados, ${invalid} inválidos`);
+    }});
   }
 
-  function showUndoSnackbar(text, timeout = 10000) {
-    const sb = document.getElementById('undo-snackbar');
-    const sbText = document.getElementById('undo-snackbar-text');
-    sbText.textContent = text;
-    sb.style.display = 'flex';
-    let t = setTimeout(()=>{ sb.style.display='none'; lastDeleted = null; }, timeout);
-    document.getElementById('undo-snackbar-btn').onclick = async () => {
-      clearTimeout(t);
-      sb.style.display = 'none';
-      if (!lastDeleted) return;
-      try {
-        if (dbCollection) {
-          // try restore with same id
-          try {
-            await setDoc(doc(db,'aniversariantes', lastDeleted.id), {
-              nome: lastDeleted.name, setor: lastDeleted.sector, dia: lastDeleted.day, mes: lastDeleted.month,
-              ano: lastDeleted.year || null, textoData: lastDeleted.textoData || `${lastDeleted.day} de ${monthNames[(lastDeleted.month||1)-1]}`
-            });
-            showNotification('Registro restaurado.');
-          } catch(e) {
-            await addDoc(dbCollection, {
-              nome: lastDeleted.name, setor: lastDeleted.sector, dia: lastDeleted.day, mes: lastDeleted.month,
-              ano: lastDeleted.year || null, textoData: lastDeleted.textoData || `${lastDeleted.day} de ${monthNames[(lastDeleted.month||1)-1]}`
-            });
-            showNotification('Registro restaurado (novo id).');
-          }
-        } else {
-          window.birthdayData.push(lastDeleted);
-          renderAll();
-          showNotification('Registro restaurado (demo).');
-        }
-      } catch(e){ console.error('undo restore', e); showNotification('Erro ao restaurar', true); }
-      lastDeleted = null;
-    };
-  }
-
-  /* -------------- CSV import/export -------------- */
-  function validateCsvRow(raw) {
-    const row = normalizeToInternal(raw);
-    const errors = [];
-    if (!row.name) errors.push('Nome vazio');
-    if (!isValidDayForMonth(row.day, row.month)) errors.push('Data inválida');
-    return { valid: errors.length === 0, errors, row };
-  }
-
-  function importCsvFile(file) {
-    if (!file) return;
-    Papa.parse(file, {
-      header: true, skipEmptyLines: true,
-      complete: async (results) => {
-        const data = results.data || [];
-        const added = [], invalid = [], duplicates = [];
-        for (const raw of data) {
-          const { valid, errors, row } = validateCsvRow(raw);
-          if (!valid) { invalid.push({ raw, errors }); continue; }
-          const exists = window.birthdayData.some(b => (b.name||'').toLowerCase() === (row.name||'').toLowerCase() && b.day === row.day && b.month === row.month);
-          if (exists) { duplicates.push(row); continue; }
-          try {
-            if (dbCollection) {
-              await addDoc(dbCollection, { nome: row.name, setor: row.sector, dia: row.day, mes: row.month, ano: row.year || null, textoData: row.textoData });
-            } else {
-              window.birthdayData.push({ id: 'local_' + Date.now() + Math.random().toString(36).slice(2,6), ...row });
-            }
-            added.push(row);
-          } catch(e) { console.error('import error', e); }
-        }
-        renderAll();
-        showNotification(`Import: ${added.length} adicionados, ${duplicates.length} duplicados, ${invalid.length} inválidos`);
-      },
-      error: (err) => { console.error('CSV parse err', err); showNotification('Erro ao importar CSV', true); }
-    });
-  }
-
-  function exportCsv() {
-    try {
-      const arr = window.birthdayData.map(b => ({ name: b.name, sector: b.sector, day: b.day, month: b.month, year: b.year || '', textoData: b.textoData }));
+  function exportCsv(){
+    try{
+      const arr = window.birthdayData.map(b => ({ name: b.name, sector: b.sector, day: b.day, month: b.month, textoData: b.textoData }));
       const csv = Papa.unparse(arr);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = 'aniversariantes.csv'; document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(url);
       showNotification('Export concluído.');
-    } catch(e){ console.error('export error', e); showNotification('Erro ao exportar CSV', true); }
+    }catch(e){ console.error('export error', e); showNotification('Erro ao exportar CSV', true); }
   }
 
-  /* -------------- Firebase initialization & auth handling -------------- */
-  async function initFirebase() {
-    try {
-      const cfg = window.__firebase_config || window.firebaseConfig || null;
-      if (!cfg) {
-        console.warn('Firebase config não encontrado. Modo demo ativado.');
-        if (!window.birthdayData.length) {
-          window.birthdayData = [
-            { id:'local_1', name:'Eliomar', sector:'Ambiental', day:15, month:1, year:null, textoData:'15 de Janeiro' }
-          ];
-        }
-        renderAll();
-        return;
-      }
+  // Firebase init: uses window.__firebase_config object (not string)
+  async function initFirebase(){
+    try{
+      const cfg = window.__firebase_config || null;
+      if(!cfg){ console.warn('Firebase config não encontrado — demo mode'); if(!window.birthdayData.length) window.birthdayData = [{ id:'local_1', name:'Eliomar', sector:'Ambiental', day:15, month:1, textoData:'15 de Janeiro' }]; renderAll(); return; }
       firebaseApp = initializeApp(cfg);
       auth = getAuth(firebaseApp);
       db = getFirestore(firebaseApp);
       dbCollection = collection(db, 'aniversariantes');
 
-      // try redirect result (if used)
-      try { await getRedirectResult(auth); } catch(e) { /* ignore redirect errors */ }
-
       onAuthStateChanged(auth, async (user) => {
-        try {
-          if (!user) { isAdmin = false; document.body.classList.remove('admin-mode'); authBtn.textContent = '🔒 Entrar'; return; }
-          let tokenRes = null;
-          try { tokenRes = await user.getIdTokenResult(false); } catch(e){ console.warn('token fetch fail', e); }
-          isAdmin = !!(tokenRes && tokenRes.claims && tokenRes.claims.admin === true);
-          document.body.classList.toggle('admin-mode', isAdmin);
-          document.getElementById('admin') && (document.getElementById('admin').style.display = isAdmin ? 'inline-block' : 'none');
-          authBtn.textContent = isAdmin ? 'Sair (admin)' : 'Sair';
-        } catch(e){ console.error('onAuthStateChanged error', e); isAdmin = false; }
+        if(!user){ isAdmin=false; authBtn.textContent='🔒 Entrar'; renderAll(); return; }
+        try{
+          const token = await user.getIdTokenResult(false);
+          isAdmin = !!(token && token.claims && token.claims.admin === true);
+          authBtn.textContent = isAdmin? 'Sair (admin)' : 'Sair';
+          renderAll();
+        }catch(e){ console.warn('token fetch failed', e); isAdmin=false; authBtn.textContent='Sair'; }
       });
 
-      // real-time updates
-      onSnapshot(dbCollection, (snap) => {
-        window.birthdayData = snap.docs.map(d => mapSnapshotToInternal(d));
+      // realtime snapshot
+      onSnapshot(dbCollection, snap => {
+        window.birthdayData = snap.docs.map(d => normalizeToInternal(d));
         renderAll();
-      }, (err) => {
-        console.error('onSnapshot failed', err);
-        // fallback fetch
-        (async () => {
-          try {
-            const q = await getDocs(dbCollection);
-            window.birthdayData = q.docs.map(d => mapSnapshotToInternal(d));
-            renderAll();
-          } catch(e) { console.warn('fetch fallback failed', e); }
-        })();
+      }, err => {
+        console.warn('snapshot fail, fallback fetch', err);
+        (async ()=>{ try{ const q = await getDocs(dbCollection); window.birthdayData = q.docs.map(d=>normalizeToInternal(d)); renderAll(); }catch(e){ console.warn('fetch fallback fail', e); } })();
       });
-
-    } catch(err) {
-      console.error('initFirebase error', err);
-      showNotification('Erro inicializando Firebase: ' + (err.message || err), true);
-      // fallback to demo
-      if (!window.birthdayData.length) {
-        window.birthdayData = [{ id:'local_1', name:'Eliomar', sector:'Ambiental', day:15, month:1, year:null, textoData:'15 de Janeiro' }];
-      }
-      renderAll();
-    }
+    }catch(err){ console.error('initFirebase error', err); showNotification('Erro inicializando Firebase: '+(err.message||err), true); if(!window.birthdayData.length) window.birthdayData = [{ id:'local_1', name:'Eliomar', sector:'Ambiental', day:15, month:1, textoData:'15 de Janeiro' }]; renderAll(); }
   }
 
-  /* -------------- Auth UI handlers -------------- */
-  async function handleAuthButton() {
-    if (!auth) { showNotification('Auth não configurado (demo).'); return; }
-    const user = auth.currentUser;
-    if (user) {
-      try { await signOut(auth); showNotification('Logout realizado.'); } catch(e){ console.error(e); showNotification('Erro no logout', true); }
-      return;
-    }
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch(e) {
-      if (e.code && e.code.includes('auth/cancelled-popup-request')) {
-        try { await signInWithRedirect(auth, provider); } catch(err){ console.error('redirect fallback failed', err); showNotification('Login falhou', true); }
-      } else {
-        console.error('login error', e); showNotification('Erro no login: ' + (e.message || e), true);
-      }
-    }
+  // Auth UI handlers (email/password modal)
+  authBtn.addEventListener('click', async ()=>{
+    if(auth && auth.currentUser){ try{ await signOut(auth); showNotification('Logout realizado'); authBtn.textContent='🔒 Entrar'; return; } catch(e){ console.error('logout error', e); showNotification('Erro no logout', true); return; } }
+    // show modal
+    const modal = document.getElementById('login-modal'); modal.style.display='block'; modal.setAttribute('aria-hidden','false');
+  });
+
+  document.getElementById('login-cancel').addEventListener('click', ()=>{ const modal=document.getElementById('login-modal'); modal.style.display='none'; modal.setAttribute('aria-hidden','true'); });
+  document.getElementById('login-submit').addEventListener('click', async ()=>{
+    const email = document.getElementById('login-email').value.trim(); const pass = document.getElementById('login-pass').value;
+    if(!email || !pass){ alert('Preencha email e senha'); return; }
+    try{
+      await signInWithEmailAndPassword(getAuth(), email, pass);
+      document.getElementById('login-modal').style.display='none';
+      showNotification('Login bem-sucedido');
+    }catch(err){ console.error('login error', err); alert('Erro no login: '+(err.message||err.code)); }
+  });
+
+  // helper open edit modal (prompt simple)
+  function openEditModal(id=null){
+    const person = id ? window.birthdayData.find(x=>x.id===id) : null;
+    const name = prompt('Nome completo:', person?person.name:'');
+    if(!name) return;
+    const setor = prompt('Setor (opcional):', person?person.sector:'');
+    const day = Number(prompt('Dia (1-31):', person?person.day:1));
+    const month = Number(prompt('Mês (1-12):', person?person.month:1));
+    if(!day || !month || month<1 || month>12 || day<1 || day>31){ alert('Data inválida'); return; }
+    savePerson({ name: name.trim(), sector: setor.trim(), day: Number(day), month: Number(month), textoData: `${day} de ${['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][month-1]}` }, id);
   }
 
-  /* -------------- Render orchestration -------------- */
-  function renderAll() {
-    renderToday();
-    renderUpcoming();
-    renderCalendar();
-    renderList(searchInput.value || '');
-    renderCharts();
+  // render orchestration
+  function renderAll(){
+    renderToday(); renderCalendar(); renderList(document.getElementById('search-input') ? document.getElementById('search-input').value : '');
+    try{ // chart placeholders (admin)
+      const cm = document.getElementById('chart-month'); if(cm){ if(window._monthChart) window._monthChart.destroy(); window._monthChart = new Chart(cm.getContext? cm.getContext('2d') : cm, { type:'bar', data:{ labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], datasets:[{ data: (function(){ const arr = new Array(12).fill(0); window.birthdayData.forEach(b=> { if(b.month) arr[b.month-1]++; }); return arr; })() }] } }); }
+    }catch(e){}
   }
 
-  /* -------------- UI wiring -------------- */
+  // UI wiring and small init
   document.addEventListener('DOMContentLoaded', () => {
-    // Tab underline init
-    const firstTab = tabsContainer.querySelector('.tab-btn');
-    if (firstTab) {
-      const rect = firstTab.getBoundingClientRect();
-      activeTabUnderline.style.width = `${firstTab.offsetWidth}px`;
-      activeTabUnderline.style.left = `${firstTab.offsetLeft}px`;
-    }
+    // tabs
+    document.querySelectorAll('.tab-btn').forEach(btn=> btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+      const tab = btn.dataset.tab; document.getElementById(tab+'-panel').style.display = 'block';
+    }));
+    // default tab
+    document.querySelector('.tab-btn') && document.querySelector('.tab-btn').click();
 
-    tabsContainer.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        tabsContainer.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        activeTabUnderline.style.width = `${btn.offsetWidth}px`;
-        activeTabUnderline.style.left = `${btn.offsetLeft}px`;
-        // panels
-        document.querySelectorAll('#tab-panels-container > section').forEach(s => s.classList.add('hidden'));
-        const tabName = btn.dataset.tab;
-        const panel = document.getElementById((tabName === 'admin') ? 'admin-panel' : `${tabName}-panel`);
-        if (panel) panel.classList.remove('hidden');
-      });
-    });
-
-    // search debounce
-    searchInput.addEventListener('input', debounce((e)=> renderList(e.target.value), 300));
-
-    // add / import / export
-    addBtn.addEventListener('click', ()=> openEditModal(null));
-    importBtn.addEventListener('click', ()=> csvFileInput.click());
-    csvFileInput.addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; if (f) importCsvFile(f); e.target.value = null; });
+    // file import/export wiring
+    importBtn.addEventListener('click', ()=> document.getElementById('csv-file-input').click());
+    csvFileInput.addEventListener('change', (e)=>{ const f = e.target.files && e.target.files[0]; if(f) importCsvFile(f); e.target.value = null; });
     exportBtn.addEventListener('click', exportCsv);
 
-    // buttons
-    authBtn.addEventListener('click', handleAuthButton);
-    celebrateNowBtn.addEventListener('click', ()=> {
-      const now = new Date(); const d = now.getDate(), m = now.getMonth()+1;
-      const todays = window.birthdayData.filter(p => p.day === d && p.month === m);
-      doCelebrate(Math.max(1, todays.length), { force: true });
-    });
-    soundToggleBtn.addEventListener('click', ()=> { toggleSound(); soundToggleBtn.textContent = soundEnabled() ? '🔊' : '🔈'; });
-    themeToggleBtn && themeToggleBtn.addEventListener('click', ()=> { document.documentElement.classList.toggle('dark'); });
+    addBtn.addEventListener('click', ()=> openEditModal(null));
 
-    // init firebase (also renders demo if config missing)
+    celebrateNowBtn.addEventListener('click', ()=> { const now=new Date(); const d=now.getDate(), m=now.getMonth()+1; const todays = window.birthdayData.filter(p=>p.day===d && p.month===m); doCelebrate(Math.max(1, todays.length), { force:true }); });
+
+    // search
+    const si = document.getElementById('search-input'); if(si) si.addEventListener('input', (e)=> renderList(e.target.value));
+
+    // init firebase
     initFirebase();
   });
 
-  /* -------------- Expose tiny helper (safe) -------------- */
-  // Only expose minimal helpers for debugging in console. Remove in strict production if desired.
-  window._bp = {
-    renderAll: () => renderAll(),
-    data: () => JSON.parse(JSON.stringify(window.birthdayData))
-  };
+  // expose debug
+  window._bp = { renderAll: ()=> renderAll(), data: ()=> JSON.parse(JSON.stringify(window.birthdayData)) };
   </script>
 </body>
 </html>
