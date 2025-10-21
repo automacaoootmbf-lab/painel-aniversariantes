@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel de Aniversariantes — Dashboard (v1.0.0)</title>
-  <meta name="description" content="Painel responsivo de aniversariantes com tema claro/escuro, export/import CSV, calendário, gráficos e celebração com confetes + balões." />
-  <meta name="version" content="1.0.0">
+  <title>Painel de Aniversariantes — Dashboard (v1.0.1)</title>
+  <meta name="description" content="Painel responsivo de aniversariantes com tema claro/escuro, export/import CSV, calendário e celebração com confetes + balões." />
+  <meta name="version" content="1.0.1">
   <meta name="theme-color" content="#10b981">
 
   <style>
@@ -13,20 +13,22 @@
       --bg-light: #f7fefa;
       --card-light: #ffffff;
       --text-light: #06121a;
-      --muted-light: #4b5563;
+      --muted-light: #32474f; /* increased contrast */
       --bg-dark: #06121a;
-      --card-dark: #071426;
-      --text-dark: #e6f7f2;
-      --muted-dark: #9aa8b1;
+      --card-dark: #0b1b24;   /* slightly lighter for better card contrast */
+      --text-dark: #e8faf5;
+      --muted-dark: #9fbfc7;  /* increased contrast */
       --accent-green: #10b981;
       --accent-blue: #0ea5e9;
       --danger: #ef4444;
-      --contrast-border-light: rgba(2,6,23,0.06);
+      --contrast-border-light: rgba(2,6,23,0.08);
       --contrast-border-dark: rgba(255,255,255,0.06);
-      --elevation: 0 8px 30px rgba(2,6,23,0.16);
+      --elevation: 0 10px 36px rgba(2,6,23,0.18);
       --radius-lg: 16px;
       --radius-md: 10px;
+      --focus-glow: 4px;
     }
+
     [data-theme="light"]{
       --bg: var(--bg-light);
       --card: var(--card-light);
@@ -51,8 +53,8 @@
     :focus{outline:3px solid color-mix(in srgb, var(--accent) 36%, transparent);outline-offset:3px}
     @media (prefers-reduced-motion: reduce){*{animation-duration:0.001ms !important; transition-duration:0.001ms !important}}
 
-    .container{max-width:1150px;margin:20px auto;padding:18px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border-radius:var(--radius-lg);background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);box-shadow:var(--elevation);border:1px solid var(--contrast-border)}
+    .container{max-width:1180px;margin:20px auto;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border-radius:var(--radius-lg);background:linear-gradient(180deg, rgba(0,0,0,0.02), transparent);box-shadow:var(--elevation);border:1px solid var(--contrast-border)}
     .branding{display:flex;gap:12px;align-items:center}
     .logo{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--accent2),var(--accent));color:white;font-weight:700;font-size:18px}
     h1{margin:0;font-size:18px}
@@ -60,34 +62,40 @@
     .controls{display:flex;gap:8px;align-items:center}
     .btn{appearance:none;border:0;padding:10px 12px;border-radius:10px;background:linear-gradient(90deg,var(--accent2),var(--accent));color:white;font-weight:600;cursor:pointer;box-shadow:0 6px 18px rgba(2,6,23,0.08)}
     .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--contrast-border);box-shadow:none}
+    .btn.small{padding:8px 10px;font-size:13px}
     .tab-row{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}
-    .tab{padding:8px 14px;border-radius:10px;background:transparent;border:1px solid transparent;cursor:pointer}
+    .tab{padding:8px 14px;border-radius:10px;background:transparent;border:1px solid transparent;cursor:pointer;color:var(--muted)}
     .tab[aria-selected="true"]{background:var(--accent);color:white;box-shadow:0 8px 24px rgba(2,6,23,0.08)}
     .grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
     @media(max-width:980px){.grid{grid-template-columns:1fr}}
     .bg-card{background:var(--card);border-radius:var(--radius-md);padding:16px;border:1px solid var(--contrast-border);box-shadow:0 6px 18px rgba(0,0,0,0.04)}
     .card{border-radius:12px;padding:12px;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.01));border:1px solid var(--contrast-border)}
     .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-    .day{min-height:100px;border-radius:10px;padding:8px;border:1px dashed var(--contrast-border);position:relative;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.01))}
-    .day .num{position:absolute;right:8px;top:8px;color:var(--muted);font-size:12px}
+    .day{min-height:100px;border-radius:10px;padding:12px;border:1px dashed var(--contrast-border);position:relative;background:linear-gradient(180deg,transparent,rgba(0,0,0,0.01))}
+    .day .num{position:absolute;right:10px;top:8px;color:var(--muted);font-size:13px;font-weight:600}
     table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-bottom:1px solid var(--contrast-border);text-align:left}
-    th{color:var(--accent);font-weight:600}
+    th,td{padding:12px;border-bottom:1px solid var(--contrast-border);text-align:left}
+    th{color:var(--accent);font-weight:700}
     tr:hover{background:linear-gradient(90deg,rgba(0,0,0,0.02),transparent)}
-    .small{font-size:13px}
+    .small{font-size:13px;color:var(--muted)}
     #toast{position:fixed;right:20px;bottom:20px;padding:12px 16px;border-radius:12px;background:var(--accent);color:white;box-shadow:0 6px 24px rgba(0,0,0,0.25);transform:translateY(12px);opacity:0;transition:all .28s;z-index:10010}
     #toast.show{opacity:1;transform:translateY(0)}
     dialog{border:none}
-    .dialog{padding:16px;background:var(--card);border-radius:12px;min-width:300px}
+    .dialog{padding:16px;background:var(--card);border-radius:12px;min-width:320px}
     #confetti-canvas{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999}
     #balloon-wrap{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9980}
     .skeleton{background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));border-radius:8px;height:14px}
     .fade-in{animation:fadeIn .36s ease both}
     @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    /* admin-only helper (hidden by default until auth) */
+    .admin-only{display:none}
+    .admin-visible{display:inline-flex}
+    /* make important small text more legible in dark */
+    [data-theme="dark"] .small{color:var(--muted-dark)}
   </style>
 </head>
 <body data-theme="light" lang="pt-BR">
-  <!-- if you provide public/firebase-config.js that sets window.__firebase_config the app will try to init Firebase -->
+  <!-- firebase-config.js should set window.__firebase_config if you want real Firebase -->
   <script src="/firebase-config.js"></script>
 
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
@@ -99,8 +107,8 @@
       <div class="branding">
         <div class="logo" aria-hidden="true">AA</div>
         <div>
-          <h1>Painel de Aniversariantes</h1>
-          <p class="sub">Visão rápida • Calendário • Estatísticas • Export/Import</p>
+          <h1 id="title-main">Painel de Aniversariantes</h1>
+          <p id="subtitle" class="sub">Visão rápida • Calendário • Estatísticas • Export/Import</p>
         </div>
       </div>
 
@@ -112,11 +120,11 @@
     </header>
 
     <nav class="tab-row" role="tablist" aria-label="Navegação do painel">
-      <button class="tab" role="tab" aria-selected="true" data-tab="today">🎂 Hoje</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="calendar">🗓 Calendário</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="list">📋 Lista</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="future">🔮 Futuros</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="stats">📊 Gráficos</button>
+      <button class="tab" role="tab" aria-selected="true" data-tab="today" id="tab-today">🎂 Hoje</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="calendar" id="tab-calendar">🗓 Calendário</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="list" id="tab-list">📋 Lista</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="future" id="tab-future">🔮 Futuros</button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="stats" id="tab-stats">📊 Gráficos</button>
     </nav>
 
     <main class="grid" id="main-grid">
@@ -133,7 +141,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center">
             <h3 id="future-title">Próximos aniversariantes</h3>
             <div style="display:flex;gap:8px;align-items:center">
-              <label for="days-ahead" class="small">Próximos</label>
+              <label for="days-ahead" class="small" id="label-days">Próximos</label>
               <input id="days-ahead" type="number" min="1" max="365" value="30" style="width:70px;padding:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)" />
               <button id="refresh-future" class="btn ghost small">Atualizar</button>
             </div>
@@ -152,12 +160,13 @@
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
               <h3 id="actions-title">Ações rápidas</h3>
-              <p class="small">Importe, exporte ou adicione manualmente.</p>
+              <p class="small" id="actions-sub">Importe, exporte ou adicione manualmente.</p>
             </div>
             <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-              <input id="csv-file" type="file" accept=".csv" aria-label="Importar CSV" />
+              <!-- import is admin-only -->
+              <input id="csv-file" class="admin-only" type="file" accept=".csv" aria-label="Importar CSV" />
               <div style="display:flex;gap:8px">
-                <button id="import-sample" class="btn ghost small">Importar Exemplo</button>
+                <button id="import-sample" class="btn ghost small admin-only">Importar Exemplo</button>
                 <button id="export-csv" class="btn ghost small">Exportar CSV</button>
               </div>
             </div>
@@ -169,7 +178,7 @@
             <h3 id="list-title">Lista completa</h3>
             <div style="display:flex;gap:8px;align-items:center">
               <input id="search-input" type="search" placeholder="Buscar por nome ou setor" aria-label="Buscar aniversariantes" style="padding:8px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)" />
-              <button id="add-btn" class="btn ghost small">➕ Novo</button>
+              <button id="add-btn" class="btn ghost small admin-only">➕ Novo</button>
             </div>
           </div>
           <div id="list-wrapper">Carregando...</div>
@@ -179,11 +188,16 @@
         <div class="bg-card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
           <div>
             <h4 style="margin:0">Versão</h4>
-            <div class="small">v1.0.0 • Internacionalização pronta</div>
+            <div class="small" id="ver-info">v1.0.1 • Internacionalização pronta</div>
           </div>
           <div style="text-align:right">
             <div class="small">Tema: <span id="current-theme">Claro</span></div>
-            <div class="small">Locale: <select id="locale-select" aria-label="Selecionar idioma"><option value="pt-BR">pt-BR</option><option value="en-US">en-US</option></select></div>
+            <div class="small">Idioma:
+              <select id="locale-select" aria-label="Selecionar idioma">
+                <option value="pt-BR">pt-BR</option>
+                <option value="en-US">en-US</option>
+              </select>
+            </div>
           </div>
         </div>
       </aside>
@@ -193,8 +207,12 @@
       <div class="dialog">
         <h3 id="login-heading">Login Admin</h3>
         <form id="login-form">
-          <label class="small">E-mail<input id="login-email" type="email" required style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)"></label>
-          <label class="small" style="margin-top:8px">Senha<input id="login-pass" type="password" required style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)"></label>
+          <label class="small">E-mail
+            <input id="login-email" type="email" required style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)">
+          </label>
+          <label class="small" style="margin-top:8px">Senha
+            <input id="login-pass" type="password" required style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)">
+          </label>
           <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
             <button type="button" id="close-login" class="btn ghost">Fechar</button>
             <button type="submit" class="btn">Entrar</button>
@@ -209,54 +227,102 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 
   <script>
-    /* --- Config / State --- */
-    const APP_VERSION = '1.0.0';
+    /* -------------------------
+       App: controls auth visibility, i18n, contrast, admin gating
+       ------------------------- */
+
     const DEFAULT_LOCALE = 'pt-BR';
     let locale = localStorage.getItem('locale') || DEFAULT_LOCALE;
     let dataArr = []; // { id, nome, setor, dia, mes }
     let page = 0;
     const PAGE_SIZE = 20;
     let chart = null;
-    let celebratedDate = null; // to avoid repeat auto-celebrate same day
+    let celebratedDate = null;
+
+    // firebase state
     let firebaseInitialized = false;
     let firebaseDb = null;
     let firebaseAuth = null;
 
-    // DOM refs
-    const toastEl = document.getElementById('toast');
-    const confettiCanvas = document.getElementById('confetti-canvas');
-    const balloonWrap = document.getElementById('balloon-wrap');
+    // translations
+    const i18n = {
+      "pt-BR": {
+        title: "Painel de Aniversariantes",
+        subtitle: "Visão rápida • Calendário • Estatísticas • Export/Import",
+        tab_today: "🎂 Hoje",
+        tab_calendar: "🗓 Calendário",
+        tab_list: "📋 Lista",
+        tab_future: "🔮 Futuros",
+        tab_stats: "📊 Gráficos",
+        actions_quick: "Ações rápidas",
+        import_example: "Importar Exemplo",
+        export_csv: "Exportar CSV",
+        add_new: "➕ Novo",
+        search_placeholder: "Buscar por nome ou setor",
+        next_upcoming: "Próximos aniversariantes",
+        distribute: "Distribuição por mês",
+        login: "Entrar",
+        logout: "Sair",
+        celebrate: "🎉 Celebrar",
+        admin_only_note: "Ações administrativas disponíveis somente para usuários autenticados."
+      },
+      "en-US": {
+        title: "Birthday Dashboard",
+        subtitle: "Quick view • Calendar • Stats • Export/Import",
+        tab_today: "🎂 Today",
+        tab_calendar: "🗓 Calendar",
+        tab_list: "📋 List",
+        tab_future: "🔮 Upcoming",
+        tab_stats: "📊 Charts",
+        actions_quick: "Quick actions",
+        import_example: "Import Example",
+        export_csv: "Export CSV",
+        add_new: "➕ New",
+        search_placeholder: "Search by name or team",
+        next_upcoming: "Upcoming birthdays",
+        distribute: "Distribution by month",
+        login: "Sign in",
+        logout: "Sign out",
+        celebrate: "🎉 Celebrate",
+        admin_only_note: "Administrative actions only appear for authenticated users."
+      }
+    };
+
+    function applyTranslations(){
+      const t = i18n[locale] || i18n['pt-BR'];
+      document.getElementById('title-main').textContent = t.title;
+      document.getElementById('subtitle').textContent = t.subtitle;
+      document.getElementById('tab-today').textContent = t.tab_today;
+      document.getElementById('tab-calendar').textContent = t.tab_calendar;
+      document.getElementById('tab-list').textContent = t.tab_list;
+      document.getElementById('tab-future').textContent = t.tab_future;
+      document.getElementById('tab-stats').textContent = t.tab_stats;
+      document.getElementById('actions-title').textContent = t.actions_quick;
+      document.getElementById('import-sample').textContent = t.import_example;
+      document.getElementById('export-csv').textContent = t.export_csv;
+      document.getElementById('add-btn').textContent = t.add_new;
+      document.getElementById('search-input').placeholder = t.search_placeholder;
+      document.getElementById('future-title').textContent = t.next_upcoming;
+      document.getElementById('stats-title').textContent = t.distribute;
+      document.getElementById('celebrate-btn').textContent = t.celebrate;
+      document.getElementById('auth-btn').textContent = t.login;
+      document.getElementById('actions-sub').textContent = t.admin_only_note;
+    }
 
     function toast(msg, error=false){
-      toastEl.textContent = msg;
-      toastEl.style.background = error ? 'var(--danger)' : 'var(--accent)';
-      toastEl.classList.add('show');
-      setTimeout(()=> toastEl.classList.remove('show'), 3000);
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.style.background = error ? 'var(--danger)' : 'var(--accent)';
+      el.classList.add('show');
+      setTimeout(()=> el.classList.remove('show'), 3500);
     }
-
-    function announce(msg){ /* accessible announcement already via toast (aria-live) */ toast(msg); }
 
     function uid(){ return 'id-'+Math.random().toString(36).slice(2,9); }
-
-    // --- Demo seed when firebase absent ---
-    function seedDemo(){
-      dataArr = [
-        { id: 'local1', nome: 'Eliomar', setor: 'Ambiental', dia: 15, mes: 1 },
-        { id: 'local2', nome: 'Ana Silva', setor: 'TI', dia: 20, mes: 1 },
-        { id: 'local3', nome: 'Gabriel Dutra', setor: 'Engenharia', dia: 21, mes: 10 }
-      ];
-      for(let i=0;i<60;i++){
-        dataArr.push({ id: 'demo-'+i, nome: 'User '+(i+1), setor: ['RH','TI','Vendas'][i%3], dia: (i%28)+1, mes: ((i%12)+1) });
-      }
-    }
-
-    function formatDate(date){ try { return new Intl.DateTimeFormat(locale, { day:'2-digit', month:'2-digit', year:'numeric' }).format(date); } catch(e){ return date.toLocaleDateString(); } }
-
-    function escapeHTML(s){ return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function escapeHTML(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function initials(name){ return (name||'').split(' ').map(p=>p.charAt(0)).join('').slice(0,2).toUpperCase(); }
-    function nextDate(rec, from=new Date()){ const year = from.getFullYear(); let d = new Date(year, rec.mes-1, rec.dia, 12); if(d<from) d = new Date(year+1, rec.mes-1, rec.dia, 12); return d; }
+    function nextDate(rec, from=new Date()){ const y = from.getFullYear(); let d = new Date(y, rec.mes-1, rec.dia, 12); if(d<from) d = new Date(y+1, rec.mes-1, rec.dia, 12); return d; }
 
-    /* --- Renders --- */
+    /* ------------- renders ------------- */
     function renderToday(){
       const el = document.getElementById('today-content');
       const now = new Date();
@@ -283,7 +349,7 @@
         avatar.style.width='48px'; avatar.style.height='48px'; avatar.style.borderRadius='10px'; avatar.style.fontSize='16px';
         avatar.textContent = initials(p.nome);
         const info = document.createElement('div');
-        info.innerHTML = `<strong>${escapeHTML(p.nome)}</strong><div class="small" style="color:var(--muted)">${escapeHTML(p.setor||'')}</div>`;
+        info.innerHTML = `<strong style="font-size:15px">${escapeHTML(p.nome)}</strong><div class="small" style="color:var(--muted)">${escapeHTML(p.setor||'')}</div>`;
         row.appendChild(avatar); row.appendChild(info);
         el.appendChild(row);
       });
@@ -292,8 +358,7 @@
       const todayKey = new Date().toISOString().slice(0,10);
       if(matches.length > 0 && celebratedDate !== todayKey){
         celebratedDate = todayKey;
-        // small delay so user sees the panel then celebration
-        setTimeout(()=> { celebrateNow(); }, 600);
+        setTimeout(()=> { celebrateNow(); }, 700);
       }
     }
 
@@ -316,15 +381,11 @@
     function renderCalendar(month = (new Date()).getMonth(), year = (new Date()).getFullYear()){
       let calendarPanel = document.getElementById('calendar-panel');
       if(!calendarPanel){
-        calendarPanel = document.createElement('section');
-        calendarPanel.id = 'calendar-panel';
-        calendarPanel.className = 'bg-card fade-in';
-        calendarPanel.style.marginTop = '14px';
+        calendarPanel = document.createElement('section'); calendarPanel.id = 'calendar-panel'; calendarPanel.className = 'bg-card fade-in'; calendarPanel.style.marginTop = '14px';
         document.getElementById('left-col').appendChild(calendarPanel);
       }
       calendarPanel.innerHTML = '';
-      const wrap = document.createElement('div');
-      wrap.className = 'calendar-grid';
+      const wrap = document.createElement('div'); wrap.className = 'calendar-grid';
       const daysInMonth = new Date(year, month+1, 0).getDate();
       for(let d=1;d<=daysInMonth;d++){
         const day = document.createElement('div'); day.className='day'; day.tabIndex=0;
@@ -336,6 +397,7 @@
       calendarPanel.appendChild(wrap);
     }
 
+    // list render: include admin buttons only when auth
     function renderList(reset=false){
       if(reset) page = 0;
       const start = page*PAGE_SIZE; const end = start+PAGE_SIZE;
@@ -344,46 +406,57 @@
       const slice = items.slice(0,end);
       const wrapper = document.getElementById('list-wrapper');
       if(!slice.length){ wrapper.innerHTML = '<p>Nenhum registro.</p>'; return; }
+      const userLogged = (firebaseInitialized && firebaseAuth && firebaseAuth.currentUser);
       let html = '<table role="table" aria-label="Tabela de aniversariantes"><thead><tr><th>Nome</th><th>Setor</th><th>Data</th><th style="text-align:right">Ações</th></tr></thead><tbody>';
-      slice.forEach(p=> html += `<tr><td>${escapeHTML(p.nome)}</td><td>${escapeHTML(p.setor||'')}</td><td>${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}</td><td style="text-align:right"><button data-id="${p.id}" class="edit-btn btn ghost small">✏️</button> <button data-id="${p.id}" class="del-btn btn ghost small">🗑️</button></td></tr>`);
+      slice.forEach(p=>{
+        html += `<tr><td>${escapeHTML(p.nome)}</td><td>${escapeHTML(p.setor||'')}</td><td>${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}</td><td style="text-align:right">`;
+        if(userLogged){
+          html += `<button data-id="${p.id}" class="edit-btn btn ghost small admin-visible">✏️</button> <button data-id="${p.id}" class="del-btn btn ghost small admin-visible">🗑️</button>`;
+        } else {
+          html += `<span class="small" style="color:var(--muted)">Somente admin</span>`;
+        }
+        html += `</td></tr>`;
+      });
       html += '</tbody></table>';
       wrapper.innerHTML = html;
 
-      wrapper.querySelectorAll('.del-btn').forEach(b=> b.addEventListener('click', async (e)=>{
-        const id = e.currentTarget.dataset.id;
-        if(!confirm('Excluir?')) return;
-        if(firebaseInitialized && firebaseDb){
-          try{
-            await firebaseDb.collection('aniversariantes').doc(id).delete();
-            toast('Registro excluído');
-          }catch(err){ toast('Erro ao excluir: ' + err.message, true); }
-        } else {
-          dataArr = dataArr.filter(x=>x.id!==id);
-          renderList(true); renderToday(); renderFuture(); renderStats();
-          toast('Registro excluído (demo)');
-        }
-      }));
-
-      wrapper.querySelectorAll('.edit-btn').forEach(b=> b.addEventListener('click', async (e)=>{
-        const id = e.currentTarget.dataset.id;
-        const rec = dataArr.find(x=>x.id===id);
-        if(!rec) return;
-        const nome = prompt('Nome:', rec.nome);
-        const setor = prompt('Setor:', rec.setor||'');
-        const dia = parseInt(prompt('Dia (1-31):', rec.dia),10);
-        const mes = parseInt(prompt('Mês (1-12):', rec.mes),10);
-        if(!nome || isNaN(dia) || isNaN(mes)) { toast('Dados inválidos', true); return; }
-        if(firebaseInitialized && firebaseDb){
-          try{
-            await firebaseDb.collection('aniversariantes').doc(id).set({ nome, setor, dia, mes }, { merge: true });
-            toast('Atualizado');
-          }catch(err){ toast('Erro ao atualizar: ' + err.message, true); }
-        } else {
-          Object.assign(rec,{ nome, setor, dia, mes });
-          renderList(true); renderToday(); renderFuture(); renderStats();
-          toast('Atualizado (demo)');
-        }
-      }));
+      // events for admin buttons
+      if(userLogged){
+        wrapper.querySelectorAll('.del-btn').forEach(b=> b.addEventListener('click', async (e)=>{
+          const id = e.currentTarget.dataset.id;
+          if(!confirm('Excluir?')) return;
+          if(firebaseInitialized && firebaseDb){
+            try{
+              await firebaseDb.collection('aniversariantes').doc(id).delete();
+              toast('Registro excluído');
+            }catch(err){ toast('Erro ao excluir: ' + err.message, true); }
+          } else {
+            dataArr = dataArr.filter(x=>x.id!==id);
+            renderList(true); renderToday(); renderFuture(); renderStats();
+            toast('Registro excluído (demo)');
+          }
+        }));
+        wrapper.querySelectorAll('.edit-btn').forEach(b=> b.addEventListener('click', async (e)=>{
+          const id = e.currentTarget.dataset.id;
+          const rec = dataArr.find(x=>x.id===id);
+          if(!rec) return;
+          const nome = prompt('Nome:', rec.nome);
+          const setor = prompt('Setor:', rec.setor||'');
+          const dia = parseInt(prompt('Dia (1-31):', rec.dia),10);
+          const mes = parseInt(prompt('Mês (1-12):', rec.mes),10);
+          if(!nome || isNaN(dia) || isNaN(mes)) { toast('Dados inválidos', true); return; }
+          if(firebaseInitialized && firebaseDb){
+            try{
+              await firebaseDb.collection('aniversariantes').doc(id).set({ nome, setor, dia, mes }, { merge: true });
+              toast('Atualizado');
+            }catch(err){ toast('Erro ao atualizar: ' + err.message, true); }
+          } else {
+            Object.assign(rec,{ nome, setor, dia, mes });
+            renderList(true); renderToday(); renderFuture(); renderStats();
+            toast('Atualizado (demo)');
+          }
+        }));
+      }
 
       const loadMore = document.getElementById('load-more');
       if(loadMore) loadMore.style.display = items.length > end ? 'inline-block' : 'none';
@@ -404,83 +477,47 @@
       });
     }
 
-    /* --- Effects: confetti + balloons (stronger) --- */
-    function setupCanvasSize(){
-      confettiCanvas.width = window.innerWidth;
-      confettiCanvas.height = window.innerHeight;
-    }
+    /* ------------- effects ------------- */
+    function setupCanvasSize(){ const c = document.getElementById('confetti-canvas'); c.width = window.innerWidth; c.height = window.innerHeight; }
     window.addEventListener('resize', setupCanvasSize);
     setupCanvasSize();
 
-    function launchConfetti(particleCount = 300){
-      const canvas = confettiCanvas;
-      const ctx = canvas.getContext('2d');
+    function launchConfetti(pcount = 300){
+      const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d');
       const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
       const pieces = [];
-      for(let i=0;i<particleCount;i++){
-        pieces.push({
-          x: Math.random()*canvas.width,
-          y: -10 - Math.random()*canvas.height*0.4,
-          vx: (Math.random()-0.5)*8,
-          vy: 2 + Math.random()*7,
-          r: 6 + Math.random()*8,
-          color: colors[Math.floor(Math.random()*colors.length)],
-          rot: Math.random()*360,
-          vr: (Math.random()-0.5)*12
-        });
+      for(let i=0;i<pcount;i++){
+        pieces.push({ x: Math.random()*canvas.width, y: -10 - Math.random()*canvas.height*0.4, vx: (Math.random()-0.5)*9, vy: 2 + Math.random()*7, r: 6 + Math.random()*8, color: colors[Math.floor(Math.random()*colors.length)], rot: Math.random()*360, vr: (Math.random()-0.5)*12 });
       }
       const gravity = 0.35;
-      let running = true;
       function frame(){
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        for(const p of pieces){
-          p.vy += gravity;
-          p.x += p.vx;
-          p.y += p.vy;
-          p.rot += p.vr;
-          ctx.save();
-          ctx.translate(p.x,p.y);
-          ctx.rotate(p.rot * Math.PI/180);
-          ctx.fillStyle = p.color;
-          ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6);
-          ctx.restore();
-        }
-        if(pieces.every(p=>p.y > canvas.height + 60)){ running = false; ctx.clearRect(0,0,canvas.width,canvas.height); return; }
+        for(const p of pieces){ p.vy += gravity; p.x += p.vx; p.y += p.vy; p.rot += p.vr; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle = p.color; ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6); ctx.restore(); }
+        if(pieces.every(p=>p.y > canvas.height + 60)){ ctx.clearRect(0,0,canvas.width,canvas.height); return; }
         requestAnimationFrame(frame);
       }
       frame();
     }
 
-    function launchBalloons(count = 24){
-      const wrap = balloonWrap;
+    function launchBalloons(count = 28){
+      const wrap = document.getElementById('balloon-wrap');
       const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
       for(let i=0;i<count;i++){
         const el = document.createElementNS('http://www.w3.org/2000/svg','svg');
-        el.setAttribute('width','56'); el.setAttribute('height','80'); el.setAttribute('viewBox','0 0 48 68');
-        el.style.position = 'fixed';
-        el.style.left = Math.random()*100 + '%';
-        el.style.bottom = '-120px';
-        el.style.pointerEvents = 'none';
-        el.style.zIndex = 9980;
+        el.setAttribute('width','60'); el.setAttribute('height','84'); el.setAttribute('viewBox','0 0 48 68');
+        el.style.position = 'fixed'; el.style.left = Math.random()*100 + '%'; el.style.bottom = '-140px'; el.style.pointerEvents = 'none'; el.style.zIndex = 9980;
         const color = colors[i%colors.length];
         el.innerHTML = `<ellipse cx="24" cy="24" rx="18" ry="22" fill="${color}" opacity="0.98"></ellipse><path d="M24 46 L24 62" stroke="#222" stroke-opacity="0.06" stroke-width="1"/>`;
         wrap.appendChild(el);
-        const duration = 4200 + Math.random()*1400;
-        const delay = Math.random()*500;
-        const rotate = Math.random()*50 - 25;
+        const duration = 4200 + Math.random()*1600; const delay = Math.random()*500; const rotate = Math.random()*60 - 30;
         el.animate([{ transform: 'translateY(0) scale(1)', opacity:1 }, { transform: `translateY(-120vh) rotate(${rotate}deg) scale(1.03)`, opacity:0 }], { duration, easing: 'cubic-bezier(.2,.9,.2,1)', delay });
-        setTimeout(()=> el.remove(), duration + delay + 300);
+        setTimeout(()=> el.remove(), duration + delay + 400);
       }
     }
 
-    function celebrateNow(){
-      launchConfetti(320);
-      launchBalloons(28);
-      toast('🎉 Parabéns!');
-      announce('Eventos de celebração disparados');
-    }
+    function celebrateNow(){ launchConfetti(360); launchBalloons(34); toast(i18n[locale].celebrate || '🎉 Parabéns!'); }
 
-    /* --- CSV import/export helpers --- */
+    /* ------------ CSV helpers ------------ */
     function quoteCSV(s){ return '"' + String(s||'').replace(/"/g,'""') + '"'; }
     function exportCSV(){
       if(!dataArr.length){ toast('Sem dados para exportar', true); return; }
@@ -492,31 +529,19 @@
       toast('CSV exportado');
     }
     function parseCSV(text){
-      const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
-      if(!lines.length) return [];
+      const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); if(!lines.length) return [];
       const header = lines.shift().split(',').map(h=>h.trim().toLowerCase());
-      const idxNome = header.indexOf('nome');
-      const idxSetor = header.indexOf('setor');
-      const idxDia = header.indexOf('dia');
-      const idxMes = header.indexOf('mes');
+      const idxNome = header.indexOf('nome'); const idxSetor = header.indexOf('setor'); const idxDia = header.indexOf('dia'); const idxMes = header.indexOf('mes');
       if(idxNome<0 || idxDia<0 || idxMes<0){ toast('CSV precisa ter colunas nome,dia,mes', true); return []; }
       const out = [];
-      lines.forEach((ln,i)=>{
-        const parts = ln.match(/(".*?"|[^,]+)/g) || [];
-        const nome = (parts[idxNome]||'').replace(/^"|"$/g,'').trim();
-        const setor = (parts[idxSetor]||'').replace(/^"|"$/g,'').trim();
-        const dia = parseInt((parts[idxDia]||'').replace(/^"|"$/g,''),10);
-        const mes = parseInt((parts[idxMes]||'').replace(/^"|"$/g,''),10);
-        if(nome && !Number.isNaN(dia) && !Number.isNaN(mes)) out.push({ id: uid(), nome, setor, dia, mes });
-      });
+      lines.forEach((ln,i)=>{ const parts = ln.match(/(".*?"|[^,]+)/g) || []; const nome = (parts[idxNome]||'').replace(/^"|"$/g,'').trim(); const setor = (parts[idxSetor]||'').replace(/^"|"$/g,'').trim(); const dia = parseInt((parts[idxDia]||'').replace(/^"|"$/g,''),10); const mes = parseInt((parts[idxMes]||'').replace(/^"|"$/g,''),10); if(nome && !Number.isNaN(dia) && !Number.isNaN(mes)) out.push({ id: uid(), nome, setor, dia, mes }); });
       return out;
     }
 
-    /* --- Firebase dynamic init (compat layer) --- */
+    /* --------- Firebase dynamic init (compat) ---------- */
     async function tryInitFirebase(){
       if(!window.__firebase_config) return false;
       try{
-        // load compat scripts so we can use simple firebase.* APIs
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js');
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js');
@@ -526,25 +551,28 @@
         firebaseDb = firebase.firestore();
         firebaseAuth = firebase.auth();
 
-        // realtime listener for collection 'aniversariantes'
+        // realtime listener
         firebaseDb.collection('aniversariantes').onSnapshot(snapshot=>{
           const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          // ensure dia/mes are numbers
           dataArr = docs.map(r => ({ ...r, dia: Number(r.dia), mes: Number(r.mes) }));
           syncRenderAll();
         }, err=>{
-          toast('Falha ao sincronizar: ' + err.message, true);
-          // fallback to one-time get
+          console.warn('onSnapshot failed, fallback to get():', err);
           firebaseDb.collection('aniversariantes').get().then(snap=>{
             dataArr = snap.docs.map(d => ({ id: d.id, ...d.data() })).map(r => ({ ...r, dia: Number(r.dia), mes: Number(r.mes) }));
             syncRenderAll();
           }).catch(()=>{ seedDemo(); syncRenderAll(); });
         });
 
-        // auth state
+        // auth state -> update UI permissions
         firebaseAuth.onAuthStateChanged(user=>{
+          updateAuthUI(!!user);
           const authBtn = document.getElementById('auth-btn');
-          if(authBtn) authBtn.textContent = user ? 'Sair' : '🔒 Entrar';
+          if(authBtn) authBtn.textContent = user ? (i18n[locale].logout || 'Sair') : (i18n[locale].login || 'Entrar');
+          // if logged in and no data yet, ensure data loaded
+          if(user && !dataArr.length){
+            firebaseDb.collection('aniversariantes').get().then(snap=>{ dataArr = snap.docs.map(d=>({ id:d.id, ...d.data() })).map(r=>({ ...r, dia: Number(r.dia), mes: Number(r.mes) })); syncRenderAll(); }).catch(()=>{});
+          }
         });
 
         return true;
@@ -554,49 +582,62 @@
       }
     }
 
-    function loadScript(src){
-      return new Promise((res,rej)=>{
-        const s = document.createElement('script');
-        s.src = src; s.onload = res; s.onerror = rej;
-        document.head.appendChild(s);
+    function loadScript(src){ return new Promise((res, rej)=>{ const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+
+    /* ------------- Auth UI gating ------------- */
+    function updateAuthUI(loggedIn){
+      // admin-only elements: add-btn, csv-file, import-sample, edit/delete (rendered dynamically), maybe edit/delete show based on loggedIn
+      document.querySelectorAll('.admin-only').forEach(el=>{
+        if(loggedIn){ el.style.display = ''; el.classList.remove('admin-only'); el.classList.add('admin-visible'); }
+        else { el.style.display = 'none'; el.classList.remove('admin-visible'); el.classList.add('admin-only'); }
       });
-    }
-
-    /* --- Sync render helper --- */
-    function syncRenderAll(){
-      renderToday();
-      renderFuture();
+      // re-render list so action buttons adapt
       renderList(true);
-      renderStats();
-      // if calendar is visible renderCalendar will be called by tab handler
     }
 
-    /* --- UI wiring --- */
+    /* ------------- Sync helper ------------- */
+    function seedDemo(){
+      dataArr = [
+        { id: 'local1', nome: 'Eliomar', setor: 'Ambiental', dia: 15, mes: 1 },
+        { id: 'local2', nome: 'Ana Silva', setor: 'TI', dia: 20, mes: 1 },
+        { id: 'local3', nome: 'Gabriel Dutra', setor: 'Engenharia', dia: 21, mes: 10 }
+      ];
+      for(let i=0;i<60;i++){ dataArr.push({ id: 'demo-'+i, nome: 'User '+(i+1), setor: ['RH','TI','Vendas'][i%3], dia: (i%28)+1, mes: ((i%12)+1) }); }
+    }
+    function syncRenderAll(){ applyTranslations(); renderToday(); renderFuture(); renderList(true); renderStats(); }
+
+    /* -------------------- Wiring -------------------- */
     document.addEventListener('DOMContentLoaded', async ()=>{
-      // theme
+      // translations init
+      document.getElementById('locale-select').value = locale;
+      document.getElementById('locale-select').addEventListener('change', (e)=>{ locale = e.target.value; localStorage.setItem('locale', locale); applyTranslations(); renderList(true); renderToday(); renderFuture(); renderStats(); });
+
+      applyTranslations();
+
+      // theme toggle
       const themeToggle = document.getElementById('theme-toggle');
       function setTheme(t){ document.body.setAttribute('data-theme', t); document.getElementById('current-theme').textContent = t==='dark' ? 'Escuro' : 'Claro'; localStorage.setItem('theme',t); themeToggle.setAttribute('aria-pressed', t==='dark'); renderStats(); }
       setTheme(localStorage.getItem('theme')||'light');
       themeToggle.addEventListener('click', ()=> setTheme(document.body.getAttribute('data-theme')==='dark' ? 'light' : 'dark'));
 
-      // CSV
+      // CSV events
+      document.getElementById('export-csv').addEventListener('click', exportCSV);
       document.getElementById('csv-file').addEventListener('change', (e)=>{
         const f = e.target.files[0]; if(!f) return;
         const reader = new FileReader();
-        reader.onload = ()=>{ const recs = parseCSV(reader.result); if(!recs.length) return; if(firebaseInitialized && firebaseDb){ recs.forEach(async r => { try{ await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes }); }catch(e){ console.error(e); } }); } else { dataArr = dataArr.concat(recs); renderList(true); renderStats(); } toast('Importado '+recs.length+' registros'); };
+        reader.onload = ()=>{ const recs = parseCSV(reader.result); if(!recs.length) return; if(firebaseInitialized && firebaseDb){ recs.forEach(async r=>{ try{ await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes }); }catch(e){ console.error(e); } }); } else { dataArr = dataArr.concat(recs); renderList(true); renderStats(); } toast('Importado '+recs.length+' registros'); };
         reader.readAsText(f,'utf-8'); e.target.value = '';
       });
-      document.getElementById('export-csv').addEventListener('click', exportCSV);
-      document.getElementById('import-sample').addEventListener('click', ()=>{ const sample = 'nome,setor,dia,mes\n"Maria Silva",RH,5,11\n"João Pereira",Financeiro,12,3\n"Luiza Costa",Vendas,28,12'; const recs = parseCSV(sample); if(firebaseInitialized && firebaseDb){ recs.forEach(async r => { try{ await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes }); }catch(e){console.error(e);} }); } else { dataArr = dataArr.concat(recs); renderList(true); renderStats(); } toast('Exemplo importado'); });
+      document.getElementById('import-sample').addEventListener('click', ()=>{ const sample = 'nome,setor,dia,mes\n"Maria Silva",RH,5,11\n"João Pereira",Financeiro,12,3\n"Luiza Costa",Vendas,28,12'; const recs = parseCSV(sample); if(firebaseInitialized && firebaseDb){ recs.forEach(async r=>{ try{ await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes }); }catch(e){ console.error(e); } }); } else { dataArr = dataArr.concat(recs); renderList(true); renderStats(); } toast('Exemplo importado'); });
 
-      // add new
+      // add new (admin-only)
       document.getElementById('add-btn').addEventListener('click', async ()=>{
         const nome = prompt('Nome completo:'); if(!nome) return;
         const setor = prompt('Setor (opcional):','');
         const dia = parseInt(prompt('Dia (1-31):','1'),10);
         const mes = parseInt(prompt('Mês (1-12):','1'),10);
         if(isNaN(dia)||isNaN(mes)){ toast('Data inválida', true); return; }
-        if(firebaseInitialized && firebaseDb){
+        if(firebaseInitialized && firebaseDb && firebaseAuth && firebaseAuth.currentUser){
           try{ await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes }); toast('Registro criado'); } catch(e){ toast('Erro: '+e.message, true); }
         } else {
           dataArr.push({ id: uid(), nome, setor, dia, mes }); renderList(true); renderToday(); renderFuture(); renderStats(); toast('Registro criado (demo)');
@@ -618,7 +659,7 @@
         document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
         btn.setAttribute('aria-selected','true');
         const tab = btn.dataset.tab;
-        // hide or show panels accordingly:
+        // hide all main panels
         document.getElementById('today-panel').style.display = 'none';
         document.getElementById('future-panel').style.display = 'none';
         document.getElementById('stats-panel').style.display = 'none';
@@ -635,12 +676,10 @@
       // login modal / auth
       const loginModal = document.getElementById('login-modal');
       document.getElementById('auth-btn').addEventListener('click', ()=>{
-        // if firebase is initialized and user logged -> sign out
         if(firebaseInitialized && firebaseAuth && firebaseAuth.currentUser){
           firebaseAuth.signOut().then(()=> toast('Logout realizado')).catch(e=> toast('Erro logout: '+e.message,true));
           return;
         }
-        // open modal
         loginModal.showModal();
       });
       document.getElementById('close-login').addEventListener('click', ()=> loginModal.close());
@@ -649,15 +688,8 @@
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
         if(firebaseInitialized && firebaseAuth){
-          try{
-            await firebaseAuth.signInWithEmailAndPassword(email, pass);
-            toast('Bem-vindo admin!');
-            loginModal.close();
-          }catch(err){ toast('Erro no login: '+err.message, true); }
-        } else {
-          toast('Firebase não configurado (modo demo)', true);
-          loginModal.close();
-        }
+          try{ await firebaseAuth.signInWithEmailAndPassword(email, pass); toast('Bem-vindo admin!'); loginModal.close(); } catch(err){ toast('Erro no login: '+err.message, true); }
+        } else { toast('Firebase não configurado (modo demo)', true); loginModal.close(); }
       });
 
       // keyboard shortcuts
@@ -667,28 +699,22 @@
         if(e.key === '/'){ e.preventDefault(); document.getElementById('search-input').focus(); }
       });
 
-      // locale select
-      const localeSelect = document.getElementById('locale-select');
-      localeSelect.value = locale;
-      localeSelect.addEventListener('change',(e)=>{ locale = e.target.value; localStorage.setItem('locale', locale); renderFuture(); renderToday(); renderStats(); });
-
-      // try to init firebase; if fails, fallback to demo seed
+      // try to init firebase
       const ok = await tryInitFirebase();
       if(!ok){
+        // fallback demo
         seedDemo();
         syncRenderAll();
+        updateAuthUI(false); // ensure admin controls hidden in demo
+      } else {
+        // auth state will call updateAuthUI via tryInitFirebase
       }
     });
 
-    function nextUpcoming(){
-      if(!dataArr.length) return null;
-      const now = new Date();
-      const list = dataArr.map(p=> ({ ...p, date: nextDate(p, now) }));
-      list.sort((a,b)=>a.date - b.date);
-      return list[0];
-    }
+    function nextUpcoming(){ if(!dataArr.length) return null; const now = new Date(); const list = dataArr.map(p=> ({ ...p, date: nextDate(p, now) })); list.sort((a,b)=>a.date-b.date); return list[0]; }
+    function formatDate(d){ try{ return new Intl.DateTimeFormat(locale, { day:'2-digit', month:'2-digit', year:'numeric' }).format(d); }catch(e){ return d.toLocaleDateString(); } }
 
-    // expose for debug
+    // expose debug
     window.__painel = { getData: ()=> dataArr, renderList, renderStats, celebrateNow };
   </script>
 </body>
