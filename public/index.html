@@ -153,7 +153,7 @@
       </section>
 
       <aside id="right-col">
-        <div class="card bg-card" style="margin-bottom:12px" aria-labelledby="actions-title">
+        <div id="actions-card" class="card bg-card" style="margin-bottom:12px" aria-labelledby="actions-title">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
               <h3 id="actions-title">Ações rápidas</h3>
@@ -172,8 +172,28 @@
         <div id="list-panel" class="bg-card" role="region" aria-labelledby="list-title">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <h3 id="list-title">Lista completa</h3>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input id="search-input" type="search" placeholder="Buscar por nome ou setor" aria-label="Buscar aniversariantes" style="padding:8px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)" />
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+              <select id="filter-month" aria-label="Filtrar por mês"
+                      style="padding:8px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)">
+                <option value="0">Todos os meses</option>
+                <option value="1">Jan</option>
+                <option value="2">Fev</option>
+                <option value="3">Mar</option>
+                <option value="4">Abr</option>
+                <option value="5">Mai</option>
+                <option value="6">Jun</option>
+                <option value="7">Jul</option>
+                <option value="8">Ago</option>
+                <option value="9">Set</option>
+                <option value="10">Out</option>
+                <option value="11">Nov</option>
+                <option value="12">Dez</option>
+              </select>
+
+              <input id="search-input" type="search" placeholder="Buscar por nome ou setor"
+                     aria-label="Buscar aniversariantes"
+                     style="padding:8px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)" />
+
               <button id="add-btn" class="btn ghost small admin-only">➕ Novo</button>
             </div>
           </div>
@@ -181,7 +201,7 @@
           <div style="display:flex;justify-content:center;margin-top:8px"><button id="load-more" class="btn ghost small">Carregar mais</button></div>
         </div>
 
-        <div class="bg-card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+        <div id="version-card" class="bg-card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
           <div>
             <h4 style="margin:0">Versão</h4>
             <div class="small" id="ver-info">v1.0.2 • Internacionalização pronta</div>
@@ -225,9 +245,9 @@
   <script>
     /* -------------------------
        App script (v1.0.2)
-       - confetti with side reflection, slower balloons
+       - confetti with side reflection, balloons
        - i18n, admin gating, Firebase dynamic init
-       - ajustes: fallback textoData -> mes, deduplicação
+       - ajustes: fallback textoData -> mes, deduplicação, filtros
        ------------------------- */
 
     const DEFAULT_LOCALE = 'pt-BR';
@@ -304,7 +324,12 @@
       document.getElementById('future-title').textContent = t.next_upcoming;
       document.getElementById('stats-title').textContent = t.distribute;
       document.getElementById('celebrate-btn').textContent = t.celebrate;
-      document.getElementById('auth-btn').textContent = t.login;
+      const authBtn = document.getElementById('auth-btn');
+      if(firebaseAuth && firebaseAuth.currentUser){
+        authBtn.textContent = t.logout;
+      } else {
+        authBtn.textContent = t.login;
+      }
       document.getElementById('actions-sub').textContent = t.admin_only_note;
     }
 
@@ -369,17 +394,33 @@
       }
     }
 
-    function renderFuture(){
-      const daysAhead = Number(document.getElementById('days-ahead').value || 30);
-      const now = new Date(); const end = new Date(now.getTime()+daysAhead*24*60*60*1000);
-      const arr = dataArr.map(p=>({...p, date: nextDate(p, now)})).filter(x=>x.date>now && x.date<=end).sort((a,b)=>a.date-b.date);
+    function renderFuture(daysOverride){
+      const input = document.getElementById('days-ahead');
+      const daysAhead = typeof daysOverride === 'number'
+        ? daysOverride
+        : Number(input?.value || 30);
+
+      const now = new Date();
+      const end = new Date(now.getTime()+daysAhead*24*60*60*1000);
+
+      const arr = dataArr
+        .map(p=>({...p, date: nextDate(p, now)}))
+        .filter(x=>x.date>now && x.date<=end)
+        .sort((a,b)=>a.date-b.date);
+
       const wrap = document.getElementById('future-list');
       const fc = document.getElementById('future-count');
       if(fc) fc.textContent = arr.length + ' encontrados';
-      if(!arr.length){ if(wrap) wrap.innerHTML = `<p>Nenhum nos próximos ${daysAhead} dias.</p>`; return; }
+
+      if(!arr.length){
+        if(wrap) wrap.innerHTML = `<p>Nenhum nos próximos ${daysAhead} dias.</p>`;
+        return;
+      }
       if(wrap) wrap.innerHTML = '';
       arr.forEach(p=>{
-        const row = document.createElement('div'); row.style.padding='8px 0'; row.style.borderBottom='1px solid var(--contrast-border)';
+        const row = document.createElement('div');
+        row.style.padding='8px 0';
+        row.style.borderBottom='1px solid var(--contrast-border)';
         row.innerHTML = `<strong>${escapeHTML(p.nome)}</strong> · ${escapeHTML(p.setor||'')} · ${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}<div class="small" style="color:var(--muted)">Em ${Math.ceil((p.date-new Date())/(1000*60*60*24))} dia(s) — ${formatDate(p.date)}</div>`;
         wrap.appendChild(row);
       });
@@ -407,11 +448,35 @@
     function renderList(reset=false){
       if(reset) page = 0;
       const start = page*PAGE_SIZE; const end = start+PAGE_SIZE;
-      const filtered = (document.getElementById('search-input').value||'').toLowerCase();
-      let items = dataArr.filter(p => { if(!filtered) return true; return (p.nome||'').toLowerCase().includes(filtered) || (p.setor||'').toLowerCase().includes(filtered); });
+
+      const searchTerm = (document.getElementById('search-input').value||'').toLowerCase();
+      const monthFilter = Number(document.getElementById('filter-month')?.value || '0');
+
+      let items = dataArr.filter(p => {
+        const okSearch =
+          !searchTerm ||
+          (p.nome||'').toLowerCase().includes(searchTerm) ||
+          (p.setor||'').toLowerCase().includes(searchTerm);
+
+        const okMonth =
+          !monthFilter ||
+          Number(p.mes) === monthFilter;
+
+        return okSearch && okMonth;
+      });
+
+      items.sort((a,b) =>
+        (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { sensitivity: 'base' })
+      );
+
       const slice = items.slice(0,end);
       const wrapper = document.getElementById('list-wrapper');
-      if(!slice.length){ wrapper.innerHTML = '<p>Nenhum registro.</p>'; return; }
+      if(!slice.length){
+        wrapper.innerHTML = '<p>Nenhum registro.</p>';
+        const loadMore = document.getElementById('load-more');
+        if(loadMore) loadMore.style.display = 'none';
+        return;
+      }
       const userLogged = (firebaseInitialized && firebaseAuth && firebaseAuth.currentUser);
       let html = '<table role="table" aria-label="Tabela de aniversariantes"><thead><tr><th>Nome</th><th>Setor</th><th>Data</th><th style="text-align:right">Ações</th></tr></thead><tbody>';
       slice.forEach(p=>{
@@ -434,7 +499,7 @@
             try{ await firebaseDb.collection('aniversariantes').doc(id).delete(); toast('Registro excluído'); }catch(err){ toast('Erro ao excluir: ' + err.message, true); }
           } else {
             dataArr = dataArr.filter(x=>x.id!==id);
-            renderList(true); renderToday(); renderFuture(); renderStats();
+            renderList(true); renderToday(); renderFuture(5); renderStats();
             toast('Registro excluído (demo)');
           }
         }));
@@ -451,7 +516,7 @@
             try{ await firebaseDb.collection('aniversariantes').doc(id).set({ nome, setor, dia, mes }, { merge: true }); toast('Atualizado'); }catch(err){ toast('Erro ao atualizar: ' + err.message, true); }
           } else {
             Object.assign(rec,{ nome, setor, dia, mes });
-            renderList(true); renderToday(); renderFuture(); renderStats();
+            renderList(true); renderToday(); renderFuture(5); renderStats();
             toast('Atualizado (demo)');
           }
         }));
@@ -687,8 +752,7 @@
 
         firebaseAuth.onAuthStateChanged(user=>{
           updateAuthUI(!!user);
-          const authBtn = document.getElementById('auth-btn');
-          if(authBtn) authBtn.textContent = user ? (i18n[locale].logout || 'Sair') : (i18n[locale].login || 'Entrar');
+          applyTranslations();
           if(user && !dataArr.length){
             firebaseDb.collection('aniversariantes').get().then(snap=>{
               dataArr = snap.docs.map(d=>({ id:d.id, ...d.data() })).map(r=>mapDocFromFirestore(r));
@@ -722,7 +786,7 @@
       ];
       for(let i=0;i<60;i++){ dataArr.push({ id: 'demo-'+i, nome: 'User '+(i+1), setor: ['RH','TI','Vendas'][i%3], dia: (i%28)+1, mes: ((i%12)+1) }); }
     }
-    function syncRenderAll(){ applyTranslations(); renderToday(); renderFuture(); renderList(true); renderStats(); }
+    function syncRenderAll(){ applyTranslations(); renderToday(); renderFuture(5); renderList(true); renderStats(); }
 
     /* --------- Remoção de duplicatas (uma vez) ---------- */
     async function removeDuplicatesOnce(){
@@ -763,11 +827,29 @@
     /* -------------------- Wiring -------------------- */
     document.addEventListener('DOMContentLoaded', async ()=>{
       document.getElementById('locale-select').value = locale;
-      document.getElementById('locale-select').addEventListener('change', (e)=>{ locale = e.target.value; localStorage.setItem('locale', locale); applyTranslations(); renderList(true); renderToday(); renderFuture(); renderStats(); });
+      document.getElementById('locale-select').addEventListener('change', (e)=>{
+        locale = e.target.value;
+        localStorage.setItem('locale', locale);
+        applyTranslations(); renderList(true); renderToday(); renderFuture(5); renderStats();
+      });
       applyTranslations();
 
+      // estado inicial por aba
+      document.getElementById('today-panel').style.display = 'block';
+      document.getElementById('future-panel').style.display = 'block';
+      document.getElementById('stats-panel').style.display = 'none';
+      document.getElementById('list-panel').style.display = 'none';
+      const actionsCard = document.getElementById('actions-card');
+      if(actionsCard) actionsCard.style.display = 'none';
+
       const themeToggle = document.getElementById('theme-toggle');
-      function setTheme(t){ document.body.setAttribute('data-theme', t); document.getElementById('current-theme').textContent = t==='dark' ? 'Escuro' : 'Claro'; localStorage.setItem('theme',t); themeToggle.setAttribute('aria-pressed', t==='dark'); renderStats(); }
+      function setTheme(t){
+        document.body.setAttribute('data-theme', t);
+        document.getElementById('current-theme').textContent = t==='dark' ? 'Escuro' : 'Claro';
+        localStorage.setItem('theme',t);
+        themeToggle.setAttribute('aria-pressed', t==='dark');
+        renderStats();
+      }
       setTheme(localStorage.getItem('theme')||'light');
       themeToggle.addEventListener('click', ()=> setTheme(document.body.getAttribute('data-theme')==='dark' ? 'light' : 'dark'));
 
@@ -862,13 +944,14 @@
         if(firebaseInitialized && firebaseDb && firebaseAuth && firebaseAuth.currentUser){
           try{ await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes }); toast('Registro criado'); } catch(e){ toast('Erro: '+e.message, true); }
         } else {
-          dataArr.push({ id: uid(), nome, setor, dia, mes }); renderList(true); renderToday(); renderFuture(); renderStats(); toast('Registro criado (demo)');
+          dataArr.push({ id: uid(), nome, setor, dia, mes }); renderList(true); renderToday(); renderFuture(5); renderStats(); toast('Registro criado (demo)');
         }
       });
 
       document.getElementById('celebrate-btn').addEventListener('click', ()=> celebrateNow({ sideBurst: false, auto: false }));
 
       document.getElementById('search-input').addEventListener('input', ()=> renderList(true));
+      document.getElementById('filter-month').addEventListener('change', ()=> renderList(true));
       document.getElementById('load-more').addEventListener('click', ()=>{ page++; renderList(); });
       document.getElementById('refresh-future').addEventListener('click', ()=> renderFuture());
 
@@ -876,17 +959,48 @@
         document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
         btn.setAttribute('aria-selected','true');
         const tab = btn.dataset.tab;
-        document.getElementById('today-panel').style.display = 'none';
-        document.getElementById('future-panel').style.display = 'none';
-        document.getElementById('stats-panel').style.display = 'none';
-        document.getElementById('list-panel').style.display = 'none';
+
+        const todayPanel   = document.getElementById('today-panel');
+        const futurePanel  = document.getElementById('future-panel');
+        const statsPanel   = document.getElementById('stats-panel');
+        const listPanel    = document.getElementById('list-panel');
+        const actionsCard  = document.getElementById('actions-card');
+
+        todayPanel.style.display  = 'none';
+        futurePanel.style.display = 'none';
+        statsPanel.style.display  = 'none';
+        listPanel.style.display   = 'none';
+        if(actionsCard) actionsCard.style.display = 'none';
+
         const calendarPanel = document.getElementById('calendar-panel');
         if(calendarPanel) calendarPanel.remove();
-        if(tab === 'today'){ document.getElementById('today-panel').style.display = 'block'; document.getElementById('future-panel').style.display = 'block'; document.getElementById('stats-panel').style.display = 'block'; renderToday(); }
-        if(tab === 'calendar'){ renderCalendar(); }
-        if(tab === 'list'){ document.getElementById('list-panel').style.display = 'block'; renderList(true); }
-        if(tab === 'future'){ document.getElementById('future-panel').style.display = 'block'; renderFuture(); }
-        if(tab === 'stats'){ document.getElementById('stats-panel').style.display = 'block'; renderStats(); }
+
+        if(tab === 'today'){
+          todayPanel.style.display  = 'block';
+          futurePanel.style.display = 'block';
+          renderToday();
+          renderFuture(5);
+        }
+
+        if(tab === 'calendar'){
+          renderCalendar();
+        }
+
+        if(tab === 'list'){
+          listPanel.style.display = 'block';
+          if(actionsCard) actionsCard.style.display = 'block';
+          renderList(true);
+        }
+
+        if(tab === 'future'){
+          futurePanel.style.display = 'block';
+          renderFuture();
+        }
+
+        if(tab === 'stats'){
+          statsPanel.style.display = 'block';
+          renderStats();
+        }
       }));
 
       const loginModal = document.getElementById('login-modal');
