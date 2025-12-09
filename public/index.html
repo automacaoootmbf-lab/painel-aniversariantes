@@ -227,6 +227,7 @@
        App script (v1.0.2)
        - confetti with side reflection, slower balloons
        - i18n, admin gating, Firebase dynamic init
+       - ajustes: fallback textoData -> mes, deduplicação
        ------------------------- */
 
     const DEFAULT_LOCALE = 'pt-BR';
@@ -320,6 +321,15 @@
     function initials(name){ return (name||'').split(' ').map(p=>p.charAt(0)).join('').slice(0,2).toUpperCase(); }
     function nextDate(rec, from=new Date()){ const y = from.getFullYear(); let d = new Date(y, rec.mes-1, rec.dia, 12); if(d<from) d = new Date(y+1, rec.mes-1, rec.dia, 12); return d; }
 
+    // ---------- helper para chave única (deduplicação) ----------
+    function makeKeyFromRecord(rec){
+      const nome  = (rec.nome  || '').trim().toLowerCase();
+      const setor = (rec.setor || '').trim().toLowerCase();
+      const dia   = String(Number(rec.dia));
+      const mes   = String(Number(rec.mes));
+      return `${nome}|${setor}|${dia}|${mes}`;
+    }
+
     /* -------- renders -------- */
     function renderToday(){
       const el = document.getElementById('today-content');
@@ -352,7 +362,6 @@
         el.appendChild(row);
       });
 
-      // auto-celebrate once per day if there are matches
       const todayKey = new Date().toISOString().slice(0,10);
       if(matches.length > 0 && celebratedDate !== todayKey){
         celebratedDate = todayKey;
@@ -482,31 +491,25 @@
       const height = canvas.height = window.innerHeight;
       const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
 
-      // adapt density for mobile
       const particleCount = isMobileWidth() ? Math.max(60, Math.floor(desiredCount * 0.28)) : desiredCount;
 
       const pieces = [];
-      // physics params tuned for slower motion and lively bounces
       const gravity = 0.22;
       const maxBounces = 3;
       for(let i=0;i<particleCount;i++){
         const sideRoll = Math.random();
         let x,y,vx,vy;
-        // spawn near sides or occasionally from top center
         if(options.sideBurst && sideRoll < 0.46){
-          // left edge
           x = -8 - Math.random()*40;
           y = Math.random() * height * 0.9;
-          vx = 0.9 + Math.random()*2.2; // initial push to the right
+          vx = 0.9 + Math.random()*2.2;
           vy = -0.6 + Math.random()*2.4;
         } else if(options.sideBurst && sideRoll < 0.92){
-          // right edge
           x = width + 8 + Math.random()*40;
           y = Math.random() * height * 0.9;
-          vx = -(0.9 + Math.random()*2.2); // push left
+          vx = -(0.9 + Math.random()*2.2);
           vy = -0.6 + Math.random()*2.4;
         } else {
-          // top rain
           x = Math.random() * width;
           y = -10 - Math.random()*140;
           vx = (Math.random()-0.5) * 1.4;
@@ -523,25 +526,22 @@
         });
       }
 
-      let running = true;
       function frame(){
         ctx.clearRect(0,0,width,height);
         for(const p of pieces){
-          // physics
           p.vy += gravity * (0.9 + p.r*0.003);
           p.x += p.vx;
           p.y += p.vy;
           p.rot += p.vr * 0.5;
           p.life++;
 
-          // side reflection (bounce) behavior
           const leftBound = -6;
           const rightBound = width + 6;
 
           if(p.x < leftBound && p.bounces < maxBounces){
             p.x = leftBound;
-            p.vx = -p.vx * (0.64 + Math.random()*0.18); // invert and dampen
-            p.vy = p.vy * 0.8 - (0.5 + Math.random()*0.6); // slight upward impulse
+            p.vx = -p.vx * (0.64 + Math.random()*0.18);
+            p.vy = p.vy * 0.8 - (0.5 + Math.random()*0.6);
             p.bounces++;
           } else if(p.x > rightBound && p.bounces < maxBounces){
             p.x = rightBound;
@@ -550,10 +550,8 @@
             p.bounces++;
           }
 
-          // gentle air drag
           p.vx *= 0.999;
 
-          // draw
           ctx.save();
           ctx.translate(p.x, p.y);
           ctx.rotate(p.rot * Math.PI/180);
@@ -562,11 +560,9 @@
           ctx.restore();
         }
 
-        // stop when almost all pieces are off-screen
         const alive = pieces.some(p => !(p.y > height + 80 && (p.x < -160 || p.x > width + 160)));
         if(!alive){
           ctx.clearRect(0,0,width,height);
-          running = false;
           return;
         }
         requestAnimationFrame(frame);
@@ -574,7 +570,6 @@
       frame();
     }
 
-    /* slightly slower, graceful balloons (keeps existing behavior) */
     function launchBalloons(count = 22){
       const wrap = document.getElementById('balloon-wrap');
       const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
@@ -583,7 +578,6 @@
         const el = document.createElementNS('http://www.w3.org/2000/svg','svg');
         el.setAttribute('width','58'); el.setAttribute('height','86'); el.setAttribute('viewBox','0 0 48 68');
         el.style.position = 'fixed';
-        // position with bias so some come from sides
         const sideBias = Math.random() < 0.5 ? (Math.random()*20 + '%') : (50 + Math.random()*50) + '%';
         el.style.left = sideBias;
         el.style.bottom = '-140px';
@@ -592,7 +586,7 @@
         const color = colors[i % colors.length];
         el.innerHTML = `<ellipse cx="24" cy="24" rx="18" ry="22" fill="${color}" opacity="0.98"></ellipse><path d="M24 46 L24 74" stroke="#111" stroke-opacity="0.06" stroke-width="1"/>`;
         wrap.appendChild(el);
-        const duration = 10000 + Math.random()*9000; // 10s - 19s
+        const duration = 10000 + Math.random()*9000;
         const delay = Math.random()*700;
         const rotate = Math.random()*60 - 30;
         el.animate([{ transform: 'translateY(0) scale(1)', opacity:1 }, { transform: `translateY(-120vh) rotate(${rotate}deg) scale(1.02)`, opacity:0.02 }], { duration, easing: 'cubic-bezier(.2,.9,.2,1)', delay });
@@ -630,6 +624,43 @@
     }
 
     /* --------- Firebase dynamic init (compat) ---------- */
+
+    function mapDocFromFirestore(r){
+      let dia = Number(r.dia);
+      let mes = Number(r.mes);
+
+      if ((mes === 0 || !mes) && typeof r.textoData === "string") {
+        const txt = r.textoData.toLowerCase();
+        const map = {
+          'janeiro': 1,
+          'fevereiro': 2,
+          'março': 3,
+          'marco': 3,
+          'abril': 4,
+          'maio': 5,
+          'junho': 6,
+          'julho': 7,
+          'agosto': 8,
+          'setembro': 9,
+          'outubro': 10,
+          'novembro': 11,
+          'dezembro': 12
+        };
+        for (const [name, num] of Object.entries(map)) {
+          if (txt.includes(name)) {
+            mes = num;
+            break;
+          }
+        }
+      }
+
+      return {
+        ...r,
+        dia: dia,
+        mes: mes
+      };
+    }
+
     async function tryInitFirebase(){
       if(!window.__firebase_config) return false;
       try{
@@ -644,12 +675,12 @@
 
         firebaseDb.collection('aniversariantes').onSnapshot(snapshot=>{
           const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          dataArr = docs.map(r => ({ ...r, dia: Number(r.dia), mes: Number(r.mes) }));
+          dataArr = docs.map(r => mapDocFromFirestore(r));
           syncRenderAll();
         }, err=>{
           console.warn('onSnapshot failed, fallback to get():', err);
           firebaseDb.collection('aniversariantes').get().then(snap=>{
-            dataArr = snap.docs.map(d => ({ id: d.id, ...d.data() })).map(r => ({ ...r, dia: Number(r.dia), mes: Number(r.mes) }));
+            dataArr = snap.docs.map(d => ({ id: d.id, ...d.data() })).map(r => mapDocFromFirestore(r));
             syncRenderAll();
           }).catch(()=>{ seedDemo(); syncRenderAll(); });
         });
@@ -659,7 +690,10 @@
           const authBtn = document.getElementById('auth-btn');
           if(authBtn) authBtn.textContent = user ? (i18n[locale].logout || 'Sair') : (i18n[locale].login || 'Entrar');
           if(user && !dataArr.length){
-            firebaseDb.collection('aniversariantes').get().then(snap=>{ dataArr = snap.docs.map(d=>({ id:d.id, ...d.data() })).map(r=>({ ...r, dia: Number(r.dia), mes: Number(r.mes) })); syncRenderAll(); }).catch(()=>{});
+            firebaseDb.collection('aniversariantes').get().then(snap=>{
+              dataArr = snap.docs.map(d=>({ id:d.id, ...d.data() })).map(r=>mapDocFromFirestore(r));
+              syncRenderAll();
+            }).catch(()=>{});
           }
         });
 
@@ -690,6 +724,42 @@
     }
     function syncRenderAll(){ applyTranslations(); renderToday(); renderFuture(); renderList(true); renderStats(); }
 
+    /* --------- Remoção de duplicatas (uma vez) ---------- */
+    async function removeDuplicatesOnce(){
+      if (!firebaseInitialized || !firebaseDb) {
+        console.warn('Firebase não inicializado (modo demo).');
+        toast('Não dá pra limpar duplicatas no modo demo.', true);
+        return;
+      }
+
+      const snap = await firebaseDb.collection('aniversariantes').get();
+      const seen = new Set();
+      const batch = firebaseDb.batch();
+      let deletions = 0;
+
+      snap.forEach(doc => {
+        const data = doc.data();
+        const key = makeKeyFromRecord(data);
+
+        if (seen.has(key)) {
+          batch.delete(doc.ref);
+          deletions++;
+        } else {
+          seen.add(key);
+        }
+      });
+
+      if (!deletions) {
+        console.log('Nenhuma duplicata encontrada.');
+        toast('Nenhuma duplicata encontrada.');
+        return;
+      }
+
+      await batch.commit();
+      console.log(`Removidas ${deletions} duplicata(s).`);
+      toast(`Removidas ${deletions} duplicata(s).`);
+    }
+
     /* -------------------- Wiring -------------------- */
     document.addEventListener('DOMContentLoaded', async ()=>{
       document.getElementById('locale-select').value = locale;
@@ -702,13 +772,86 @@
       themeToggle.addEventListener('click', ()=> setTheme(document.body.getAttribute('data-theme')==='dark' ? 'light' : 'dark'));
 
       document.getElementById('export-csv').addEventListener('click', exportCSV);
+
       document.getElementById('csv-file').addEventListener('change', (e)=>{
         const f = e.target.files[0]; if(!f) return;
         const reader = new FileReader();
-        reader.onload = ()=>{ const recs = parseCSV(reader.result); if(!recs.length) return; if(firebaseInitialized && firebaseDb){ recs.forEach(async r=>{ try{ await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes }); }catch(e){ console.error(e); } }); } else { dataArr = dataArr.concat(recs); renderList(true); renderStats(); } toast('Importado '+recs.length+' registros'); };
+        reader.onload = ()=>{
+          const recs = parseCSV(reader.result);
+          if(!recs.length) return;
+
+          const existingKeys = new Set(dataArr.map(makeKeyFromRecord));
+          const novos = [];
+          let ignorados = 0;
+          const addedNow = new Set();
+
+          for (const r of recs) {
+            const key = makeKeyFromRecord(r);
+            if (existingKeys.has(key) || addedNow.has(key)) {
+              ignorados++;
+              continue;
+            }
+            addedNow.add(key);
+            novos.push(r);
+          }
+
+          if (!novos.length) {
+            toast('Todos os registros do CSV já existem (ou são duplicados).', true);
+            return;
+          }
+
+          if(firebaseInitialized && firebaseDb){
+            novos.forEach(async r=>{
+              try{
+                await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes });
+              }catch(e){ console.error(e); }
+            });
+          } else {
+            dataArr = dataArr.concat(novos);
+            renderList(true); renderStats();
+          }
+          toast(`Importado ${novos.length} registro(s). Ignorados ${ignorados} duplicado(s).`);
+        };
         reader.readAsText(f,'utf-8'); e.target.value = '';
       });
-      document.getElementById('import-sample').addEventListener('click', ()=>{ const sample = 'nome,setor,dia,mes\n"Maria Silva",RH,5,11\n"João Pereira",Financeiro,12,3\n"Luiza Costa",Vendas,28,12'; const recs = parseCSV(sample); if(firebaseInitialized && firebaseDb){ recs.forEach(async r=>{ try{ await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes }); }catch(e){ console.error(e); } }); } else { dataArr = dataArr.concat(recs); renderList(true); renderStats(); } toast('Exemplo importado'); });
+
+      document.getElementById('import-sample').addEventListener('click', ()=>{
+        const sample = 'nome,setor,dia,mes\n"Maria Silva",RH,5,11\n"João Pereira",Financeiro,12,3\n"Luiza Costa",Vendas,28,12';
+        const recs = parseCSV(sample);
+        if(!recs.length) return;
+
+        const existingKeys = new Set(dataArr.map(makeKeyFromRecord));
+        const novos = [];
+        let ignorados = 0;
+        const addedNow = new Set();
+
+        for (const r of recs) {
+          const key = makeKeyFromRecord(r);
+          if (existingKeys.has(key) || addedNow.has(key)) {
+            ignorados++;
+            continue;
+          }
+          addedNow.add(key);
+          novos.push(r);
+        }
+
+        if (!novos.length) {
+          toast('Exemplo já existente na base.', true);
+          return;
+        }
+
+        if(firebaseInitialized && firebaseDb){
+          novos.forEach(async r=>{
+            try{
+              await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes });
+            }catch(e){ console.error(e); }
+          });
+        } else {
+          dataArr = dataArr.concat(novos);
+          renderList(true); renderStats();
+        }
+        toast(`Exemplo importado (${novos.length} novo(s), ${ignorados} ignorado(s)).`);
+      });
 
       document.getElementById('add-btn').addEventListener('click', async ()=>{
         const nome = prompt('Nome completo:'); if(!nome) return;
@@ -781,8 +924,14 @@
     function nextUpcoming(){ if(!dataArr.length) return null; const now = new Date(); const list = dataArr.map(p=> ({ ...p, date: nextDate(p, now) })); list.sort((a,b)=>a.date-b.date); return list[0]; }
     function formatDate(d){ try{ return new Intl.DateTimeFormat(locale, { day:'2-digit', month:'2-digit', year:'numeric' }).format(d); }catch(e){ return d.toLocaleDateString(); } }
 
-    // debug
-    window.__painel = { getData: ()=> dataArr, renderList, renderStats, celebrateNow };
+    // debug / admin helpers
+    window.__painel = {
+      getData: () => dataArr,
+      renderList,
+      renderStats,
+      celebrateNow,
+      removeDuplicatesOnce
+    };
   </script>
 </body>
 </html>
