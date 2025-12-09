@@ -508,7 +508,7 @@
           const rec = dataArr.find(x=>x.id===id);
           if(!rec) return;
           const nome = prompt('Nome:', rec.nome);
-          const setor = prompt('Setor:', rec.setor||'') || '').toUpperCase();
+          const setor = (prompt('Setor:', rec.setor||'') || '').toUpperCase();
           const dia = parseInt(prompt('Dia (1-31):', rec.dia),10);
           const mes = parseInt(prompt('Mês (1-12):', rec.mes),10);
           if(!nome || isNaN(dia) || isNaN(mes)) { toast('Dados inválidos', true); return; }
