@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel de Aniversariantes — Dashboard (v1.0.2)</title>
+  <title>Painel de Aniversariantes — Dashboard (v1.0.3)</title>
   <meta name="description" content="Painel responsivo de aniversariantes com tema claro/escuro, export/import CSV, calendário e celebração com confetes + balões." />
-  <meta name="version" content="1.0.2">
+  <meta name="version" content="1.0.3">
   <meta name="theme-color" content="#10b981">
 
   <style>
@@ -204,7 +204,7 @@
         <div id="version-card" class="bg-card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
           <div>
             <h4 style="margin:0">Versão</h4>
-            <div class="small" id="ver-info">v1.0.2 • Internacionalização pronta</div>
+            <div class="small" id="ver-info">v1.0.3 • Internacionalização pronta</div>
           </div>
           <div style="text-align:right">
             <div class="small">Tema: <span id="current-theme">Claro</span></div>
@@ -508,7 +508,7 @@
           const rec = dataArr.find(x=>x.id===id);
           if(!rec) return;
           const nome = prompt('Nome:', rec.nome);
-          const setor = prompt('Setor:', rec.setor||'');
+          const setor = prompt('Setor:', rec.setor||'') || '').toUpperCase();
           const dia = parseInt(prompt('Dia (1-31):', rec.dia),10);
           const mes = parseInt(prompt('Mês (1-12):', rec.mes),10);
           if(!nome || isNaN(dia) || isNaN(mes)) { toast('Dados inválidos', true); return; }
@@ -684,7 +684,7 @@
       const idxNome = header.indexOf('nome'); const idxSetor = header.indexOf('setor'); const idxDia = header.indexOf('dia'); const idxMes = header.indexOf('mes');
       if(idxNome<0 || idxDia<0 || idxMes<0){ toast('CSV precisa ter colunas nome,dia,mes', true); return []; }
       const out = [];
-      lines.forEach((ln,i)=>{ const parts = ln.match(/(".*?"|[^,]+)/g) || []; const nome = (parts[idxNome]||'').replace(/^"|"$/g,'').trim(); const setor = (parts[idxSetor]||'').replace(/^"|"$/g,'').trim(); const dia = parseInt((parts[idxDia]||'').replace(/^"|"$/g,''),10); const mes = parseInt((parts[idxMes]||'').replace(/^"|"$/g,''),10); if(nome && !Number.isNaN(dia) && !Number.isNaN(mes)) out.push({ id: uid(), nome, setor, dia, mes }); });
+      lines.forEach((ln,i)=>{ const parts = ln.match(/(".*?"|[^,]+)/g) || []; const nome = (parts[idxNome]||'').replace(/^"|"$/g,'').trim(); const setor = (parts[idxSetor]||'').replace(/^"|"$/g,'').trim().toUpperCase(); const dia = parseInt((parts[idxDia]||'').replace(/^"|"$/g,''),10); const mes = parseInt((parts[idxMes]||'').replace(/^"|"$/g,''),10); if(nome && !Number.isNaN(dia) && !Number.isNaN(mes)) out.push({ id: uid(), nome, setor, dia, mes }); });
       return out;
     }
 
@@ -721,6 +721,7 @@
 
       return {
         ...r,
+        setor: (r.setor || '').toUpperCase(),
         dia: dia,
         mes: mes
       };
@@ -937,7 +938,7 @@
 
       document.getElementById('add-btn').addEventListener('click', async ()=>{
         const nome = prompt('Nome completo:'); if(!nome) return;
-        const setor = prompt('Setor (opcional):','');
+        const setor = prompt('Setor (opcional):','') || '').toUpperCase();
         const dia = parseInt(prompt('Dia (1-31):','1'),10);
         const mes = parseInt(prompt('Mês (1-12):','1'),10);
         if(isNaN(dia)||isNaN(mes)){ toast('Data inválida', true); return; }
