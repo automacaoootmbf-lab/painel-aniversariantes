@@ -938,7 +938,7 @@
 
       document.getElementById('add-btn').addEventListener('click', async ()=>{
         const nome = prompt('Nome completo:'); if(!nome) return;
-        const setor = prompt('Setor (opcional):','') || '').toUpperCase();
+        const setor = (prompt('Setor (opcional):','') || '').toUpperCase();
         const dia = parseInt(prompt('Dia (1-31):','1'),10);
         const mes = parseInt(prompt('Mês (1-12):','1'),10);
         if(isNaN(dia)||isNaN(mes)){ toast('Data inválida', true); return; }
