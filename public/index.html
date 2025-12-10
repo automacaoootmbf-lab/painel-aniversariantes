@@ -3,492 +3,824 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel de Aniversariantes — Dashboard (v1.0.3)</title>
-  <meta name="description" content="Painel responsivo de aniversariantes com tema claro/escuro, export/import CSV, calendário e celebração com confetes + balões." />
-  <meta name="version" content="1.0.3">
+  <title>Painel de Aniversariantes — Dashboard</title>
+  <meta name="description" content="Painel corporativo de aniversariantes com calendário, lista, estatísticas e importação CSV." />
   <meta name="theme-color" content="#10b981">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
   <style>
-  :root{
-    --bg-light: #f7fefa;
-    --card-light: #ffffff;
-    --text-light: #06121a;
-    --muted-light: #32474f;
-    --bg-dark: #06121a;
-    --card-dark: #0b1b24;
-    --text-dark: #e8faf5;
-    --muted-dark: #9fbfc7;
-    --accent-green: #10b981;
-    --accent-blue: #0ea5e9;
-    --danger: #ef4444;
-    --contrast-border-light: rgba(2,6,23,0.08);
-    --contrast-border-dark: rgba(255,255,255,0.06);
-    --elevation: 0 10px 36px rgba(2,6,23,0.18);
-    --radius-lg: 16px;
-    --radius-md: 10px;
-  }
-
-  [data-theme="light"]{
-    --bg: var(--bg-light);
-    --card: var(--card-light);
-    --text: var(--text-light);
-    --muted: var(--muted-light);
-    --accent: var(--accent-green);
-    --accent2: var(--accent-blue);
-    --contrast-border: var(--contrast-border-light);
-  }
-
-  [data-theme="dark"]{
-    --bg: var(--bg-dark);
-    --card: var(--card-dark);
-    --text: var(--text-dark);
-    --muted: var(--muted-dark);
-    --accent: var(--accent-green);
-    --accent2: var(--accent-blue);
-    --contrast-border: var(--contrast-border-dark);
-  }
-
-  /* === NOVO: deixa o select legível em ambos os temas === */
-  select{
-    background-color: var(--card);
-    color: var(--text);
-  }
-
-  select option{
-    background-color: var(--card);
-    color: var(--text);
-  }
-
-  [data-theme="dark"] select{
-    background-color: var(--card-dark);
-    color: var(--text-dark);
-  }
-
-  [data-theme="dark"] select option{
-    background-color: var(--card-dark);
-    color: var(--text-dark);
-  }
-  /* === FIM DO BLOCO NOVO === */
-
-  *,*::before,*::after{box-sizing:border-box}
-  html,body{
-    height:100%;
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
-    line-height:1.35
-  }
-  :focus{
-    outline:3px solid color-mix(in srgb, var(--accent) 36%, transparent);
-    outline-offset:3px
-  }
-  @media (prefers-reduced-motion: reduce){
-    *{
-      animation-duration:0.001ms !important;
-      transition-duration:0.001ms !important
+    :root{
+      --bg-light: #f5faf7;
+      --card-light: #ffffff;
+      --text-light: #020617;
+      --muted-light: #4b5563;
+      --bg-dark: #020817;
+      --card-dark: #020c1b;
+      --text-dark: #e5f4ff;
+      --muted-dark: #9ca3af;
+      --accent-green: #10b981;
+      --accent-blue: #0ea5e9;
+      --danger: #ef4444;
+      --contrast-border-light: rgba(15,23,42,0.08);
+      --contrast-border-dark: rgba(148,163,184,0.35);
+      --elevation: 0 18px 38px rgba(15,23,42,0.35);
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --nav-height: 64px;
     }
-  }
 
-  .container{max-width:1180px;margin:20px auto;padding:18px}
-  header{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    padding:14px;
-    border-radius:var(--radius-lg);
-    background:linear-gradient(180deg, rgba(0,0,0,0.02), transparent);
-    box-shadow:var(--elevation);
-    border:1px solid var(--contrast-border)
-  }
-  .branding{display:flex;gap:12px;align-items:center}
-  .logo{
-    width:56px;
-    height:56px;
-    border-radius:12px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:linear-gradient(135deg,var(--accent2),var(--accent));
-    color:white;
-    font-weight:700;
-    font-size:18px
-  }
-  h1{margin:0;font-size:18px}
-  .sub{margin:0;color:var(--muted);font-size:13px}
-  .controls{display:flex;gap:8px;align-items:center}
-  .btn{
-    appearance:none;
-    border:0;
-    padding:10px 12px;
-    border-radius:10px;
-    background:linear-gradient(90deg,var(--accent2),var(--accent));
-    color:white;
-    font-weight:600;
-    cursor:pointer;
-    box-shadow:0 6px 18px rgba(2,6,23,0.08)
-  }
-  .btn.ghost{
-    background:transparent;
-    color:var(--accent);
-    border:1px solid var(--contrast-border);
-    box-shadow:none
-  }
-  .btn.small{padding:8px 10px;font-size:13px}
-  .tab-row{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}
-  .tab{
-    padding:8px 14px;
-    border-radius:10px;
-    background:transparent;
-    border:1px solid transparent;
-    cursor:pointer;
-    color:var(--muted)
-  }
-  .tab[aria-selected="true"]{
-    background:var(--accent);
-    color:white;
-    box-shadow:0 8px 24px rgba(2,6,23,0.08)
-  }
-  .grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
-  @media(max-width:980px){.grid{grid-template-columns:1fr}}
-  .bg-card{
-    background:var(--card);
-    border-radius:var(--radius-md);
-    padding:16px;
-    border:1px solid var(--contrast-border);
-    box-shadow:0 6px 18px rgba(0,0,0,0.04)
-  }
-  .card{
-    border-radius:12px;
-    padding:12px;
-    background:linear-gradient(180deg,transparent,rgba(0,0,0,0.01));
-    border:1px solid var(--contrast-border)
-  }
-  .calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-  .day{
-    min-height:100px;
-    border-radius:10px;
-    padding:12px;
-    border:1px dashed var(--contrast-border);
-    position:relative;
-    background:linear-gradient(180deg,transparent,rgba(0,0,0,0.01))
-  }
-  .day .num{
-    position:absolute;
-    right:10px;
-    top:8px;
-    color:var(--muted);
-    font-size:13px;
-    font-weight:600
-  }
-  table{width:100%;border-collapse:collapse}
-  th,td{
-    padding:12px;
-    border-bottom:1px solid var(--contrast-border);
-    text-align:left
-  }
-  th{color:var(--accent);font-weight:700}
-  tr:hover{background:linear-gradient(90deg,rgba(0,0,0,0.02),transparent)}
-  .small{font-size:13px;color:var(--muted)}
-  #toast{
-    position:fixed;
-    right:20px;
-    bottom:20px;
-    padding:12px 16px;
-    border-radius:12px;
-    background:var(--accent);
-    color:white;
-    box-shadow:0 6px 24px rgba(0,0,0,0.25);
-    transform:translateY(12px);
-    opacity:0;
-    transition:all .28s;
-    z-index:10010
-  }
-  #toast.show{opacity:1;transform:translateY(0)}
-  dialog{border:none}
-  .dialog{
-    padding:16px;
-    background:var(--card);
-    border-radius:12px;
-    min-width:320px
-  }
-  #confetti-canvas{
-    position:fixed;
-    left:0;
-    top:0;
-    width:100%;
-    height:100%;
-    pointer-events:none;
-    z-index:9999
-  }
-  #balloon-wrap{
-    position:fixed;
-    left:0;
-    top:0;
-    width:100%;
-    height:100%;
-    pointer-events:none;
-    z-index:9980
-  }
-  .skeleton{
-    background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-    border-radius:8px;
-    height:14px
-  }
-  .fade-in{animation:fadeIn .36s ease both}
-  @keyframes fadeIn{
-    from{opacity:0;transform:translateY(6px)}
-    to{opacity:1;transform:none}
-  }
-  .admin-only{display:none}
-  .admin-visible{display:inline-flex}
-  [data-theme="dark"] .small{color:var(--muted-dark)}
-</style>
+    [data-theme="light"]{
+      --bg: var(--bg-light);
+      --card: var(--card-light);
+      --text: var(--text-light);
+      --muted: var(--muted-light);
+      --accent: var(--accent-green);
+      --accent2: var(--accent-blue);
+      --contrast-border: var(--contrast-border-light);
+    }
+    [data-theme="dark"]{
+      --bg: var(--bg-dark);
+      --card: var(--card-dark);
+      --text: var(--text-dark);
+      --muted: var(--muted-dark);
+      --accent: var(--accent-green);
+      --accent2: var(--accent-blue);
+      --contrast-border: var(--contrast-border-dark);
+    }
+
+    /* select legível nos dois temas */
+    select{
+      background-color: var(--card);
+      color: var(--text);
+    }
+    select option{
+      background-color: var(--card);
+      color: var(--text);
+    }
+    [data-theme="dark"] select{
+      background-color: var(--card-dark);
+      color: var(--text-dark);
+    }
+    [data-theme="dark"] select option{
+      background-color: var(--card-dark);
+      color: var(--text-dark);
+    }
+
+    *,*::before,*::after{box-sizing:border-box}
+    html,body{
+      height:100%;
+      margin:0;
+      background:radial-gradient(circle at top, rgba(56,189,248,0.15), transparent 50%) , var(--bg);
+      color:var(--text);
+      font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
+      line-height:1.35;
+    }
+    :focus{
+      outline:2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+      outline-offset:3px;
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{
+        animation-duration:0.001ms !important;
+        transition-duration:0.001ms !important;
+      }
+    }
+
+    .shell{
+      min-height:100vh;
+      max-width:1180px;
+      margin:0 auto;
+      padding:18px 18px 32px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    /* HEADER / NAVBAR */
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:10px 16px;
+      border-radius:999px;
+      background:linear-gradient(90deg, rgba(15,23,42,0.08), transparent);
+      border:1px solid var(--contrast-border);
+      box-shadow:0 20px 60px rgba(15,23,42,0.32);
+      backdrop-filter:blur(18px);
+      position:sticky;
+      top:10px;
+      z-index:40;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .brand-logo{
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      background:conic-gradient(from 220deg, var(--accent2), var(--accent), #22c55e);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#f9fafb;
+      font-size:20px;
+      box-shadow:0 10px 24px rgba(16,185,129,0.45);
+    }
+    .brand-text h1{
+      margin:0;
+      font-size:18px;
+      font-weight:600;
+      letter-spacing:0.03em;
+    }
+    .brand-text p{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .nav-tabs{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      padding:4px;
+      background:rgba(15,23,42,0.4);
+    }
+    .nav-tab{
+      position:relative;
+      border:none;
+      border-radius:999px;
+      padding:6px 14px;
+      font-size:13px;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      background:transparent;
+      color:var(--muted);
+      cursor:pointer;
+      transition:background .18s ease, color .18s ease, transform .12s ease;
+    }
+    .nav-tab i{
+      font-size:13px;
+    }
+    .nav-tab[data-active="true"]{
+      background:linear-gradient(90deg,var(--accent2),var(--accent));
+      color:#f9fafb;
+      box-shadow:0 10px 25px rgba(15,23,42,0.55);
+      transform:translateY(-1px);
+    }
+    .nav-tab[data-active="true"]::after{
+      content:'';
+      position:absolute;
+      left:16px;
+      right:16px;
+      bottom:-6px;
+      height:3px;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--accent2),var(--accent));
+      opacity:.9;
+    }
+
+    .header-actions{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .btn{
+      appearance:none;
+      border-radius:999px;
+      border:1px solid transparent;
+      padding:7px 12px;
+      font-size:13px;
+      font-weight:500;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:linear-gradient(90deg,var(--accent2),var(--accent));
+      color:#f9fafb;
+      box-shadow:0 8px 20px rgba(16,185,129,0.4);
+      transition:transform .12s ease, box-shadow .12s ease, background .18s ease;
+    }
+    .btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 26px rgba(15,23,42,0.5);
+    }
+    .btn-ghost{
+      background:transparent;
+      color:var(--muted);
+      border-color:var(--contrast-border);
+      box-shadow:none;
+    }
+    .btn-ghost:hover{
+      background:rgba(15,23,42,0.18);
+      color:var(--text);
+    }
+    .btn-icon{
+      width:34px;
+      height:34px;
+      padding:0;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+    }
+
+    main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .page{
+      display:none;
+      animation:fadeIn .3s ease both;
+    }
+    .page.active{
+      display:block;
+    }
+
+    .page-grid{
+      display:grid;
+      grid-template-columns:2.1fr 1.1fr;
+      gap:18px;
+      align-items:flex-start;
+    }
+    .page-full{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    @media(max-width:980px){
+      header{
+        flex-wrap:wrap;
+        border-radius:18px;
+        align-items:flex-start;
+      }
+      .nav-tabs{
+        flex-wrap:wrap;
+        width:100%;
+        justify-content:center;
+      }
+      .page-grid{
+        grid-template-columns:1fr;
+      }
+    }
+
+    .card{
+      background:radial-gradient(circle at top left, rgba(56,189,248,0.14), transparent 55%), var(--card);
+      border-radius:var(--radius-lg);
+      padding:18px 18px 16px;
+      border:1px solid var(--contrast-border);
+      box-shadow:0 16px 35px rgba(15,23,42,0.25);
+      position:relative;
+      overflow:hidden;
+    }
+    .card-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:10px;
+    }
+    .card-title{
+      font-size:16px;
+      font-weight:600;
+    }
+    .card-sub{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    .pill{
+      font-size:12px;
+      padding:4px 10px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.25);
+      color:var(--muted);
+    }
+
+    .today-highlight{
+      font-size:14px;
+      margin-top:6px;
+    }
+
+    .list-inline{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:6px;
+    }
+    .person-row{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:8px 0;
+      border-bottom:1px solid rgba(148,163,184,0.2);
+    }
+    .person-row:last-child{
+      border-bottom:none;
+    }
+    .avatar{
+      width:36px;
+      height:36px;
+      border-radius:12px;
+      background:linear-gradient(135deg,var(--accent2),var(--accent));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-size:15px;
+      font-weight:600;
+      box-shadow:0 8px 18px rgba(16,185,129,0.45);
+    }
+    .person-main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .person-name{
+      font-size:14px;
+      font-weight:500;
+    }
+    .person-meta{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .calendar-grid{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:8px;
+      margin-top:8px;
+    }
+    .day-cell{
+      min-height:90px;
+      border-radius:14px;
+      padding:8px;
+      border:1px dashed rgba(148,163,184,0.4);
+      position:relative;
+      background:linear-gradient(180deg, rgba(15,23,42,0.25), transparent);
+      font-size:12px;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .day-num{
+      position:absolute;
+      right:8px;
+      top:6px;
+      font-size:11px;
+      color:var(--muted);
+      font-weight:500;
+    }
+    .day-badge{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+    }
+    th,td{
+      padding:10px 8px;
+      border-bottom:1px solid rgba(148,163,184,0.25);
+      text-align:left;
+    }
+    th{
+      color:var(--accent);
+      font-weight:600;
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:0.05em;
+    }
+    tbody tr:hover{
+      background:linear-gradient(90deg,rgba(15,23,42,0.32),transparent);
+    }
+    .table-actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:4px;
+    }
+    .icon-btn{
+      border:none;
+      border-radius:999px;
+      width:26px;
+      height:26px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(15,23,42,0.55);
+      color:var(--muted);
+      cursor:pointer;
+      font-size:12px;
+    }
+    .icon-btn:hover{
+      background:rgba(15,23,42,0.9);
+      color:#e5e7eb;
+    }
+
+    .input, .input-sm{
+      border-radius:999px;
+      border:1px solid var(--contrast-border);
+      background:rgba(15,23,42,0.08);
+      color:var(--text);
+      padding:8px 10px;
+      font-size:13px;
+    }
+    .input-sm{
+      padding:6px 9px;
+      font-size:12px;
+    }
+    .input::placeholder{
+      color:var(--muted);
+    }
+
+    .chips-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:4px;
+    }
+
+    .badge-soft{
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.35);
+      color:var(--muted);
+    }
+
+    .page-title{
+      font-size:18px;
+      font-weight:600;
+      margin:0 0 2px;
+    }
+
+    .page-sub{
+      font-size:13px;
+      color:var(--muted);
+      margin:0;
+    }
+
+    .footer-card{
+      margin-top:10px;
+      border-radius:18px;
+      padding:10px 16px;
+      border:1px solid var(--contrast-border);
+      background:linear-gradient(90deg,rgba(15,23,42,0.55),transparent);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .footer-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    #toast{
+      position:fixed;
+      right:20px;
+      bottom:20px;
+      padding:12px 16px;
+      border-radius:999px;
+      background:var(--accent);
+      color:white;
+      box-shadow:0 18px 40px rgba(15,23,42,0.7);
+      transform:translateY(14px);
+      opacity:0;
+      transition:all .24s ease;
+      z-index:10020;
+      font-size:13px;
+    }
+    #toast.show{
+      opacity:1;
+      transform:translateY(0);
+    }
+
+    dialog{border:none}
+    .dialog{
+      padding:16px;
+      background:var(--card);
+      border-radius:16px;
+      min-width:320px;
+      border:1px solid var(--contrast-border);
+      box-shadow:var(--elevation);
+    }
+    .dialog h3{
+      margin-top:0;
+      margin-bottom:8px;
+      font-size:16px;
+    }
+
+    #confetti-canvas{
+      position:fixed;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:9999;
+    }
+    #balloon-wrap{
+      position:fixed;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:9980;
+    }
+
+    .admin-only{display:none}
+    .admin-visible{display:inline-flex}
+    .small{font-size:12px;color:var(--muted)}
+
+    .tag-green{
+      color:#22c55e;
+      font-weight:500;
+    }
+
+    @keyframes fadeIn{
+      from{opacity:0;transform:translateY(6px);}
+      to{opacity:1;transform:none;}
+    }
+  </style>
 </head>
+
 <body data-theme="light" lang="pt-BR">
-  <!-- firebase-config.js should set window.__firebase_config if you want real Firebase -->
   <script src="/firebase-config.js"></script>
 
   <canvas id="confetti-canvas" aria-hidden="true"></canvas>
   <div id="balloon-wrap" aria-hidden="true"></div>
   <div id="toast" role="status" aria-live="polite"></div>
 
-  <div class="container">
+  <div class="shell">
     <header>
-      <div class="branding">
-        <div class="logo" aria-hidden="true">AA</div>
-        <div>
-          <h1 id="title-main">Painel de Aniversariantes</h1>
-          <p id="subtitle" class="sub">Visão rápida • Calendário • Estatísticas • Export/Import</p>
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">🎂</div>
+        <div class="brand-text">
+          <h1>Painel de Aniversariantes</h1>
+          <p>Visão rápida • Calendário • Estatísticas • Export/Import</p>
         </div>
       </div>
 
-      <div class="controls">
-        <button id="theme-toggle" class="btn ghost" aria-pressed="false" title="Alternar modo claro/escuro">🌙</button>
-        <button id="celebrate-btn" class="btn" title="Celebrar aniversariantes">🎉 Celebrar</button>
-        <button id="auth-btn" class="btn ghost" title="Entrar/Admin">🔒 Entrar</button>
+      <nav class="nav-tabs" aria-label="Seções do painel">
+        <button class="nav-tab" data-view="home" data-active="true"><i class="fa-solid fa-house"></i><span>Hoje</span></button>
+        <button class="nav-tab" data-view="calendar"><i class="fa-solid fa-calendar-days"></i><span>Calendário</span></button>
+        <button class="nav-tab" data-view="list"><i class="fa-solid fa-list"></i><span>Lista</span></button>
+        <button class="nav-tab" data-view="future"><i class="fa-solid fa-forward"></i><span>Futuros</span></button>
+        <button class="nav-tab" data-view="charts"><i class="fa-solid fa-chart-simple"></i><span>Gráficos</span></button>
+      </nav>
+
+      <div class="header-actions">
+        <button id="theme-toggle" class="btn-ghost btn-icon" aria-pressed="false" title="Alternar modo claro/escuro">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <button id="celebrate-btn" class="btn" title="Celebrar aniversariantes">
+          <i class="fa-solid fa-champagne-glasses"></i><span>Celebrar</span>
+        </button>
+        <button id="auth-btn" class="btn-ghost">
+          <i class="fa-solid fa-lock"></i><span>Entrar</span>
+        </button>
       </div>
     </header>
 
-    <nav class="tab-row" role="tablist" aria-label="Navegação do painel">
-      <button class="tab" role="tab" aria-selected="true" data-tab="today" id="tab-today">🎂 Hoje</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="calendar" id="tab-calendar">🗓 Calendário</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="list" id="tab-list">📋 Lista</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="future" id="tab-future">🔮 Futuros</button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="stats" id="tab-stats">📊 Gráficos</button>
-    </nav>
-
-    <main class="grid" id="main-grid">
-      <section id="left-col">
-        <div id="today-panel" class="bg-card fade-in" role="region" aria-labelledby="today-title">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <h2 id="today-title">Hoje</h2>
-            <div class="small" id="today-count">—</div>
-          </div>
-          <div id="today-content" style="margin-top:12px">Carregando...</div>
-        </div>
-
-        <div id="future-panel" class="bg-card fade-in" style="margin-top:14px;" role="region" aria-labelledby="future-title">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <h3 id="future-title">Próximos aniversariantes</h3>
-            <div style="display:flex;gap:8px;align-items:center">
-              <label for="days-ahead" class="small" id="label-days">Próximos</label>
-              <input id="days-ahead" type="number" min="1" max="365" value="30" style="width:70px;padding:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)" />
-              <button id="refresh-future" class="btn ghost small">Atualizar</button>
-            </div>
-          </div>
-          <div id="future-list" style="margin-top:12px">Carregando...</div>
-        </div>
-
-        <div id="stats-panel" class="bg-card fade-in" style="margin-top:14px;" role="region" aria-labelledby="stats-title">
-          <h3 id="stats-title">Distribuição por mês</h3>
-          <canvas id="chart-monthly" style="width:100%;height:220px;margin-top:10px"></canvas>
-        </div>
-      </section>
-
-      <aside id="right-col">
-        <div id="actions-card" class="card bg-card" style="margin-bottom:12px" aria-labelledby="actions-title">
-          <div style="display:flex;justify-content:space-between;align-items:center">
+    <main>
+      <section id="view-home" class="page page-grid active" aria-label="Visão de hoje">
+        <div class="card">
+          <div class="card-header">
             <div>
-              <h3 id="actions-title">Ações rápidas</h3>
-              <p class="small" id="actions-sub">Importe, exporte ou adicione manualmente.</p>
+              <p class="page-title">Hoje</p>
+              <p class="page-sub" id="today-sub">Resumo do dia</p>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
-              <input id="csv-file" class="admin-only" type="file" accept=".csv" aria-label="Importar CSV" />
-              <div style="display:flex;gap:8px">
-                <button id="import-sample" class="btn ghost small admin-only">Importar Exemplo</button>
-                <button id="export-csv" class="btn ghost small">Exportar CSV</button>
+            <span class="pill" id="today-count">—</span>
+          </div>
+          <div id="today-content" class="today-highlight">Carregando...</div>
+
+          <div style="margin-top:14px;">
+            <div class="card-header" style="margin-bottom:6px;">
+              <div>
+                <div class="card-title" style="font-size:14px;">Próximos 5 dias</div>
+                <div class="card-sub">Visão rápida dos aniversariantes mais próximos.</div>
               </div>
             </div>
+            <div id="home-upcoming" class="list-inline">Carregando...</div>
           </div>
         </div>
 
-        <div id="list-panel" class="bg-card" role="region" aria-labelledby="list-title">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <h3 id="list-title">Lista completa</h3>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-              <select id="filter-month" aria-label="Filtrar por mês"
-                      style="padding:8px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)">
-                <option value="0">Todos os meses</option>
-                <option value="1">Jan</option>
-                <option value="2">Fev</option>
-                <option value="3">Mar</option>
-                <option value="4">Abr</option>
-                <option value="5">Mai</option>
-                <option value="6">Jun</option>
-                <option value="7">Jul</option>
-                <option value="8">Ago</option>
-                <option value="9">Set</option>
-                <option value="10">Out</option>
-                <option value="11">Nov</option>
-                <option value="12">Dez</option>
-              </select>
-
-              <input id="search-input" type="search" placeholder="Buscar por nome ou setor"
-                     aria-label="Buscar aniversariantes"
-                     style="padding:8px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)" />
-
-              <button id="add-btn" class="btn ghost small admin-only">➕ Novo</button>
+        <aside class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Visão do sistema</div>
+              <div class="card-sub">Tema, idioma e versão do painel.</div>
             </div>
           </div>
-          <div id="list-wrapper">Carregando...</div>
-          <div style="display:flex;justify-content:center;margin-top:8px"><button id="load-more" class="btn ghost small">Carregar mais</button></div>
-        </div>
-
-        <div id="version-card" class="bg-card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <h4 style="margin:0">Versão</h4>
-            <div class="small" id="ver-info">v1.0.3 • Internacionalização pronta</div>
-          </div>
-          <div style="text-align:right">
-            <div class="small">Tema: <span id="current-theme">Claro</span></div>
-            <div class="small">Idioma:
-              <select id="locale-select" aria-label="Selecionar idioma">
+          <div class="chips-row">
+            <span class="badge-soft"><strong>Tema:</strong> <span id="current-theme">Claro</span></span>
+            <span class="badge-soft"><strong>Idioma:</strong>
+              <select id="locale-select" class="input-sm" aria-label="Selecione o idioma">
                 <option value="pt-BR">pt-BR</option>
                 <option value="en-US">en-US</option>
               </select>
+            </span>
+            <span class="badge-soft"><strong>Versão:</strong> <span id="ver-info">v1.0.3 • Internacionalização pronta</span></span>
+          </div>
+          <p class="small" style="margin-top:10px;">
+            <span class="tag-green">Dica:</span> pressione <code>C</code> para celebrar de qualquer lugar da página.
+          </p>
+        </aside>
+      </section>
+
+      <section id="view-calendar" class="page page-grid" aria-label="Calendário de aniversários">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <p class="page-title">Calendário</p>
+              <p class="page-sub">Visualização mensal dos aniversários cadastrados.</p>
             </div>
           </div>
+          <div id="calendar-month-label" class="small" style="margin-bottom:4px;">Mês atual</div>
+          <div id="calendar-grid" class="calendar-grid"></div>
         </div>
-      </aside>
+
+        <aside class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Resumo rápido</div>
+              <div class="card-sub">Total por mês e navegação rápida.</div>
+            </div>
+          </div>
+          <p class="small" id="calendar-summary">Carregando dados...</p>
+        </aside>
+      </section>
+
+      <section id="view-list" class="page page-grid" aria-label="Lista completa">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <p class="page-title">Lista completa</p>
+              <p class="page-sub">Busque, filtre e gerencie todos os aniversariantes.</p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input id="search-input" type="search" class="input" placeholder="Buscar por nome ou setor" aria-label="Buscar aniversariantes">
+                <button id="add-btn" class="btn-ghost admin-only"><i class="fa-solid fa-plus"></i></button>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;">
+                <select id="month-filter" class="input-sm" aria-label="Filtrar por mês">
+                  <option value="all">Todos os meses</option>
+                  <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+                  <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+                  <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+                  <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div id="list-wrapper">Carregando...</div>
+          <div style="display:flex;justify-content:center;margin-top:8px;">
+            <button id="load-more" class="btn-ghost" style="font-size:12px;padding:6px 12px;">Carregar mais</button>
+          </div>
+        </div>
+
+        <aside class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Ações rápidas</div>
+              <div class="card-sub">Importe, exporte ou adicione registros em massa.</div>
+            </div>
+          </div>
+          <p class="small" id="actions-sub">
+            Ações administrativas disponíveis somente para usuários autenticados.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+            <input id="csv-file" class="admin-only input-sm" type="file" accept=".csv" aria-label="Importar CSV">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button id="import-sample" class="btn-ghost admin-only" style="font-size:12px;padding:6px 10px;">
+                Importar Exemplo
+              </button>
+              <button id="export-csv" class="btn-ghost" style="font-size:12px;padding:6px 10px;">
+                Exportar CSV
+              </button>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section id="view-future" class="page page-full" aria-label="Próximos aniversários">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <p class="page-title">Próximos aniversariantes</p>
+              <p class="page-sub">Visão estendida dos próximos dias.</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="small">Próximos</span>
+              <input id="days-ahead" type="number" min="1" max="365" value="30" class="input-sm" style="width:80px;">
+              <button id="refresh-future" class="btn-ghost" style="font-size:12px;padding:6px 10px;">Atualizar</button>
+            </div>
+          </div>
+          <div id="future-list" class="list-inline">Carregando...</div>
+        </div>
+      </section>
+
+      <section id="view-charts" class="page page-grid" aria-label="Gráficos e estatísticas">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <p class="page-title">Distribuição por mês</p>
+              <p class="page-sub">Quantidade de aniversariantes em cada mês.</p>
+            </div>
+          </div>
+          <canvas id="chart-monthly" style="width:100%;height:260px;margin-top:10px"></canvas>
+        </div>
+
+        <aside class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Insights rápidos</div>
+              <div class="card-sub">Resumo dos meses mais cheios.</div>
+            </div>
+          </div>
+          <div class="small" id="charts-summary">Carregando...</div>
+        </aside>
+      </section>
     </main>
 
-    <dialog id="login-modal" aria-labelledby="login-heading">
-      <div class="dialog">
-        <h3 id="login-heading">Login Admin</h3>
-        <form id="login-form">
-          <label class="small">E-mail
-            <input id="login-email" type="email" required style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)">
-          </label>
-          <label class="small" style="margin-top:8px">Senha
-            <input id="login-pass" type="password" required style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid var(--contrast-border);background:transparent;color:var(--text)">
-          </label>
-          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
-            <button type="button" id="close-login" class="btn ghost">Fechar</button>
-            <button type="submit" class="btn">Entrar</button>
-          </div>
-        </form>
+    <div class="footer-card">
+      <span>🎂 Painel de Aniversariantes • <span id="footer-version">v1.0.3</span></span>
+      <div class="footer-right">
+        <span>Idioma atual: <strong id="footer-locale">pt-BR</strong></span>
+        <span>Tema: <strong id="footer-theme">Claro</strong></span>
       </div>
-    </dialog>
-
+    </div>
   </div>
 
-  <!-- Chart.js -->
+  <dialog id="login-modal" aria-labelledby="login-heading">
+    <div class="dialog">
+      <h3 id="login-heading">Login administrativo</h3>
+      <p class="small" style="margin-bottom:10px;">
+        Use seu usuário e senha cadastrados para gerenciar aniversariantes.
+      </p>
+      <form id="login-form">
+        <label class="small">E-mail
+          <input id="login-email" type="email" required class="input" style="width:100%;margin-top:4px;">
+        </label>
+        <label class="small" style="margin-top:8px;">Senha
+          <input id="login-pass" type="password" required class="input" style="width:100%;margin-top:4px;">
+        </label>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+          <button type="button" id="close-login" class="btn-ghost">Fechar</button>
+          <button type="submit" class="btn">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 
   <script>
-    /* -------------------------
-       App script (v1.0.2)
-       - confetti with side reflection, balloons
-       - i18n, admin gating, Firebase dynamic init
-       - ajustes: fallback textoData -> mes, deduplicação, filtros
-       ------------------------- */
-
+    // ---------------------------
+    // ESTADO GLOBAL
+    // ---------------------------
     const DEFAULT_LOCALE = 'pt-BR';
     let locale = localStorage.getItem('locale') || DEFAULT_LOCALE;
-    let dataArr = []; // { id, nome, setor, dia, mes }
-    let page = 0;
-    const PAGE_SIZE = 20;
-    let chart = null;
-    let celebratedDate = null;
 
-    // firebase state
+    let dataArr = []; // {id, nome, setor, dia, mes}
+    let page = 0;
+    const PAGE_SIZE = 25;
+    let chart = null;
+
+    // Firebase
     let firebaseInitialized = false;
     let firebaseDb = null;
     let firebaseAuth = null;
+    let isAdmin = false;
+    let celebratedDate = null;
 
-    // translations minimal
-    const i18n = {
-      "pt-BR": {
-        title: "Painel de Aniversariantes",
-        subtitle: "Visão rápida • Calendário • Estatísticas • Export/Import",
-        tab_today: "🎂 Hoje",
-        tab_calendar: "🗓 Calendário",
-        tab_list: "📋 Lista",
-        tab_future: "🔮 Futuros",
-        tab_stats: "📊 Gráficos",
-        actions_quick: "Ações rápidas",
-        import_example: "Importar Exemplo",
-        export_csv: "Exportar CSV",
-        add_new: "➕ Novo",
-        search_placeholder: "Buscar por nome ou setor",
-        next_upcoming: "Próximos aniversariantes",
-        distribute: "Distribuição por mês",
-        login: "Entrar",
-        logout: "Sair",
-        celebrate: "🎉 Celebrar",
-        admin_only_note: "Ações administrativas disponíveis somente para usuários autenticados."
-      },
-      "en-US": {
-        title: "Birthday Dashboard",
-        subtitle: "Quick view • Calendar • Stats • Export/Import",
-        tab_today: "🎂 Today",
-        tab_calendar: "🗓 Calendar",
-        tab_list: "📋 List",
-        tab_future: "🔮 Upcoming",
-        tab_stats: "📊 Charts",
-        actions_quick: "Quick actions",
-        import_example: "Import Example",
-        export_csv: "Export CSV",
-        add_new: "➕ New",
-        search_placeholder: "Search by name or team",
-        next_upcoming: "Upcoming birthdays",
-        distribute: "Distribution by month",
-        login: "Sign in",
-        logout: "Sign out",
-        celebrate: "🎉 Celebrate",
-        admin_only_note: "Administrative actions only appear for authenticated users."
-      }
-    };
-
-    function applyTranslations(){
-      const t = i18n[locale] || i18n['pt-BR'];
-      document.getElementById('title-main').textContent = t.title;
-      document.getElementById('subtitle').textContent = t.subtitle;
-      document.getElementById('tab-today').textContent = t.tab_today;
-      document.getElementById('tab-calendar').textContent = t.tab_calendar;
-      document.getElementById('tab-list').textContent = t.tab_list;
-      document.getElementById('tab-future').textContent = t.tab_future;
-      document.getElementById('tab-stats').textContent = t.tab_stats;
-      document.getElementById('actions-title').textContent = t.actions_quick;
-      document.getElementById('import-sample').textContent = t.import_example;
-      document.getElementById('export-csv').textContent = t.export_csv;
-      document.getElementById('add-btn').textContent = t.add_new;
-      document.getElementById('search-input').placeholder = t.search_placeholder;
-      document.getElementById('future-title').textContent = t.next_upcoming;
-      document.getElementById('stats-title').textContent = t.distribute;
-      document.getElementById('celebrate-btn').textContent = t.celebrate;
-      const authBtn = document.getElementById('auth-btn');
-      if(firebaseAuth && firebaseAuth.currentUser){
-        authBtn.textContent = t.logout;
-      } else {
-        authBtn.textContent = t.login;
-      }
-      document.getElementById('actions-sub').textContent = t.admin_only_note;
-    }
-
-    function toast(msg, error=false){
+    // ---------------------------
+    // HELPERS
+    // ---------------------------
+    function toast(msg, error = false){
       const el = document.getElementById('toast');
       el.textContent = msg;
       el.style.background = error ? 'var(--danger)' : 'var(--accent)';
@@ -497,389 +829,631 @@
     }
 
     function uid(){ return 'id-'+Math.random().toString(36).slice(2,9); }
-    function escapeHTML(s){ return String(s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function initials(name){ return (name||'').split(' ').map(p=>p.charAt(0)).join('').slice(0,2).toUpperCase(); }
-    function nextDate(rec, from=new Date()){ const y = from.getFullYear(); let d = new Date(y, rec.mes-1, rec.dia, 12); if(d<from) d = new Date(y+1, rec.mes-1, rec.dia, 12); return d; }
 
-    // ---------- helper para chave única (deduplicação) ----------
-    function makeKeyFromRecord(rec){
-      const nome  = (rec.nome  || '').trim().toLowerCase();
-      const setor = (rec.setor || '').trim().toLowerCase();
-      const dia   = String(Number(rec.dia));
-      const mes   = String(Number(rec.mes));
-      return `${nome}|${setor}|${dia}|${mes}`;
+    function escapeHTML(s){
+      return String(s || '').replace(/[&<>"']/g, c => (
+        {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+      ));
     }
 
-    /* -------- renders -------- */
-    function renderToday(){
-      const el = document.getElementById('today-content');
-      const now = new Date();
-      const d = now.getDate(), m = now.getMonth()+1;
-      const matches = dataArr.filter(p => Number(p.dia) === d && Number(p.mes) === m);
-      const countEl = document.getElementById('today-count');
-      if(countEl) countEl.textContent = matches.length + ' encontrado(s)';
-      el.innerHTML = '';
-      if(!matches.length){
-        const next = nextUpcoming();
-        if(next){
-          const days = Math.ceil((next.date - now)/(1000*60*60*24));
-          el.innerHTML = `<p>Nenhum hoje — próximo: <strong>${escapeHTML(next.nome)}</strong> em ${String(next.dia).padStart(2,'0')}/${String(next.mes).padStart(2,'0')} (${days} dias)</p>`;
-        } else {
-          el.innerHTML = '<p>Nenhum aniversariante cadastrado.</p>';
+    function initials(name){
+      return (name || '')
+        .split(' ')
+        .filter(Boolean)
+        .map(p => p[0])
+        .join('')
+        .slice(0,2)
+        .toUpperCase();
+    }
+
+    function normalizeSector(s){
+      return (s || '').toString().trim().toUpperCase();
+    }
+
+    function nextDate(rec, from = new Date()){
+      const y = from.getFullYear();
+      let d = new Date(y, rec.mes - 1, rec.dia, 12);
+      if (d < from) d = new Date(y + 1, rec.mes - 1, rec.dia, 12);
+      return d;
+    }
+
+    function formatDate(d){
+      try{
+        return new Intl.DateTimeFormat(locale, {
+          day:'2-digit', month:'2-digit', year:'numeric'
+        }).format(d);
+      }catch(e){
+        return d.toLocaleDateString();
+      }
+    }
+
+    function monthName(m){
+      const names = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      return names[m-1] || String(m);
+    }
+
+    function inferMonthFromTexto(texto){
+      if(!texto) return 0;
+      const t = texto.toLowerCase();
+      const map = {
+        'janeiro':1,'fevereiro':2,'março':3,'marco':3,'abril':4,
+        'maio':5,'junho':6,'julho':7,'agosto':8,'setembro':9,
+        'outubro':10,'novembro':11,'dezembro':12
+      };
+      for(const k in map){
+        if(t.includes(k)) return map[k];
+      }
+      return 0;
+    }
+
+    function dedupeRecords(records){
+      const map = new Map();
+      for(const r of records){
+        const key = (r.nome || '').toUpperCase().trim() + '|' + r.dia + '|' + r.mes;
+        if(!map.has(key)){
+          map.set(key, r);
         }
-        return;
       }
-      matches.forEach(p => {
-        const row = document.createElement('div');
-        row.style.display = 'flex'; row.style.gap = '12px'; row.style.alignItems = 'center'; row.style.marginBottom = '12px';
-        const avatar = document.createElement('div');
-        avatar.className = 'logo';
-        avatar.style.width='48px'; avatar.style.height='48px'; avatar.style.borderRadius='10px'; avatar.style.fontSize='16px';
-        avatar.textContent = initials(p.nome);
-        const info = document.createElement('div');
-        info.innerHTML = `<strong style="font-size:15px">${escapeHTML(p.nome)}</strong><div class="small" style="color:var(--muted)">${escapeHTML(p.setor||'')}</div>`;
-        row.appendChild(avatar); row.appendChild(info);
-        el.appendChild(row);
-      });
-
-      const todayKey = new Date().toISOString().slice(0,10);
-      if(matches.length > 0 && celebratedDate !== todayKey){
-        celebratedDate = todayKey;
-        setTimeout(()=> { celebrateNow({ sideBurst: true, auto: true }); }, 700);
-      }
+      return Array.from(map.values());
     }
 
-    function renderFuture(daysOverride){
-      const input = document.getElementById('days-ahead');
-      const daysAhead = typeof daysOverride === 'number'
-        ? daysOverride
-        : Number(input?.value || 30);
+    function getUpcoming(days){
+      if(!dataArr.length) return [];
+      const now = new Date();
+      const end = new Date(now.getTime() + days*24*60*60*1000);
+      return dataArr
+        .map(p => ({...p, date: nextDate(p, now)}))
+        .filter(x => x.date >= now && x.date <= end)
+        .sort((a,b) => a.date - b.date);
+    }
+
+    // ---------------------------
+    // TEMA
+    // ---------------------------
+    function setTheme(t){
+      const theme = (t === 'dark') ? 'dark' : 'light';
+      document.body.setAttribute('data-theme', theme);
+      localStorage.setItem('theme', theme);
+
+      const label = (theme === 'dark') ? 'Escuro' : 'Claro';
+      const themeToggle = document.getElementById('theme-toggle');
+      const icon = themeToggle.querySelector('i');
+      if(icon){
+        icon.className = theme === 'dark'
+          ? 'fa-solid fa-sun'
+          : 'fa-solid fa-moon';
+      }
+      const currentTheme = document.getElementById('current-theme');
+      const footerTheme = document.getElementById('footer-theme');
+      if(currentTheme) currentTheme.textContent = label;
+      if(footerTheme) footerTheme.textContent = label;
+      renderStats(); // atualiza cores do gráfico
+    }
+
+    // ---------------------------
+    // RENDERIZAÇÃO - HOME
+    // ---------------------------
+    function renderToday(){
+      const todayContent = document.getElementById('today-content');
+      const todayCount = document.getElementById('today-count');
+      const todaySub = document.getElementById('today-sub');
+      if(!todayContent) return;
 
       const now = new Date();
-      const end = new Date(now.getTime()+daysAhead*24*60*60*1000);
+      const d = now.getDate();
+      const m = now.getMonth() + 1;
 
-      const arr = dataArr
-        .map(p=>({...p, date: nextDate(p, now)}))
-        .filter(x=>x.date>now && x.date<=end)
-        .sort((a,b)=>a.date-b.date);
+      const matches = dataArr.filter(p => Number(p.dia) === d && Number(p.mes) === m);
+      todayCount.textContent = `${matches.length} encontrado(s)`;
 
-      const wrap = document.getElementById('future-list');
-      const fc = document.getElementById('future-count');
-      if(fc) fc.textContent = arr.length + ' encontrados';
+      if(matches.length === 0){
+        const upcoming = getUpcoming(365);
+        if(upcoming.length){
+          const next = upcoming[0];
+          const days = Math.ceil((next.date - now)/(1000*60*60*24));
+          todayContent.innerHTML = `
+            <p class="today-highlight">
+              Nenhum aniversariante hoje — próximo: <strong>${escapeHTML(next.nome)}</strong>
+              em ${String(next.dia).padStart(2,'0')}/${String(next.mes).padStart(2,'0')} (${days} dia(s)).
+            </p>`;
+          todaySub.textContent = 'Sem aniversários hoje';
+        }else{
+          todayContent.innerHTML = '<p class="today-highlight">Nenhum aniversariante cadastrado.</p>';
+          todaySub.textContent = 'Sem dados';
+        }
+      }else{
+        todaySub.textContent = 'Aniversariantes do dia';
+        todayContent.innerHTML = '';
+        const list = document.createElement('div');
+        list.className = 'list-inline';
+        matches.forEach(p => {
+          const row = document.createElement('div');
+          row.className = 'person-row';
+          row.innerHTML = `
+            <div class="avatar" aria-hidden="true">${initials(p.nome)}</div>
+            <div class="person-main">
+              <div class="person-name">${escapeHTML(p.nome)}</div>
+              <div class="person-meta">${escapeHTML(p.setor || '')}</div>
+            </div>`;
+          list.appendChild(row);
+        });
+        todayContent.appendChild(list);
 
+        const todayKey = new Date().toISOString().slice(0,10);
+        if(celebratedDate !== todayKey){
+          celebratedDate = todayKey;
+          setTimeout(() => celebrateNow(true), 600);
+        }
+      }
+
+      // próximos 5 dias (home)
+      const homeUpcoming = document.getElementById('home-upcoming');
+      if(homeUpcoming){
+        const up = getUpcoming(5);
+        if(!up.length){
+          homeUpcoming.innerHTML = '<p class="small">Nenhum aniversário nos próximos 5 dias.</p>';
+        }else{
+          homeUpcoming.innerHTML = '';
+          up.forEach(p => {
+            const days = Math.ceil((p.date - now)/(1000*60*60*24));
+            const row = document.createElement('div');
+            row.className = 'person-row';
+            row.innerHTML = `
+              <div class="avatar" aria-hidden="true">${initials(p.nome)}</div>
+              <div class="person-main">
+                <div class="person-name">${escapeHTML(p.nome)}</div>
+                <div class="person-meta">
+                  ${escapeHTML(p.setor || '')} • ${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}
+                  <span class="tag-green">• em ${days} dia(s)</span>
+                </div>
+              </div>`;
+            homeUpcoming.appendChild(row);
+          });
+        }
+      }
+    }
+
+    // ---------------------------
+    // RENDER FUTUROS
+    // ---------------------------
+    function renderFuture(){
+      const container = document.getElementById('future-list');
+      if(!container) return;
+      const inp = document.getElementById('days-ahead');
+      const daysAhead = Number(inp && inp.value ? inp.value : 30) || 30;
+      const now = new Date();
+
+      const arr = getUpcoming(daysAhead);
       if(!arr.length){
-        if(wrap) wrap.innerHTML = `<p>Nenhum nos próximos ${daysAhead} dias.</p>`;
+        container.innerHTML = `<p class="small">Nenhum aniversário nos próximos ${daysAhead} dias.</p>`;
         return;
       }
-      if(wrap) wrap.innerHTML = '';
-      arr.forEach(p=>{
+
+      container.innerHTML = '';
+      arr.forEach(p => {
+        const days = Math.ceil((p.date - now)/(1000*60*60*24));
         const row = document.createElement('div');
-        row.style.padding='8px 0';
-        row.style.borderBottom='1px solid var(--contrast-border)';
-        row.innerHTML = `<strong>${escapeHTML(p.nome)}</strong> · ${escapeHTML(p.setor||'')} · ${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}<div class="small" style="color:var(--muted)">Em ${Math.ceil((p.date-new Date())/(1000*60*60*24))} dia(s) — ${formatDate(p.date)}</div>`;
-        wrap.appendChild(row);
+        row.className = 'person-row';
+        const tone =
+          days <= 5 ? 'style="color:#22c55e;"' :
+          days <= 15 ? 'style="color:#eab308;"' :
+          'style="color:#38bdf8;"';
+        row.innerHTML = `
+          <div class="avatar" aria-hidden="true">${initials(p.nome)}</div>
+          <div class="person-main">
+            <div class="person-name">${escapeHTML(p.nome)}</div>
+            <div class="person-meta">
+              ${escapeHTML(p.setor || '')} • ${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}
+              <span ${tone}>• em ${days} dia(s)</span>
+            </div>
+          </div>`;
+        container.appendChild(row);
       });
     }
 
-    function renderCalendar(month = (new Date()).getMonth(), year = (new Date()).getFullYear()){
-      let calendarPanel = document.getElementById('calendar-panel');
-      if(!calendarPanel){
-        calendarPanel = document.createElement('section'); calendarPanel.id = 'calendar-panel'; calendarPanel.className = 'bg-card fade-in'; calendarPanel.style.marginTop = '14px';
-        document.getElementById('left-col').appendChild(calendarPanel);
-      }
-      calendarPanel.innerHTML = '';
-      const wrap = document.createElement('div'); wrap.className = 'calendar-grid';
+    // ---------------------------
+    // RENDER CALENDÁRIO
+    // ---------------------------
+    function renderCalendar(){
+      const grid = document.getElementById('calendar-grid');
+      const label = document.getElementById('calendar-month-label');
+      if(!grid) return;
+
+      const now = new Date();
+      const month = now.getMonth(); // 0-11
+      const year = now.getFullYear();
       const daysInMonth = new Date(year, month+1, 0).getDate();
-      for(let d=1;d<=daysInMonth;d++){
-        const day = document.createElement('div'); day.className='day'; day.tabIndex=0;
-        const num = document.createElement('div'); num.className='num'; num.textContent = d; day.appendChild(num);
-        const matches = dataArr.filter(p=>Number(p.dia)===d && Number(p.mes)===month+1);
-        matches.forEach(m=>{ const el = document.createElement('div'); el.textContent = `🎂 ${m.nome}`; el.title = m.nome; day.appendChild(el); });
-        wrap.appendChild(day);
+
+      if(label){
+        label.textContent = `Mês atual: ${monthName(month+1)} / ${year}`;
       }
-      calendarPanel.appendChild(wrap);
+
+      grid.innerHTML = '';
+      for(let d=1; d<=daysInMonth; d++){
+        const cell = document.createElement('div');
+        cell.className = 'day-cell';
+        cell.setAttribute('tabindex','0');
+
+        const num = document.createElement('div');
+        num.className = 'day-num';
+        num.textContent = d;
+        cell.appendChild(num);
+
+        const matches = dataArr
+          .filter(p => Number(p.dia) === d && Number(p.mes) === month+1)
+          .sort((a,b)=> a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
+
+        if(matches.length === 0){
+          cell.innerHTML += '<span class="small" style="opacity:.4;">—</span>';
+        }else{
+          matches.forEach(m => {
+            const line = document.createElement('div');
+            line.className = 'day-badge';
+            line.textContent = `🎂 ${m.nome}`;
+            cell.appendChild(line);
+          });
+        }
+        grid.appendChild(cell);
+      }
+
+      const summary = document.getElementById('calendar-summary');
+      if(summary){
+        const total = dataArr.filter(p => Number(p.mes) === month+1).length;
+        summary.textContent = `Este mês possui ${total} aniversariante(s) cadastrado(s).`;
+      }
     }
 
-    function renderList(reset=false){
+    // ---------------------------
+    // RENDER LISTA
+    // ---------------------------
+    function renderList(reset = false){
+      const wrapper = document.getElementById('list-wrapper');
+      if(!wrapper) return;
+
       if(reset) page = 0;
-      const start = page*PAGE_SIZE; const end = start+PAGE_SIZE;
+      const start = page * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
 
-      const searchTerm = (document.getElementById('search-input').value||'').toLowerCase();
-      const monthFilter = Number(document.getElementById('filter-month')?.value || '0');
+      const search = (document.getElementById('search-input').value || '').toLowerCase();
+      const monthFilter = document.getElementById('month-filter').value || 'all';
 
-      let items = dataArr.filter(p => {
-        const okSearch =
-          !searchTerm ||
-          (p.nome||'').toLowerCase().includes(searchTerm) ||
-          (p.setor||'').toLowerCase().includes(searchTerm);
+      let items = dataArr.slice();
 
-        const okMonth =
-          !monthFilter ||
-          Number(p.mes) === monthFilter;
+      if(monthFilter !== 'all'){
+        const m = Number(monthFilter);
+        items = items.filter(p => Number(p.mes) === m);
+      }
 
-        return okSearch && okMonth;
-      });
+      if(search){
+        items = items.filter(p =>
+          (p.nome || '').toLowerCase().includes(search) ||
+          (p.setor || '').toLowerCase().includes(search)
+        );
+      }
 
       items.sort((a,b) =>
-        (a.nome || '').localeCompare(b.nome || '', 'pt-BR', { sensitivity: 'base' })
+        (a.nome || '').localeCompare(b.nome || '', 'pt-BR', {sensitivity:'base'})
       );
 
-      const slice = items.slice(0,end);
-      const wrapper = document.getElementById('list-wrapper');
+      const slice = items.slice(0, end);
       if(!slice.length){
-        wrapper.innerHTML = '<p>Nenhum registro.</p>';
-        const loadMore = document.getElementById('load-more');
-        if(loadMore) loadMore.style.display = 'none';
-        return;
-      }
-      const userLogged = (firebaseInitialized && firebaseAuth && firebaseAuth.currentUser);
-      let html = '<table role="table" aria-label="Tabela de aniversariantes"><thead><tr><th>Nome</th><th>Setor</th><th>Data</th><th style="text-align:right">Ações</th></tr></thead><tbody>';
-      slice.forEach(p=>{
-        html += `<tr><td>${escapeHTML(p.nome)}</td><td>${escapeHTML(p.setor||'')}</td><td>${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}</td><td style="text-align:right">`;
-        if(userLogged){
-          html += `<button data-id="${p.id}" class="edit-btn btn ghost small admin-visible">✏️</button> <button data-id="${p.id}" class="del-btn btn ghost small admin-visible">🗑️</button>`;
-        } else {
-          html += `<span class="small" style="color:var(--muted)">Somente admin</span>`;
-        }
-        html += `</td></tr>`;
-      });
-      html += '</tbody></table>';
-      wrapper.innerHTML = html;
+        wrapper.innerHTML = '<p class="small">Nenhum registro encontrado.</p>';
+      }else{
+        const userLogged = firebaseInitialized && firebaseAuth && firebaseAuth.currentUser && isAdmin;
+        let html = `
+          <table role="table" aria-label="Tabela de aniversariantes">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Setor</th>
+                <th>Data</th>
+                <th style="text-align:right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody>`;
 
-      if(userLogged){
-        wrapper.querySelectorAll('.del-btn').forEach(b=> b.addEventListener('click', async (e)=>{
-          const id = e.currentTarget.dataset.id;
-          if(!confirm('Excluir?')) return;
-          if(firebaseInitialized && firebaseDb){
-            try{ await firebaseDb.collection('aniversariantes').doc(id).delete(); toast('Registro excluído'); }catch(err){ toast('Erro ao excluir: ' + err.message, true); }
-          } else {
-            dataArr = dataArr.filter(x=>x.id!==id);
-            renderList(true); renderToday(); renderFuture(5); renderStats();
-            toast('Registro excluído (demo)');
+        slice.forEach(p => {
+          html += `
+            <tr>
+              <td>${escapeHTML(p.nome)}</td>
+              <td>${escapeHTML(p.setor || '')}</td>
+              <td>${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}</td>
+              <td>
+                <div class="table-actions">`;
+          if(userLogged){
+            html += `
+                  <button class="icon-btn edit-btn" data-id="${p.id}" title="Editar">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button class="icon-btn del-btn" data-id="${p.id}" title="Excluir">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>`;
+          }else{
+            html += `<span class="small">Somente admin</span>`;
           }
-        }));
-        wrapper.querySelectorAll('.edit-btn').forEach(b=> b.addEventListener('click', async (e)=>{
-          const id = e.currentTarget.dataset.id;
-          const rec = dataArr.find(x=>x.id===id);
-          if(!rec) return;
-          const nome = prompt('Nome:', rec.nome);
-          const setor = (prompt('Setor:', rec.setor||'') || '').toUpperCase();
-          const dia = parseInt(prompt('Dia (1-31):', rec.dia),10);
-          const mes = parseInt(prompt('Mês (1-12):', rec.mes),10);
-          if(!nome || isNaN(dia) || isNaN(mes)) { toast('Dados inválidos', true); return; }
-          if(firebaseInitialized && firebaseDb){
-            try{ await firebaseDb.collection('aniversariantes').doc(id).set({ nome, setor, dia, mes }, { merge: true }); toast('Atualizado'); }catch(err){ toast('Erro ao atualizar: ' + err.message, true); }
-          } else {
-            Object.assign(rec,{ nome, setor, dia, mes });
-            renderList(true); renderToday(); renderFuture(5); renderStats();
-            toast('Atualizado (demo)');
-          }
-        }));
+          html += `</div></td></tr>`;
+        });
+
+        html += '</tbody></table>';
+        wrapper.innerHTML = html;
+
+        if(userLogged){
+          wrapper.querySelectorAll('.del-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const id = e.currentTarget.dataset.id;
+              if(!confirm('Excluir este registro?')) return;
+              if(firebaseInitialized && firebaseDb){
+                try{
+                  await firebaseDb.collection('aniversariantes').doc(id).delete();
+                  toast('Registro excluído');
+                }catch(err){
+                  toast('Erro ao excluir: ' + err.message, true);
+                }
+              }
+            });
+          });
+
+          wrapper.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+              const id = e.currentTarget.dataset.id;
+              const rec = dataArr.find(x => x.id === id);
+              if(!rec) return;
+
+              const nome = prompt('Nome completo:', rec.nome) || '';
+              const setorIn = prompt('Setor (opcional):', rec.setor || '') || '';
+              const setor = normalizeSector(setorIn);
+              const dia = parseInt(prompt('Dia (1-31):', rec.dia),10);
+              const mes = parseInt(prompt('Mês (1-12):', rec.mes),10);
+
+              if(!nome || isNaN(dia) || isNaN(mes)){
+                toast('Dados inválidos', true);
+                return;
+              }
+
+              if(firebaseInitialized && firebaseDb){
+                try{
+                  await firebaseDb.collection('aniversariantes').doc(id).set(
+                    { nome, setor, dia, mes },
+                    { merge:true }
+                  );
+                  toast('Registro atualizado');
+                }catch(err){
+                  toast('Erro ao atualizar: ' + err.message, true);
+                }
+              }
+            });
+          });
+        }
       }
 
       const loadMore = document.getElementById('load-more');
-      if(loadMore) loadMore.style.display = items.length > end ? 'inline-block' : 'none';
+      if(loadMore){
+        loadMore.style.display = items.length > end ? 'inline-flex' : 'none';
+      }
     }
 
+    // ---------------------------
+    // GRÁFICOS
+    // ---------------------------
     function renderStats(){
+      const canvas = document.getElementById('chart-monthly');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+
       const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
       const counts = new Array(12).fill(0);
-      dataArr.forEach(p=>{ if(p.mes>=1 && p.mes<=12) counts[p.mes-1]++; });
-      const ctx = document.getElementById('chart-monthly').getContext('2d');
+      dataArr.forEach(p => {
+        if(p.mes >= 1 && p.mes <= 12) counts[p.mes - 1]++;
+      });
+
       const accent = getComputedStyle(document.body).getPropertyValue('--accent') || '#10b981';
       const accent2 = getComputedStyle(document.body).getPropertyValue('--accent2') || '#0ea5e9';
+
       if(chart) chart.destroy();
       chart = new Chart(ctx, {
-        type: 'bar',
-        data: { labels: months, datasets: [{ label: 'Aniversariantes', data: counts, backgroundColor: counts.map((_,i)=> i%2? accent2: accent) }] },
-        options: { responsive:true, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } }, plugins:{ legend:{ display:false } } }
+        type:'bar',
+        data:{
+          labels:months,
+          datasets:[{
+            label:'Aniversariantes',
+            data:counts,
+            backgroundColor:counts.map((_,i)=> i%2 ? accent2 : accent)
+          }]
+        },
+        options:{
+          responsive:true,
+          scales:{
+            y:{
+              beginAtZero:true,
+              ticks:{precision:0}
+            }
+          },
+          plugins:{ legend:{display:false} }
+        }
       });
+
+      const summary = document.getElementById('charts-summary');
+      if(summary){
+        const maxVal = Math.max(...counts);
+        const maxIdx = counts.findIndex(c => c === maxVal);
+        const zeros = counts
+          .map((v,i) => v === 0 ? months[i] : null)
+          .filter(Boolean);
+        let txt = '';
+        if(maxVal === 0){
+          txt = 'Nenhum aniversariante cadastrado ainda.';
+        }else{
+          txt = `Mês com mais aniversariantes: ${months[maxIdx]} (${maxVal}).`;
+          if(zeros.length){
+            txt += ` Meses sem aniversários cadastrados: ${zeros.join(', ')}.`;
+          }
+        }
+        summary.textContent = txt;
+      }
     }
 
-    /* ------------- confetti with reflection ------------- */
-    function setupCanvasSize(){ const c = document.getElementById('confetti-canvas'); c.width = window.innerWidth; c.height = window.innerHeight; }
+    // ---------------------------
+    // CONFETTI / BALÕES
+    // ---------------------------
+    function setupCanvasSize(){
+      const c = document.getElementById('confetti-canvas');
+      if(!c) return;
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+    }
     window.addEventListener('resize', setupCanvasSize);
     setupCanvasSize();
 
-    function isMobileWidth(){ return window.innerWidth <= 768; }
-
-    function launchConfettiWithReflection(desiredCount = 320, options = { sideBurst: true }) {
+    function launchConfetti(count = 260){
       const canvas = document.getElementById('confetti-canvas');
       if(!canvas) return;
       const ctx = canvas.getContext('2d');
-      const width = canvas.width = window.innerWidth;
-      const height = canvas.height = window.innerHeight;
+      const width = canvas.width;
+      const height = canvas.height;
       const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
 
-      const particleCount = isMobileWidth() ? Math.max(60, Math.floor(desiredCount * 0.28)) : desiredCount;
-
       const pieces = [];
-      const gravity = 0.22;
-      const maxBounces = 3;
-      for(let i=0;i<particleCount;i++){
-        const sideRoll = Math.random();
-        let x,y,vx,vy;
-        if(options.sideBurst && sideRoll < 0.46){
-          x = -8 - Math.random()*40;
-          y = Math.random() * height * 0.9;
-          vx = 0.9 + Math.random()*2.2;
-          vy = -0.6 + Math.random()*2.4;
-        } else if(options.sideBurst && sideRoll < 0.92){
-          x = width + 8 + Math.random()*40;
-          y = Math.random() * height * 0.9;
-          vx = -(0.9 + Math.random()*2.2);
-          vy = -0.6 + Math.random()*2.4;
-        } else {
-          x = Math.random() * width;
-          y = -10 - Math.random()*140;
-          vx = (Math.random()-0.5) * 1.4;
-          vy = 0.6 + Math.random()*2.2;
-        }
+      for(let i=0; i<count; i++){
         pieces.push({
-          x, y, vx, vy,
-          r: 5 + Math.random()*7,
+          x: Math.random()*width,
+          y: -20 - Math.random()*200,
+          vx: (Math.random()-0.5)*2,
+          vy: 2 + Math.random()*2,
+          r: 4 + Math.random()*6,
           color: colors[Math.floor(Math.random()*colors.length)],
           rot: Math.random()*360,
-          vr: (Math.random()-0.5) * 8,
-          bounces: 0,
-          life: 0
+          vr: (Math.random()-0.5)*8
         });
       }
 
       function frame(){
         ctx.clearRect(0,0,width,height);
-        for(const p of pieces){
-          p.vy += gravity * (0.9 + p.r*0.003);
+        pieces.forEach(p => {
+          p.vy += 0.05;
           p.x += p.vx;
           p.y += p.vy;
-          p.rot += p.vr * 0.5;
-          p.life++;
-
-          const leftBound = -6;
-          const rightBound = width + 6;
-
-          if(p.x < leftBound && p.bounces < maxBounces){
-            p.x = leftBound;
-            p.vx = -p.vx * (0.64 + Math.random()*0.18);
-            p.vy = p.vy * 0.8 - (0.5 + Math.random()*0.6);
-            p.bounces++;
-          } else if(p.x > rightBound && p.bounces < maxBounces){
-            p.x = rightBound;
-            p.vx = -p.vx * (0.64 + Math.random()*0.18);
-            p.vy = p.vy * 0.8 - (0.5 + Math.random()*0.6);
-            p.bounces++;
-          }
-
-          p.vx *= 0.999;
+          p.rot += p.vr;
 
           ctx.save();
-          ctx.translate(p.x, p.y);
+          ctx.translate(p.x,p.y);
           ctx.rotate(p.rot * Math.PI/180);
           ctx.fillStyle = p.color;
-          ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6);
+          ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6);
           ctx.restore();
-        }
-
-        const alive = pieces.some(p => !(p.y > height + 80 && (p.x < -160 || p.x > width + 160)));
-        if(!alive){
+        });
+        if(pieces.some(p => p.y < height + 40)){
+          requestAnimationFrame(frame);
+        }else{
           ctx.clearRect(0,0,width,height);
-          return;
         }
-        requestAnimationFrame(frame);
       }
       frame();
     }
 
-    function launchBalloons(count = 22){
+    function launchBalloons(count = 18){
       const wrap = document.getElementById('balloon-wrap');
+      if(!wrap) return;
       const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
-      const actualCount = isMobileWidth() ? Math.max(6, Math.floor(count*0.5)) : count;
-      for(let i=0;i<actualCount;i++){
+
+      for(let i=0;i<count;i++){
         const el = document.createElementNS('http://www.w3.org/2000/svg','svg');
-        el.setAttribute('width','58'); el.setAttribute('height','86'); el.setAttribute('viewBox','0 0 48 68');
+        el.setAttribute('width','48');
+        el.setAttribute('height','80');
+        el.setAttribute('viewBox','0 0 48 80');
         el.style.position = 'fixed';
-        const sideBias = Math.random() < 0.5 ? (Math.random()*20 + '%') : (50 + Math.random()*50) + '%';
-        el.style.left = sideBias;
-        el.style.bottom = '-140px';
+        el.style.left = Math.random()*100 + '%';
+        el.style.bottom = '-120px';
         el.style.pointerEvents = 'none';
-        el.style.zIndex = 9980;
-        const color = colors[i % colors.length];
-        el.innerHTML = `<ellipse cx="24" cy="24" rx="18" ry="22" fill="${color}" opacity="0.98"></ellipse><path d="M24 46 L24 74" stroke="#111" stroke-opacity="0.06" stroke-width="1"/>`;
+        const color = colors[i%colors.length];
+        el.innerHTML = `
+          <ellipse cx="24" cy="24" rx="18" ry="22" fill="${color}" opacity="0.98"></ellipse>
+          <path d="M24 46 L24 78" stroke="#0f172a" stroke-opacity="0.2" stroke-width="1"/>`;
         wrap.appendChild(el);
-        const duration = 10000 + Math.random()*9000;
-        const delay = Math.random()*700;
-        const rotate = Math.random()*60 - 30;
-        el.animate([{ transform: 'translateY(0) scale(1)', opacity:1 }, { transform: `translateY(-120vh) rotate(${rotate}deg) scale(1.02)`, opacity:0.02 }], { duration, easing: 'cubic-bezier(.2,.9,.2,1)', delay });
-        setTimeout(()=> el.remove(), duration + delay + 500);
+
+        const duration = 9000 + Math.random()*6000;
+        const delay = Math.random()*800;
+        const anim = el.animate(
+          [
+            { transform:'translateY(0)', opacity:1 },
+            { transform:'translateY(-120vh)', opacity:0 }
+          ],
+          { duration, delay, easing:'cubic-bezier(.2,.9,.2,1)' }
+        );
+        anim.onfinish = () => el.remove();
       }
     }
 
-    function celebrateNow(opts = { sideBurst: true, auto: false }){
-      const side = !!opts.sideBurst;
-      const desired = side ? 380 : 220;
-      launchConfettiWithReflection(desired, { sideBurst: side });
-      launchBalloons(side ? 28 : 18);
-      toast(i18n[locale].celebrate || '🎉 Parabéns!');
+    function celebrateNow(auto = false){
+      launchConfetti(auto ? 220 : 320);
+      launchBalloons(auto ? 16 : 24);
+      if(!auto) toast('🎉 Celebração ativada!');
     }
 
-    /* ------------ CSV helpers ------------ */
-    function quoteCSV(s){ return '"' + String(s||'').replace(/"/g,'""') + '"'; }
+    // ---------------------------
+    // CSV
+    // ---------------------------
+    function quoteCSV(s){
+      return '"' + String(s || '').replace(/"/g,'""') + '"';
+    }
+
     function exportCSV(){
-      if(!dataArr.length){ toast('Sem dados para exportar', true); return; }
+      if(!dataArr.length){
+        toast('Sem dados para exportar', true);
+        return;
+      }
       const header = ['nome','setor','dia','mes'];
-      const rows = dataArr.map(r => `${quoteCSV(r.nome)},${quoteCSV(r.setor||'')},${r.dia},${r.mes}`);
+      const rows = dataArr.map(r =>
+        `${quoteCSV(r.nome)},${quoteCSV(r.setor || '')},${r.dia},${r.mes}`
+      );
       const csv = [header.join(','), ...rows].join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'aniversariantes.csv'; document.body.appendChild(a); a.click(); a.remove();
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'aniversariantes.csv';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
       toast('CSV exportado');
     }
+
     function parseCSV(text){
-      const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean); if(!lines.length) return [];
-      const header = lines.shift().split(',').map(h=>h.trim().toLowerCase());
-      const idxNome = header.indexOf('nome'); const idxSetor = header.indexOf('setor'); const idxDia = header.indexOf('dia'); const idxMes = header.indexOf('mes');
-      if(idxNome<0 || idxDia<0 || idxMes<0){ toast('CSV precisa ter colunas nome,dia,mes', true); return []; }
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if(!lines.length) return [];
+      const header = lines.shift().split(',').map(h => h.trim().toLowerCase());
+      const idxNome = header.indexOf('nome');
+      const idxSetor = header.indexOf('setor');
+      const idxDia = header.indexOf('dia');
+      const idxMes = header.indexOf('mes');
+      if(idxNome < 0 || idxDia < 0 || idxMes < 0){
+        toast('CSV precisa ter colunas nome,dia,mes', true);
+        return [];
+      }
       const out = [];
-      lines.forEach((ln,i)=>{ const parts = ln.match(/(".*?"|[^,]+)/g) || []; const nome = (parts[idxNome]||'').replace(/^"|"$/g,'').trim(); const setor = (parts[idxSetor]||'').replace(/^"|"$/g,'').trim().toUpperCase(); const dia = parseInt((parts[idxDia]||'').replace(/^"|"$/g,''),10); const mes = parseInt((parts[idxMes]||'').replace(/^"|"$/g,''),10); if(nome && !Number.isNaN(dia) && !Number.isNaN(mes)) out.push({ id: uid(), nome, setor, dia, mes }); });
+      for(const ln of lines){
+        const parts = ln.match(/(".*?"|[^,]+)/g) || [];
+        const nome = (parts[idxNome] || '').replace(/^"|"$/g,'').trim();
+        const setorRaw = (parts[idxSetor] || '').replace(/^"|"$/g,'').trim();
+        const setor = normalizeSector(setorRaw);
+        const dia = parseInt((parts[idxDia] || '').replace(/^"|"$/g,''), 10);
+        const mes = parseInt((parts[idxMes] || '').replace(/^"|"$/g,''), 10);
+        if(nome && !Number.isNaN(dia) && !Number.isNaN(mes)){
+          out.push({ id: uid(), nome, setor, dia, mes });
+        }
+      }
       return out;
     }
 
-    /* --------- Firebase dynamic init (compat) ---------- */
-
-    function mapDocFromFirestore(r){
-      let dia = Number(r.dia);
-      let mes = Number(r.mes);
-
-      if ((mes === 0 || !mes) && typeof r.textoData === "string") {
-        const txt = r.textoData.toLowerCase();
-        const map = {
-          'janeiro': 1,
-          'fevereiro': 2,
-          'março': 3,
-          'marco': 3,
-          'abril': 4,
-          'maio': 5,
-          'junho': 6,
-          'julho': 7,
-          'agosto': 8,
-          'setembro': 9,
-          'outubro': 10,
-          'novembro': 11,
-          'dezembro': 12
-        };
-        for (const [name, num] of Object.entries(map)) {
-          if (txt.includes(name)) {
-            mes = num;
-            break;
-          }
-        }
-      }
-
-      return {
-        ...r,
-        setor: (r.setor || '').toUpperCase(),
-        dia: dia,
-        mes: mes
-      };
+    // ---------------------------
+    // FIREBASE
+    // ---------------------------
+    function loadScript(src){
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
     }
 
     async function tryInitFirebase(){
@@ -890,31 +1464,47 @@
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js');
 
         firebase.initializeApp(window.__firebase_config);
-        firebaseInitialized = true;
         firebaseDb = firebase.firestore();
         firebaseAuth = firebase.auth();
+        firebaseInitialized = true;
 
-        firebaseDb.collection('aniversariantes').onSnapshot(snapshot=>{
-          const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          dataArr = docs.map(r => mapDocFromFirestore(r));
+        firebaseDb.collection('aniversariantes').onSnapshot(snapshot => {
+          const docs = snapshot.docs.map(d => {
+            const data = d.data() || {};
+            const dia = Number(data.dia ?? data.day ?? 0);
+            let mes = Number(data.mes ?? data.month ?? 0);
+            if(!mes && data.textoData){
+              const inferred = inferMonthFromTexto(data.textoData);
+              if(inferred) mes = inferred;
+            }
+            return {
+              id: d.id,
+              nome: data.nome || data.name || '',
+              setor: normalizeSector(data.setor || data.sector || ''),
+              dia,
+              mes
+            };
+          });
+          dataArr = dedupeRecords(docs);
           syncRenderAll();
-        }, err=>{
-          console.warn('onSnapshot failed, fallback to get():', err);
-          firebaseDb.collection('aniversariantes').get().then(snap=>{
-            dataArr = snap.docs.map(d => ({ id: d.id, ...d.data() })).map(r => mapDocFromFirestore(r));
-            syncRenderAll();
-          }).catch(()=>{ seedDemo(); syncRenderAll(); });
+        }, err => {
+          console.error('onSnapshot error', err);
+          toast('Erro ao carregar dados do Firebase', true);
         });
 
-        firebaseAuth.onAuthStateChanged(user=>{
-          updateAuthUI(!!user);
-          applyTranslations();
-          if(user && !dataArr.length){
-            firebaseDb.collection('aniversariantes').get().then(snap=>{
-              dataArr = snap.docs.map(d=>({ id:d.id, ...d.data() })).map(r=>mapDocFromFirestore(r));
-              syncRenderAll();
-            }).catch(()=>{});
+        firebaseAuth.onAuthStateChanged(async user => {
+          if(user){
+            try{
+              const tokenRes = await user.getIdTokenResult(true);
+              isAdmin = !!tokenRes.claims.admin;
+            }catch(e){
+              console.warn('Erro ao obter claims', e);
+              isAdmin = false;
+            }
+          }else{
+            isAdmin = false;
           }
+          updateAuthUI();
         });
 
         return true;
@@ -923,285 +1513,253 @@
         return false;
       }
     }
-    function loadScript(src){ return new Promise((res, rej)=>{ const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
 
-    /* ------------- Auth UI gating ------------- */
-    function updateAuthUI(loggedIn){
-      document.querySelectorAll('.admin-only').forEach(el=>{
-        if(loggedIn){ el.style.display = ''; el.classList.remove('admin-only'); el.classList.add('admin-visible'); }
-        else { el.style.display = 'none'; el.classList.remove('admin-visible'); el.classList.add('admin-only'); }
-      });
-      renderList(true);
-    }
+    function updateAuthUI(){
+      const logged = firebaseInitialized && firebaseAuth && firebaseAuth.currentUser;
+      const admin = logged && isAdmin;
 
-    function seedDemo(){
-      dataArr = [
-        { id: 'local1', nome: 'Eliomar', setor: 'Ambiental', dia: 15, mes: 1 },
-        { id: 'local2', nome: 'Ana Silva', setor: 'TI', dia: 20, mes: 1 },
-        { id: 'local3', nome: 'Gabriel Dutra', setor: 'Engenharia', dia: 21, mes: 10 }
-      ];
-      for(let i=0;i<60;i++){ dataArr.push({ id: 'demo-'+i, nome: 'User '+(i+1), setor: ['RH','TI','Vendas'][i%3], dia: (i%28)+1, mes: ((i%12)+1) }); }
-    }
-    function syncRenderAll(){ applyTranslations(); renderToday(); renderFuture(5); renderList(true); renderStats(); }
-
-    /* --------- Remoção de duplicatas (uma vez) ---------- */
-    async function removeDuplicatesOnce(){
-      if (!firebaseInitialized || !firebaseDb) {
-        console.warn('Firebase não inicializado (modo demo).');
-        toast('Não dá pra limpar duplicatas no modo demo.', true);
-        return;
-      }
-
-      const snap = await firebaseDb.collection('aniversariantes').get();
-      const seen = new Set();
-      const batch = firebaseDb.batch();
-      let deletions = 0;
-
-      snap.forEach(doc => {
-        const data = doc.data();
-        const key = makeKeyFromRecord(data);
-
-        if (seen.has(key)) {
-          batch.delete(doc.ref);
-          deletions++;
-        } else {
-          seen.add(key);
+      document.querySelectorAll('.admin-only, .admin-visible').forEach(el => {
+        if(admin){
+          if(el.classList.contains('admin-only')){
+            el.classList.remove('admin-only');
+            el.classList.add('admin-visible');
+          }
+          el.style.display = '';
+        }else{
+          if(el.classList.contains('admin-visible')){
+            el.classList.remove('admin-visible');
+            el.classList.add('admin-only');
+          }
+          el.style.display = el.id === 'export-csv' ? '' : 'none'; // export pode aparecer sempre
         }
       });
 
-      if (!deletions) {
-        console.log('Nenhuma duplicata encontrada.');
-        toast('Nenhuma duplicata encontrada.');
-        return;
+      const authBtn = document.getElementById('auth-btn');
+      if(authBtn){
+        if(logged){
+          authBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i><span>Sair</span>';
+        }else{
+          authBtn.innerHTML = '<i class="fa-solid fa-lock"></i><span>Entrar</span>';
+        }
       }
-
-      await batch.commit();
-      console.log(`Removidas ${deletions} duplicata(s).`);
-      toast(`Removidas ${deletions} duplicata(s).`);
     }
 
-    /* -------------------- Wiring -------------------- */
-    document.addEventListener('DOMContentLoaded', async ()=>{
-      document.getElementById('locale-select').value = locale;
-      document.getElementById('locale-select').addEventListener('change', (e)=>{
-        locale = e.target.value;
-        localStorage.setItem('locale', locale);
-        applyTranslations(); renderList(true); renderToday(); renderFuture(5); renderStats();
-      });
-      applyTranslations();
+    // ---------------------------
+    // RENDER GERAL
+    // ---------------------------
+    function syncRenderAll(){
+      renderToday();
+      renderFuture();
+      renderList(true);
+      renderCalendar();
+      renderStats();
+    }
 
-      // estado inicial por aba
-      document.getElementById('today-panel').style.display = 'block';
-      document.getElementById('future-panel').style.display = 'block';
-      document.getElementById('stats-panel').style.display = 'none';
-      document.getElementById('list-panel').style.display = 'none';
-      const actionsCard = document.getElementById('actions-card');
-      if(actionsCard) actionsCard.style.display = 'none';
+    // ---------------------------
+    // EVENTOS GERAIS
+    // ---------------------------
+    document.addEventListener('DOMContentLoaded', async () => {
+      // tema
+      setTheme(localStorage.getItem('theme') || 'dark');
 
-      const themeToggle = document.getElementById('theme-toggle');
-      function setTheme(t){
-        document.body.setAttribute('data-theme', t);
-        document.getElementById('current-theme').textContent = t==='dark' ? 'Escuro' : 'Claro';
-        localStorage.setItem('theme',t);
-        themeToggle.setAttribute('aria-pressed', t==='dark');
-        renderStats();
+      // locale
+      const localeSelect = document.getElementById('locale-select');
+      const footerLocale = document.getElementById('footer-locale');
+      if(localeSelect){
+        localeSelect.value = locale;
+        localeSelect.addEventListener('change', e => {
+          locale = e.target.value;
+          localStorage.setItem('locale', locale);
+          if(footerLocale) footerLocale.textContent = locale;
+          renderToday();
+          renderFuture();
+          renderCalendar();
+          renderStats();
+        });
       }
-      setTheme(localStorage.getItem('theme')||'light');
-      themeToggle.addEventListener('click', ()=> setTheme(document.body.getAttribute('data-theme')==='dark' ? 'light' : 'dark'));
+      if(footerLocale) footerLocale.textContent = locale;
 
+      // botão tema
+      document.getElementById('theme-toggle').addEventListener('click', () => {
+        const cur = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        setTheme(cur);
+      });
+
+      // Celebrar
+      document.getElementById('celebrate-btn').addEventListener('click', () => celebrateNow(false));
+
+      // Navegação de abas
+      document.querySelectorAll('.nav-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const view = btn.dataset.view;
+          document.querySelectorAll('.nav-tab').forEach(b => b.setAttribute('data-active','false'));
+          btn.setAttribute('data-active','true');
+
+          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+          const sec = document.getElementById('view-' + view);
+          if(sec) sec.classList.add('active');
+
+          if(view === 'charts') renderStats();
+          if(view === 'calendar') renderCalendar();
+          if(view === 'future') renderFuture();
+          if(view === 'list') renderList(true);
+          if(view === 'home') renderToday();
+        });
+      });
+
+      // Lista: busca / filtros
+      document.getElementById('search-input').addEventListener('input', () => renderList(true));
+      document.getElementById('month-filter').addEventListener('change', () => {
+        renderList(true);
+        renderCalendar();
+        renderStats();
+      });
+      document.getElementById('load-more').addEventListener('click', () => {
+        page++;
+        renderList(false);
+      });
+
+      // Futuro
+      document.getElementById('refresh-future').addEventListener('click', renderFuture);
+
+      // CSV
       document.getElementById('export-csv').addEventListener('click', exportCSV);
-
-      document.getElementById('csv-file').addEventListener('change', (e)=>{
-        const f = e.target.files[0]; if(!f) return;
+      document.getElementById('csv-file').addEventListener('change', e => {
+        const file = e.target.files[0];
+        if(!file) return;
         const reader = new FileReader();
-        reader.onload = ()=>{
+        reader.onload = async () => {
           const recs = parseCSV(reader.result);
           if(!recs.length) return;
-
-          const existingKeys = new Set(dataArr.map(makeKeyFromRecord));
-          const novos = [];
-          let ignorados = 0;
-          const addedNow = new Set();
-
-          for (const r of recs) {
-            const key = makeKeyFromRecord(r);
-            if (existingKeys.has(key) || addedNow.has(key)) {
-              ignorados++;
-              continue;
-            }
-            addedNow.add(key);
-            novos.push(r);
-          }
-
-          if (!novos.length) {
-            toast('Todos os registros do CSV já existem (ou são duplicados).', true);
-            return;
-          }
-
-          if(firebaseInitialized && firebaseDb){
-            novos.forEach(async r=>{
+          if(firebaseInitialized && firebaseDb && firebaseAuth && firebaseAuth.currentUser && isAdmin){
+            for(const r of recs){
               try{
-                await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes });
-              }catch(e){ console.error(e); }
-            });
-          } else {
-            dataArr = dataArr.concat(novos);
-            renderList(true); renderStats();
+                await firebaseDb.collection('aniversariantes').add({
+                  nome:r.nome,
+                  setor:r.setor,
+                  dia:r.dia,
+                  mes:r.mes
+                });
+              }catch(err){
+                console.error(err);
+              }
+            }
+            toast(`Importado(s) ${recs.length} registro(s)`);
+          }else{
+            dataArr = dedupeRecords(dataArr.concat(recs));
+            syncRenderAll();
+            toast(`Importado(s) ${recs.length} registro(s) (modo local)`);
           }
-          toast(`Importado ${novos.length} registro(s). Ignorados ${ignorados} duplicado(s).`);
         };
-        reader.readAsText(f,'utf-8'); e.target.value = '';
+        reader.readAsText(file, 'utf-8');
+        e.target.value = '';
       });
 
-      document.getElementById('import-sample').addEventListener('click', ()=>{
+      document.getElementById('import-sample').addEventListener('click', async () => {
         const sample = 'nome,setor,dia,mes\n"Maria Silva",RH,5,11\n"João Pereira",Financeiro,12,3\n"Luiza Costa",Vendas,28,12';
         const recs = parseCSV(sample);
         if(!recs.length) return;
-
-        const existingKeys = new Set(dataArr.map(makeKeyFromRecord));
-        const novos = [];
-        let ignorados = 0;
-        const addedNow = new Set();
-
-        for (const r of recs) {
-          const key = makeKeyFromRecord(r);
-          if (existingKeys.has(key) || addedNow.has(key)) {
-            ignorados++;
-            continue;
-          }
-          addedNow.add(key);
-          novos.push(r);
-        }
-
-        if (!novos.length) {
-          toast('Exemplo já existente na base.', true);
-          return;
-        }
-
-        if(firebaseInitialized && firebaseDb){
-          novos.forEach(async r=>{
+        if(firebaseInitialized && firebaseDb && firebaseAuth && firebaseAuth.currentUser && isAdmin){
+          for(const r of recs){
             try{
-              await firebaseDb.collection('aniversariantes').add({ nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes });
-            }catch(e){ console.error(e); }
-          });
-        } else {
-          dataArr = dataArr.concat(novos);
-          renderList(true); renderStats();
+              await firebaseDb.collection('aniversariantes').add({
+                nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes
+              });
+            }catch(err){
+              console.error(err);
+            }
+          }
+          toast('Exemplo importado');
+        }else{
+          dataArr = dedupeRecords(dataArr.concat(recs));
+          syncRenderAll();
+          toast('Exemplo importado (modo local)');
         }
-        toast(`Exemplo importado (${novos.length} novo(s), ${ignorados} ignorado(s)).`);
       });
 
-      document.getElementById('add-btn').addEventListener('click', async ()=>{
-        const nome = prompt('Nome completo:'); if(!nome) return;
-        const setor = (prompt('Setor (opcional):','') || '').toUpperCase();
+      // Novo registro
+      document.getElementById('add-btn').addEventListener('click', async () => {
+        const nome = prompt('Nome completo:') || '';
+        if(!nome) return;
+        const setor = normalizeSector(prompt('Setor (opcional):','') || '');
         const dia = parseInt(prompt('Dia (1-31):','1'),10);
         const mes = parseInt(prompt('Mês (1-12):','1'),10);
-        if(isNaN(dia)||isNaN(mes)){ toast('Data inválida', true); return; }
-        if(firebaseInitialized && firebaseDb && firebaseAuth && firebaseAuth.currentUser){
-          try{ await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes }); toast('Registro criado'); } catch(e){ toast('Erro: '+e.message, true); }
-        } else {
-          dataArr.push({ id: uid(), nome, setor, dia, mes }); renderList(true); renderToday(); renderFuture(5); renderStats(); toast('Registro criado (demo)');
-        }
-      });
-
-      document.getElementById('celebrate-btn').addEventListener('click', ()=> celebrateNow({ sideBurst: false, auto: false }));
-
-      document.getElementById('search-input').addEventListener('input', ()=> renderList(true));
-      document.getElementById('filter-month').addEventListener('change', ()=> renderList(true));
-      document.getElementById('load-more').addEventListener('click', ()=>{ page++; renderList(); });
-      document.getElementById('refresh-future').addEventListener('click', ()=> renderFuture());
-
-      document.querySelectorAll('.tab').forEach(btn=> btn.addEventListener('click', ()=>{
-        document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
-        btn.setAttribute('aria-selected','true');
-        const tab = btn.dataset.tab;
-
-        const todayPanel   = document.getElementById('today-panel');
-        const futurePanel  = document.getElementById('future-panel');
-        const statsPanel   = document.getElementById('stats-panel');
-        const listPanel    = document.getElementById('list-panel');
-        const actionsCard  = document.getElementById('actions-card');
-
-        todayPanel.style.display  = 'none';
-        futurePanel.style.display = 'none';
-        statsPanel.style.display  = 'none';
-        listPanel.style.display   = 'none';
-        if(actionsCard) actionsCard.style.display = 'none';
-
-        const calendarPanel = document.getElementById('calendar-panel');
-        if(calendarPanel) calendarPanel.remove();
-
-        if(tab === 'today'){
-          todayPanel.style.display  = 'block';
-          futurePanel.style.display = 'block';
-          renderToday();
-          renderFuture(5);
-        }
-
-        if(tab === 'calendar'){
-          renderCalendar();
-        }
-
-        if(tab === 'list'){
-          listPanel.style.display = 'block';
-          if(actionsCard) actionsCard.style.display = 'block';
-          renderList(true);
-        }
-
-        if(tab === 'future'){
-          futurePanel.style.display = 'block';
-          renderFuture();
-        }
-
-        if(tab === 'stats'){
-          statsPanel.style.display = 'block';
-          renderStats();
-        }
-      }));
-
-      const loginModal = document.getElementById('login-modal');
-      document.getElementById('auth-btn').addEventListener('click', ()=>{
-        if(firebaseInitialized && firebaseAuth && firebaseAuth.currentUser){
-          firebaseAuth.signOut().then(()=> toast('Logout realizado')).catch(e=> toast('Erro logout: '+e.message,true));
+        if(isNaN(dia) || isNaN(mes)){
+          toast('Data inválida', true);
           return;
         }
-        loginModal.showModal();
+        if(firebaseInitialized && firebaseDb && firebaseAuth && firebaseAuth.currentUser && isAdmin){
+          try{
+            await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes });
+            toast('Registro criado');
+          }catch(err){
+            toast('Erro ao criar: ' + err.message, true);
+          }
+        }else{
+          dataArr.push({ id:uid(), nome, setor, dia, mes });
+          dataArr = dedupeRecords(dataArr);
+          syncRenderAll();
+          toast('Registro criado (modo local)');
+        }
       });
-      document.getElementById('close-login').addEventListener('click', ()=> loginModal.close());
-      document.getElementById('login-form').addEventListener('submit', async (e)=>{
+
+      // Login
+      const loginModal = document.getElementById('login-modal');
+      document.getElementById('auth-btn').addEventListener('click', () => {
+        if(firebaseInitialized && firebaseAuth && firebaseAuth.currentUser){
+          firebaseAuth.signOut()
+            .then(() => toast('Logout realizado'))
+            .catch(e => toast('Erro no logout: ' + e.message, true));
+        }else{
+          loginModal.showModal();
+        }
+      });
+      document.getElementById('close-login').addEventListener('click', () => loginModal.close());
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
         const pass = document.getElementById('login-pass').value;
         if(firebaseInitialized && firebaseAuth){
-          try{ await firebaseAuth.signInWithEmailAndPassword(email, pass); toast('Bem-vindo admin!'); loginModal.close(); } catch(err){ toast('Erro no login: '+err.message, true); }
-        } else { toast('Firebase não configurado (modo demo)', true); loginModal.close(); }
+          try{
+            await firebaseAuth.signInWithEmailAndPassword(email, pass);
+            toast('Bem-vindo!'); 
+            loginModal.close();
+          }catch(err){
+            toast('Erro no login: ' + err.message, true);
+          }
+        }else{
+          toast('Firebase não configurado', true);
+          loginModal.close();
+        }
       });
 
-      document.addEventListener('keydown', (e)=>{
-        if(document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
-        if(e.key === 'c' || e.key === 'C'){ celebrateNow({ sideBurst: false, auto: false }); }
-        if(e.key === '/'){ e.preventDefault(); document.getElementById('search-input').focus(); }
+      // Atalhos
+      document.addEventListener('keydown', (e) => {
+        const activeTag = document.activeElement && document.activeElement.tagName;
+        if(activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
+        if(e.key === 'c' || e.key === 'C') celebrateNow(false);
+        if(e.key === '/') {
+          e.preventDefault();
+          const s = document.getElementById('search-input');
+          if(s) s.focus();
+        }
       });
+
+      document.getElementById('footer-version').textContent = 'v1.0.3';
 
       const ok = await tryInitFirebase();
       if(!ok){
-        seedDemo();
+        // modo demo local
+        dataArr = [
+          { id:'local1', nome:'Eliomar', setor:'AMBIENTAL', dia:15, mes:1 },
+          { id:'local2', nome:'Ana Silva', setor:'TI', dia:20, mes:1 },
+          { id:'local3', nome:'Gabriel Dutra', setor:'ENGENHARIA', dia:21, mes:10 }
+        ];
+        dataArr = dedupeRecords(dataArr);
         syncRenderAll();
-        updateAuthUI(false);
+        updateAuthUI();
       }
     });
-
-    function nextUpcoming(){ if(!dataArr.length) return null; const now = new Date(); const list = dataArr.map(p=> ({ ...p, date: nextDate(p, now) })); list.sort((a,b)=>a.date-b.date); return list[0]; }
-    function formatDate(d){ try{ return new Intl.DateTimeFormat(locale, { day:'2-digit', month:'2-digit', year:'numeric' }).format(d); }catch(e){ return d.toLocaleDateString(); } }
-
-    // debug / admin helpers
-    window.__painel = {
-      getData: () => dataArr,
-      renderList,
-      renderStats,
-      celebrateNow,
-      removeDuplicatesOnce
-    };
   </script>
 </body>
 </html>
