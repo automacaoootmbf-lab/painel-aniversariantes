@@ -20,9 +20,7 @@
       --axia-blue-dark: #001f3d;   /* Azul Profundo */
       --axia-blue: #0057d9;        /* Azul Vibrante */
       --axia-green: #00c46a;       /* Verde Energia */
-      
       --brand-gradient: linear-gradient(135deg, var(--axia-blue), var(--axia-green));
-      
       --text-main: #f9fafb;
       --text-muted: #9ca3b8;
       --bg-body: #020617;
@@ -30,12 +28,10 @@
       --border-color: rgba(148, 163, 184, 0.15);
       --hover-bg: rgba(255, 255, 255, 0.03);
       --danger: #ef4444;
-
       --radius-lg: 20px;
       --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.6);
     }
 
-    /* Tema Claro */
     [data-theme="light"] {
       --text-main: #0f172a;
       --text-muted: #64748b;
@@ -46,7 +42,6 @@
     }
 
     * { box-sizing: border-box; outline: none; }
-    
     body {
       margin: 0; font-family: 'Inter', sans-serif;
       background-color: var(--bg-body);
@@ -54,14 +49,10 @@
                         radial-gradient(circle at 90% 90%, rgba(0, 196, 106, 0.1), transparent 50%);
       color: var(--text-main); min-height: 100vh; overflow-x: hidden; line-height: 1.5;
     }
-
     h1, h2, h3, .card-title { font-family: 'Poppins', sans-serif; font-weight: 600; color: var(--text-main); margin: 0; }
-    
-    /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 4px; }
-
     .shell { max-width: 1280px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
 
     /* Header */
@@ -73,7 +64,6 @@
       box-shadow: var(--shadow-soft); position: sticky; top: 20px; z-index: 100;
     }
     @media(max-width: 980px) { header { flex-wrap: wrap; justify-content: center; gap: 15px; border-radius: 24px; } }
-
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
       width: 40px; height: 40px; border-radius: 50%;
@@ -95,7 +85,6 @@
     .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
     .btn-ghost:hover { background: var(--hover-bg); color: var(--text-main); border-color: var(--axia-blue); }
     .btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; }
-
     input, select {
       background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color);
       color: var(--text-main); padding: 8px 12px; border-radius: 12px; font-size: 13px;
@@ -114,7 +103,7 @@
     .nav-tab:hover { color: var(--text-main); }
     .nav-tab[data-active="true"] { background: var(--axia-blue); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 
-    /* Pages Layout */
+    /* Pages */
     .page { display: none !important; opacity: 0; transform: translateY(10px); transition: opacity 0.4s, transform 0.4s; }
     .page.active { opacity: 1; transform: translateY(0); }
     .page.page-grid.active { display: grid !important; grid-template-columns: 2.2fr 1fr; gap: 24px; align-items: flex-start; }
@@ -153,7 +142,7 @@
     }
     [data-theme="dark"] .tag-days { color: #fff; background: var(--axia-green); }
 
-    /* Calendário Semanal */
+    /* Calendar */
     .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 8px; }
     .weekday { text-align: center; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
@@ -175,6 +164,7 @@
     td { padding: 14px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
     tr:hover td { background: var(--hover-bg); }
 
+    /* Utilitários & Animações Exageradas */
     .admin-only { display: none; }
     #toast {
       position: fixed; bottom: 30px; right: 30px; background: var(--brand-gradient); color: white;
@@ -184,6 +174,21 @@
     #toast.show { opacity: 1; transform: translateY(0); }
     dialog { border: none; background: transparent; padding: 0; }
     dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); }
+
+    /* NOVAS ANIMAÇÕES DE CELEBRAÇÃO */
+    @keyframes floatUp {
+      0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: translateY(-20vh) rotate(360deg) scale(1.2); opacity: 0; }
+    }
+    @keyframes wiggle {
+      0%, 100% { margin-left: -30px; }
+      50% { margin-left: 30px; }
+    }
+    .floating-item {
+      position: fixed; bottom: 0; pointer-events: none; z-index: 9990;
+      will-change: transform, opacity, margin-left;
+    }
   </style>
 </head>
 
@@ -351,27 +356,80 @@
 
   <script>
     /* =========================================
-       LÓGICA PRINCIPAL - V3.0 PRODUCTION
+       LÓGICA PRINCIPAL - V3.1 EXTREME CELEBRATION
        ========================================= */
     let dataArr = [];
     let isAdmin = false;
     let chartInstance = null;
     let pageOffset = 0;
     const PAGE_SIZE = 25;
-    
-    // Firebase State
     let firebaseInitialized = false;
     let firebaseDb = null;
     let firebaseAuth = null;
 
-    // --- Helpers ---
     const toast = (msg, err=false) => {
       const t = document.getElementById('toast');
       t.textContent = msg; t.style.background = err ? 'var(--danger)' : 'var(--brand-gradient)';
       t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000);
     };
     const uid = () => 'id-' + Math.random().toString(36).substr(2, 9);
-    const normalizeSetor = (s) => (s || '').trim().toUpperCase(); // Ponto 2: Setor Maiúsculo
+    const normalizeSetor = (s) => (s || '').trim().toUpperCase();
+
+    // --- FUNÇÃO DE CELEBRAÇÃO EXAGERADA ---
+    function celebrateNow(auto=false) {
+      const c = document.getElementById('confetti-canvas');
+      const myConfetti = confetti.create(c, { resize: true });
+      const colors = ['#0057d9', '#00c46a', '#ffffff', '#FFD700']; // Azul, Verde, Branco, Dourado
+
+      // 1. Confete Turbinado (Explosão Cruzada + Central)
+      const fire = (particleRatio, opts) => {
+        myConfetti({ 
+          ...opts, 
+          colors, 
+          particleCount: Math.floor((auto ? 200 : 400) * particleRatio),
+          shapes: ['square', 'circle', 'star'], // Mistura de formas
+          scalar: 1.2 // Partículas maiores
+        });
+      };
+
+      // Dispara canhões dos cantos e do centro
+      fire(0.25, { spread: 26, startVelocity: 55, origin: { x: 0, y: 0.6 } }); // Esquerda
+      fire(0.25, { spread: 26, startVelocity: 55, origin: { x: 1, y: 0.6 } }); // Direita
+      fire(0.2, { spread: 100, decay: 0.91, origin: { y: 0.8 } }); // Centro baixo
+      fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, origin: { y: 0.6 } }); // Centro meio
+      fire(0.1, { spread: 120, startVelocity: 45, origin: { y: 0.7 } }); // Centro explosão
+
+      if(!auto) toast('🎉 ENERGIA AXIA QUE MOVE! 🎉');
+
+      // 2. Chuva de Ícones Flutuantes (Raios e Confetes)
+      const wrap = document.getElementById('balloon-wrap');
+      // Cria 15 elementos flutuantes
+      for (let i = 0; i < 15; i++) {
+        const b = document.createElement('div');
+        // Alterna entre Raio e Confete
+        b.innerHTML = Math.random() > 0.5 ? '⚡' : '🎉';
+        b.classList.add('floating-item');
+        
+        // Randomização dos atributos
+        const size = Math.random() * (50 - 25) + 25; // Tamanho entre 25px e 50px
+        const left = Math.random() * 95; // Posição horizontal aleatória
+        const duration = Math.random() * (5 - 3) + 3; // Duração entre 3s e 5s
+        const delay = Math.random() * 1.5; // Atraso inicial aleatório
+        const color = Math.random() > 0.5 ? 'var(--axia-green)' : 'var(--axia-blue)'; // Cor alternada para o raio
+        
+        b.style.cssText = `
+          left: ${left}%;
+          font-size: ${size}px;
+          color: ${b.innerHTML === '⚡' ? color : 'inherit'};
+          animation: floatUp ${duration}s ease-in forwards ${delay}s, 
+                     wiggle 2s ease-in-out infinite alternate ${delay}s;
+        `;
+        
+        wrap.appendChild(b);
+        // Remove do DOM após a animação terminar
+        setTimeout(() => b.remove(), (duration + delay) * 1000 + 100);
+      }
+    }
     
     // --- Renderização ---
     function renderHome() {
@@ -397,7 +455,6 @@
           '<span style="font-size:14px;">Nenhum aniversário cadastrado.</span>';
       }
 
-      // Próximos
       const upcoming = getUpcoming(5);
       document.getElementById('home-upcoming').innerHTML = upcoming.length ? upcoming.map(p => `
         <div class="person-row">
@@ -419,7 +476,6 @@
         return matchName && matchMonth;
       });
 
-      // Ponto 4: Ordenação (Mês -> Dia -> Nome)
       filtered.sort((a,b) => {
         if(a.mes !== b.mes) return a.mes - b.mes;
         if(a.dia !== b.dia) return a.dia - b.dia;
@@ -452,7 +508,6 @@
       document.getElementById('load-more').style.display = (filtered.length > paged.length) ? 'inline-block' : 'none';
     }
 
-    // Ponto 5: Calendário Alinhado
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       const now = new Date();
@@ -460,17 +515,10 @@
       const y = now.getFullYear();
       const mNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       document.getElementById('calendar-month-label').textContent = `${mNames[m]} / ${y}`;
-      
       const daysInMonth = new Date(y, m + 1, 0).getDate();
-      const firstDayIndex = new Date(y, m, 1).getDay(); // 0 = Domingo
-      
+      const firstDayIndex = new Date(y, m, 1).getDay();
       let html = '';
-      
-      // Células vazias antes do dia 1
-      for(let i=0; i<firstDayIndex; i++){
-        html += `<div class="day-cell empty"></div>`;
-      }
-
+      for(let i=0; i<firstDayIndex; i++) html += `<div class="day-cell empty"></div>`;
       let count = 0;
       for(let d=1; d<=daysInMonth; d++) {
         const matches = dataArr.filter(p => p.dia === d && p.mes === (m+1));
@@ -500,10 +548,8 @@
       const counts = Array(12).fill(0);
       dataArr.forEach(p => { if(p.mes >= 1 && p.mes <= 12) counts[p.mes - 1]++; });
       if(chartInstance) chartInstance.destroy();
-      
       const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
       gradient.addColorStop(0, '#0057d9'); gradient.addColorStop(1, '#00c46a');
-      
       chartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -519,7 +565,6 @@
       document.getElementById('charts-summary').innerHTML = `Maior concentração: <strong>${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][counts.indexOf(max)]}</strong> (${max}).`;
     }
 
-    // --- Lógica de Dados ---
     function getUpcoming(days) {
       const today = new Date(); today.setHours(0,0,0,0);
       return dataArr.map(p => {
@@ -530,58 +575,26 @@
       }).filter(p => p.diffDays >= 0 && p.diffDays <= days).sort((a,b) => a.diffDays - b.diffDays);
     }
 
-    // CRUD (Ponto 2 aplicado: normalizeSetor)
     window.editRecord = async (id) => {
       const rec = dataArr.find(p => p.id === id); if(!rec) return;
       const novoNome = prompt('Nome:', rec.nome); if(novoNome === null) return;
-      const novoSetor = prompt('Setor:', rec.setor);
-      const novoDia = prompt('Dia:', rec.dia);
-      const novoMes = prompt('Mês:', rec.mes);
+      const novoSetor = prompt('Setor:', rec.setor); const novoDia = prompt('Dia:', rec.dia); const novoMes = prompt('Mês:', rec.mes);
       if(novoNome && novoDia && novoMes) {
-        const payload = { 
-          nome: novoNome, 
-          setor: normalizeSetor(novoSetor), 
-          dia: Number(novoDia), 
-          mes: Number(novoMes) 
-        };
-        if(firebaseInitialized && isAdmin) {
-           await firebaseDb.collection('aniversariantes').doc(id).set(payload, { merge: true });
-           toast('Atualizado!');
-        } else {
-           Object.assign(rec, payload);
-           renderList(true); toast('Atualizado (Local)');
-        }
+        const payload = { nome: novoNome, setor: normalizeSetor(novoSetor), dia: Number(novoDia), mes: Number(novoMes) };
+        if(firebaseInitialized && isAdmin) { await firebaseDb.collection('aniversariantes').doc(id).set(payload, { merge: true }); toast('Atualizado!'); }
+        else { Object.assign(rec, payload); renderList(true); toast('Atualizado (Local)'); }
       } else toast('Dados inválidos.', true);
     };
 
     window.deleteRecord = async (id) => {
       if(!confirm('Excluir este registro?')) return;
-      if(firebaseInitialized && firebaseDb) {
-        try { await firebaseDb.collection('aniversariantes').doc(id).delete(); toast('Removido.'); }
-        catch(e) { toast('Erro.', true); }
-      } else {
-        dataArr = dataArr.filter(x => x.id !== id); renderList(true); toast('Removido (Local)');
-      }
+      if(firebaseInitialized && firebaseDb) { try { await firebaseDb.collection('aniversariantes').doc(id).delete(); toast('Removido.'); } catch(e) { toast('Erro.', true); } }
+      else { dataArr = dataArr.filter(x => x.id !== id); renderList(true); toast('Removido (Local)'); }
     };
 
-    function celebrateNow(auto=false) {
-      const c = document.getElementById('confetti-canvas');
-      const myConfetti = confetti.create(c, { resize: true });
-      myConfetti({ particleCount: auto?100:200, spread: 70, origin: { y: 0.6 }, colors: ['#0057d9', '#00c46a', '#ffffff'] });
-      if(!auto) {
-        toast('🎉 Energia que move!');
-        const wrap = document.getElementById('balloon-wrap');
-        const b = document.createElement('div'); b.innerHTML = '⚡';
-        b.style.cssText = `position:absolute; left:${Math.random()*90}%; bottom:-50px; font-size:40px; transition:bottom 4s ease-in; color:#00c46a;`;
-        wrap.appendChild(b); setTimeout(() => b.style.bottom = '110%', 50); setTimeout(() => b.remove(), 4100);
-      }
-    }
-
-    // --- Inicialização ---
     async function loadScript(src) { return new Promise((r, j) => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = j; document.head.appendChild(s); }); }
 
     async function initFirebase() {
-      // Ponto 1: Usando __firebase_config
       if(!window.__firebase_config) return false;
       try {
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
@@ -590,32 +603,14 @@
         firebase.initializeApp(window.__firebase_config);
         firebaseDb = firebase.firestore(); firebaseAuth = firebase.auth();
         firebaseInitialized = true;
-
         firebaseAuth.onAuthStateChanged(async user => {
           if(user) { const t = await user.getIdTokenResult(); isAdmin = !!t.claims.admin; document.getElementById('auth-btn').textContent = 'Sair'; }
           else { isAdmin = false; document.getElementById('auth-btn').textContent = 'Login'; }
           toggleAdminUI(); renderList(true);
         });
-
         firebaseDb.collection('aniversariantes').onSnapshot(snap => {
-          dataArr = snap.docs.map(doc => { 
-            const d = doc.data(); 
-            return { 
-              id: doc.id, 
-              nome: d.nome||'', 
-              setor: normalizeSetor(d.setor), // Normaliza leitura
-              dia: Number(d.dia), 
-              mes: Number(d.mes) 
-            }; 
-          });
-          // Ponto 3: Deduplicação melhorada (Nome+Setor+Data)
-          const unique = new Map(); 
-          dataArr.forEach(i => {
-            const key = `${i.nome}|${i.setor}|${i.dia}|${i.mes}`;
-            unique.set(key, i);
-          }); 
-          dataArr = Array.from(unique.values());
-          
+          dataArr = snap.docs.map(doc => { const d = doc.data(); return { id: doc.id, nome: d.nome||'', setor: normalizeSetor(d.setor), dia: Number(d.dia), mes: Number(d.mes) }; });
+          const unique = new Map(); dataArr.forEach(i => { const key = `${i.nome}|${i.setor}|${i.dia}|${i.mes}`; unique.set(key, i); }); dataArr = Array.from(unique.values());
           const active = document.querySelector('.nav-tab[data-active="true"]'); if(active) active.click();
         });
         return true;
@@ -625,11 +620,9 @@
     function toggleAdminUI() { document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? (el.tagName === 'BUTTON' ? 'inline-flex' : 'block') : 'none'); }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      const theme = localStorage.getItem('axia_theme') || 'dark';
-      document.body.dataset.theme = theme;
+      const theme = localStorage.getItem('axia_theme') || 'dark'; document.body.dataset.theme = theme;
       document.getElementById('current-theme').textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
       document.getElementById('theme-toggle').innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
-
       const demoData = [ {id:'1', nome:'Colaborador Exemplo', setor:'OPERAÇÕES', dia:14, mes:12}, {id:'2', nome:'Ana Silva', setor:'TI', dia:1, mes:12} ];
       const fbOk = await initFirebase();
       if(!fbOk) { dataArr = demoData; console.log("Modo Demo"); document.querySelector('.nav-tab[data-view="home"]').click(); }
@@ -641,81 +634,55 @@
         document.getElementById('theme-toggle').innerHTML = next === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
         renderCharts();
       });
-
       document.querySelectorAll('.nav-tab').forEach(btn => btn.addEventListener('click', () => {
         document.querySelectorAll('.nav-tab').forEach(b => b.setAttribute('data-active', 'false'));
         btn.setAttribute('data-active', 'true');
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         const target = document.getElementById(`view-${btn.dataset.view}`);
         if(target) target.classList.add('active');
-        if(btn.dataset.view === 'home') renderHome();
-        if(btn.dataset.view === 'calendar') renderCalendar();
-        if(btn.dataset.view === 'list') renderList(true);
-        if(btn.dataset.view === 'future') renderFuture();
-        if(btn.dataset.view === 'charts') renderCharts();
+        if(btn.dataset.view === 'home') renderHome(); if(btn.dataset.view === 'calendar') renderCalendar(); if(btn.dataset.view === 'list') renderList(true); if(btn.dataset.view === 'future') renderFuture(); if(btn.dataset.view === 'charts') renderCharts();
       }));
-
       document.getElementById('celebrate-btn').addEventListener('click', () => celebrateNow(false));
       document.getElementById('search-input').addEventListener('input', () => renderList(true));
       document.getElementById('month-filter').addEventListener('change', () => renderList(true));
       document.getElementById('load-more').addEventListener('click', () => { pageOffset++; renderList(); });
       document.getElementById('refresh-future').addEventListener('click', renderFuture);
-      
-      // Login
       const modal = document.getElementById('login-modal');
       document.getElementById('auth-btn').addEventListener('click', () => { if(firebaseAuth && firebaseAuth.currentUser) firebaseAuth.signOut(); else modal.showModal(); });
       document.getElementById('close-login').addEventListener('click', () => modal.close());
       document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('login-email').value; const pass = document.getElementById('login-pass').value;
+        e.preventDefault(); const email = document.getElementById('login-email').value; const pass = document.getElementById('login-pass').value;
         if(firebaseAuth) { try { await firebaseAuth.signInWithEmailAndPassword(email, pass); modal.close(); toast('Bem-vindo!'); } catch(e) { toast('Erro login', true); } }
         else { if(email === 'admin' && pass === 'admin') { isAdmin = true; toggleAdminUI(); renderList(true); modal.close(); toast('Admin Demo'); } else toast('Erro', true); }
       });
-
-      // Add & CSV
       document.getElementById('add-btn').addEventListener('click', async () => {
-        const nome = prompt('Nome:'); if(!nome) return;
-        const setor = prompt('Setor:'); const dia = prompt('Dia:'); const mes = prompt('Mês:');
+        const nome = prompt('Nome:'); if(!nome) return; const setor = prompt('Setor:'); const dia = prompt('Dia:'); const mes = prompt('Mês:');
         if(nome && dia && mes) {
           const payload = { nome, setor: normalizeSetor(setor), dia: Number(dia), mes: Number(mes) };
           if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add(payload);
           else { dataArr.push({ id: uid(), ...payload }); renderList(true); toast('Adicionado (Local)'); }
         }
       });
-
       document.getElementById('csv-file').addEventListener('change', (e) => {
-        const f = e.target.files[0]; if(!f) return;
-        const r = new FileReader();
+        const f = e.target.files[0]; if(!f) return; const r = new FileReader();
         r.onload = async () => {
-          const lines = r.result.split(/\r?\n/).filter(l => l.trim());
-          const start = lines[0].toLowerCase().includes('nome') ? 1 : 0;
-          let c = 0;
+          const lines = r.result.split(/\r?\n/).filter(l => l.trim()); const start = lines[0].toLowerCase().includes('nome') ? 1 : 0; let c = 0;
           for(let i=start; i<lines.length; i++) {
             const parts = lines[i].match(/(".*?"|[^,]+)/g);
             if(parts && parts.length >= 3) {
-              const cl = (v) => (v||'').replace(/^"|"$/g,'').trim();
-              const nome = cl(parts[0]); const setor = normalizeSetor(cl(parts[1])); 
-              const dia = parseInt(cl(parts[2])); const mes = parseInt(cl(parts[3]));
-              if(nome && !isNaN(dia) && !isNaN(mes)) {
-                if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes });
-                else dataArr.push({ id:uid(), nome, setor, dia, mes });
-                c++;
-              }
+              const cl = (v) => (v||'').replace(/^"|"$/g,'').trim(); const nome = cl(parts[0]); const setor = normalizeSetor(cl(parts[1])); const dia = parseInt(cl(parts[2])); const mes = parseInt(cl(parts[3]));
+              if(nome && !isNaN(dia) && !isNaN(mes)) { if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes }); else dataArr.push({ id:uid(), nome, setor, dia, mes }); c++; }
             }
           }
-          if(!firebaseInitialized) renderList(true);
-          toast(`${c} importados.`); e.target.value = '';
+          if(!firebaseInitialized) renderList(true); toast(`${c} importados.`); e.target.value = '';
         };
         r.readAsText(f);
       });
-      
       document.getElementById('export-csv').addEventListener('click', () => {
          if(!dataArr.length) return toast('Sem dados.', true);
          const csv = "Nome,Setor,Dia,Mes\n" + dataArr.map(p => `"${p.nome}","${p.setor}",${p.dia},${p.mes}`).join('\n');
-         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'aniversariantes_axia.csv';
-         document.body.appendChild(a); a.click(); a.remove();
+         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'aniversariantes_axia.csv'; document.body.appendChild(a); a.click(); a.remove();
       });
-      
       document.addEventListener('keydown', (e) => { if(e.key.toLowerCase() === 'c' && document.activeElement.tagName !== 'INPUT') celebrateNow(false); });
     });
   </script>
