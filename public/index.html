@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Painel Axia Energia — Gestão de Aniversariantes</title>
-  <meta name="description" content="Gestão corporativa de aniversariantes." />
+  <meta name="description" content="Painel corporativo oficial Axia Energia." />
   <meta name="theme-color" content="#001f3d">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,271 +14,176 @@
 
   <style>
     /* =========================================
-       1. VARIÁVEIS E TEMA (AXIA ENERGIA)
+       1. IDENTIDADE VISUAL AXIA ENERGIA
        ========================================= */
     :root {
-      /* Cores da marca – aproximadas a partir do logo Axia Energia */
-      --brand-dark: #001f3d;          /* Azul base bem profundo */
-      --brand-primary: #0057d9;       /* Azul principal (logo) */
-      --brand-secondary: #00c46a;     /* Verde acento (energia/sustentabilidade) */
-      --brand-gradient: linear-gradient(135deg, #0057d9, #00c46a);
-
-      /* UI Colors (modo escuro como padrão) */
+      --axia-blue-dark: #001f3d;   /* Azul Profundo */
+      --axia-blue: #0057d9;        /* Azul Vibrante */
+      --axia-green: #00c46a;       /* Verde Energia */
+      
+      --brand-gradient: linear-gradient(135deg, var(--axia-blue), var(--axia-green));
+      
       --text-main: #f9fafb;
-      --text-muted: #9ca3af;
+      --text-muted: #9ca3b8;
       --bg-body: #020617;
-      --card-bg: rgba(15, 23, 42, 0.9);   /* vidro escuro */
-      --border-color: rgba(148, 163, 184, 0.22);
-      --hover-bg: rgba(148, 163, 184, 0.10);
+      --card-bg: rgba(15, 23, 42, 0.95);
+      --border-color: rgba(148, 163, 184, 0.15);
+      --hover-bg: rgba(255, 255, 255, 0.03);
       --danger: #ef4444;
 
-      /* Dimensões */
       --radius-lg: 20px;
-      --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.5);
+      --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.6);
     }
 
-    /* Tema claro – mantendo a identidade, mas clareando fundo/cartões */
+    /* Tema Claro */
     [data-theme="light"] {
       --text-main: #0f172a;
       --text-muted: #64748b;
-      --bg-body: #eef4ff;              /* leve puxando pro azul da marca */
-      --card-bg: rgba(255, 255, 255, 0.96);
-      --border-color: rgba(148, 163, 184, 0.35);
-      --hover-bg: rgba(15, 23, 42, 0.04);
+      --bg-body: #f0f4f8;
+      --card-bg: #ffffff;
+      --border-color: rgba(148, 163, 184, 0.25);
+      --hover-bg: rgba(0, 87, 217, 0.05);
     }
 
-    /* =========================================
-       2. RESET & BASE
-       ========================================= */
     * { box-sizing: border-box; outline: none; }
-
+    
     body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
+      margin: 0; font-family: 'Inter', sans-serif;
       background-color: var(--bg-body);
-      /* Gradiente de fundo sutil com as cores da marca */
-      background-image:
-        radial-gradient(circle at 15% 10%, rgba(0, 87, 217, 0.20), transparent 45%),
-        radial-gradient(circle at 85% 90%, rgba(0, 196, 106, 0.18), transparent 45%);
-      color: var(--text-main);
-      min-height: 100vh;
-      overflow-x: hidden;
-      line-height: 1.5;
+      background-image: radial-gradient(circle at 10% 10%, rgba(0, 87, 217, 0.15), transparent 50%),
+                        radial-gradient(circle at 90% 90%, rgba(0, 196, 106, 0.1), transparent 50%);
+      color: var(--text-main); min-height: 100vh; overflow-x: hidden; line-height: 1.5;
     }
 
-    h1, h2, h3, .card-title {
-      font-family: 'Poppins', sans-serif;
-      font-weight: 600;
-      color: var(--text-main);
-      margin: 0;
-    }
-
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    h1, h2, h3, .card-title { font-family: 'Poppins', sans-serif; font-weight: 600; color: var(--text-main); margin: 0; }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 4px; }
 
-    .shell {
-      max-width: 1280px; margin: 0 auto; padding: 24px;
-      display: flex; flex-direction: column; gap: 24px;
-    }
+    .shell { max-width: 1280px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
 
-    /* =========================================
-       3. COMPONENTES UI
-       ========================================= */
-
-    /* HEADER GLASS */
+    /* Header */
     header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 20px; background: var(--card-bg);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--border-color); border-radius: 999px;
+      padding: 12px 24px; background: var(--card-bg);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color); border-radius: 99px;
       box-shadow: var(--shadow-soft); position: sticky; top: 20px; z-index: 100;
-      transition: all 0.3s ease;
     }
-
-    @media(max-width: 980px) {
-      header { flex-wrap: wrap; justify-content: center; gap: 15px; border-radius: 20px; }
-    }
+    @media(max-width: 980px) { header { flex-wrap: wrap; justify-content: center; gap: 15px; border-radius: 24px; } }
 
     .brand { display: flex; align-items: center; gap: 12px; }
-
     .brand-icon {
-      width: 42px; height: 42px; border-radius: 50%;
+      width: 40px; height: 40px; border-radius: 50%;
       background: var(--brand-gradient);
       display: flex; align-items: center; justify-content: center;
-      font-size: 20px; color: white;
-      box-shadow: 0 0 18px rgba(0, 196, 106, 0.6);
+      font-size: 20px; color: white; box-shadow: 0 0 20px rgba(0, 196, 106, 0.4);
     }
-
     .brand-text h1 { font-size: 18px; letter-spacing: -0.5px; }
-    .brand-text span { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .brand-text span { font-size: 11px; color: var(--text-muted); font-weight: 500; letter-spacing: 1px; }
 
-    /* Botões */
+    /* UI Elements */
     .btn {
       border: none; border-radius: 99px; padding: 10px 20px;
       font-size: 13px; font-weight: 600; cursor: pointer;
       display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease;
     }
-
-    .btn-primary {
-      background: var(--brand-gradient); color: white;
-      box-shadow: 0 4px 14px rgba(0, 87, 217, 0.45);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 18px rgba(0, 87, 217, 0.65);
-    }
-
-    .btn-ghost {
-      background: transparent; color: var(--text-muted);
-      border: 1px solid var(--border-color);
-    }
-
-    .btn-ghost:hover {
-      background: var(--hover-bg); color: var(--text-main); border-color: var(--text-muted);
-    }
-
+    .btn-primary { background: var(--brand-gradient); color: white; box-shadow: 0 4px 15px rgba(0, 87, 217, 0.4); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 87, 217, 0.6); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+    .btn-ghost:hover { background: var(--hover-bg); color: var(--text-main); border-color: var(--axia-blue); }
     .btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; }
 
     input, select {
-      background: rgba(15, 23, 42, 0.35); border: 1px solid var(--border-color);
-      color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 13px;
-      transition: border-color 0.2s, background-color 0.2s;
+      background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color);
+      color: var(--text-main); padding: 8px 12px; border-radius: 12px; font-size: 13px;
+      transition: border-color 0.2s;
     }
+    [data-theme="light"] input, [data-theme="light"] select { background: #fff; }
+    input:focus, select:focus { border-color: var(--axia-blue); }
 
-    [data-theme="light"] input, [data-theme="light"] select { background: rgba(255, 255, 255, 0.9); }
-
-    input:focus, select:focus { border-color: var(--brand-primary); }
-
-    /* Nav Tabs */
-    .nav-tabs {
-      background: rgba(0, 0, 0, 0.25); padding: 5px; border-radius: 99px;
-      display: flex; gap: 4px; overflow-x: auto;
-    }
-
+    /* Tabs */
+    .nav-tabs { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 99px; display: flex; gap: 4px; overflow-x: auto; }
     .nav-tab {
       background: transparent; border: none; color: var(--text-muted);
-      padding: 8px 16px; border-radius: 99px; font-size: 13px; font-weight: 500;
-      cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center;
-      gap: 6px; white-space: nowrap;
+      padding: 8px 18px; border-radius: 99px; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap;
     }
-
     .nav-tab:hover { color: var(--text-main); }
+    .nav-tab[data-active="true"] { background: var(--axia-blue); color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
 
-    .nav-tab[data-active="true"] {
-      background: var(--brand-dark); color: var(--brand-primary);
-      box-shadow: 0 2px 10px rgba(0,0,0,0.35);
-    }
-
-    [data-theme="light"] .nav-tab[data-active="true"] {
-      background: #ffffff; color: var(--brand-primary);
-    }
-
-    /* =========================================
-       4. LAYOUT DE PÁGINAS
-       ========================================= */
-    .page {
-      display: none !important; opacity: 0; transform: translateY(10px);
-      transition: opacity 0.4s, transform 0.4s;
-    }
-
+    /* Pages Layout */
+    .page { display: none !important; opacity: 0; transform: translateY(10px); transition: opacity 0.4s, transform 0.4s; }
     .page.active { opacity: 1; transform: translateY(0); }
-
-    .page.page-grid.active {
-      display: grid !important; grid-template-columns: 2.2fr 1fr;
-      gap: 24px; align-items: flex-start;
-    }
-
-    .page.page-full.active {
-      display: flex !important; flex-direction: column; gap: 24px;
-    }
-
-    @media(max-width: 980px) {
-      .page.page-grid.active { grid-template-columns: 1fr !important; }
-    }
+    .page.page-grid.active { display: grid !important; grid-template-columns: 2.2fr 1fr; gap: 24px; align-items: flex-start; }
+    .page.page-full.active { display: flex !important; flex-direction: column; gap: 24px; }
+    @media(max-width: 980px) { .page.page-grid.active { grid-template-columns: 1fr !important; } }
 
     /* Cards */
     .card {
       background: var(--card-bg); border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg); padding: 24px;
-      backdrop-filter: blur(10px); box-shadow: var(--shadow-soft);
+      border-radius: var(--radius-lg); padding: 24px; backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-soft);
     }
-
-    .card-header {
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
-    }
-
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .card-title { font-size: 16px; letter-spacing: 0.02em; }
     .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .pill-count { background: rgba(0, 87, 217, 0.15); color: var(--axia-blue); padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+    [data-theme="dark"] .pill-count { color: #fff; background: var(--axia-blue); }
 
-    .pill-count {
-      background: rgba(0, 87, 217, 0.16); color: var(--brand-primary);
-      padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 600;
-    }
-
-    /* List Items */
+    /* Lists */
     .person-row {
       display: flex; align-items: center; gap: 14px; padding: 12px;
-      border-radius: 12px; border-bottom: 1px solid var(--border-color);
-      transition: background 0.2s;
+      border-radius: 16px; border-bottom: 1px solid var(--border-color); transition: background 0.2s;
     }
-
     .person-row:last-child { border-bottom: none; }
     .person-row:hover { background: var(--hover-bg); }
-
     .avatar {
-      width: 40px; height: 40px; border-radius: 12px;
-      background: linear-gradient(135deg, #0b1220, #1e293b); color: var(--text-main);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 600; font-size: 14px;
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--axia-blue), #003366); color: white;
+      display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;
     }
-
     .person-info h4 { margin: 0; font-size: 14px; font-weight: 500; }
     .person-info p { margin: 0; font-size: 12px; color: var(--text-muted); }
-
-    .tag-days {
-      font-size: 11px; font-weight: 600; color: var(--brand-secondary);
-      background: rgba(0, 196, 106, 0.12); padding: 2px 8px; border-radius: 6px;
+    .tag-days { 
+      font-size: 11px; font-weight: 600; color: var(--axia-blue); 
+      background: rgba(0, 196, 106, 0.2); padding: 3px 10px; border-radius: 8px; 
     }
-    
-    /* Calendar styles */
+    [data-theme="dark"] .tag-days { color: #fff; background: var(--axia-green); }
+
+    /* Calendário Semanal */
+    .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 8px; }
+    .weekday { text-align: center; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
     .day-cell {
       min-height: 90px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color);
       border-radius: 12px; padding: 8px; position: relative;
     }
+    .day-cell.empty { background: transparent; border: none; }
+    .day-num { font-size: 11px; color: var(--text-muted); position: absolute; top: 6px; right: 8px; font-weight: 600;}
     .day-badge {
-      font-size: 10px; background: rgba(0, 87, 217, 0.15); color: var(--brand-secondary);
-      padding: 2px 4px; border-radius: 4px; margin-top: 2px; white-space: nowrap; overflow: hidden;
+      font-size: 10px; background: rgba(0, 87, 217, 0.15); color: var(--axia-blue);
+      padding: 2px 4px; border-radius: 4px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    [data-theme="dark"] .day-badge { color: #fff; background: var(--axia-blue); }
 
-    /* Tabela */
+    /* Table */
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th {
-      text-align: left; color: var(--text-muted); font-size: 11px;
-      text-transform: uppercase; padding: 12px 8px; border-bottom: 1px solid var(--border-color);
-    }
-    td {
-      padding: 12px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-main);
-    }
+    th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding: 16px 8px; border-bottom: 1px solid var(--border-color); }
+    td { padding: 14px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
     tr:hover td { background: var(--hover-bg); }
 
-    /* Utilitários */
     .admin-only { display: none; }
-
     #toast {
-      position: fixed; bottom: 30px; right: 30px;
-      background: var(--brand-primary); color: white;
-      padding: 12px 24px; border-radius: 99px;
-      box-shadow: 0 10px 30px rgba(0, 87, 217, 0.5);
-      font-weight: 500; opacity: 0; transform: translateY(20px);
-      transition: all 0.3s; z-index: 999;
+      position: fixed; bottom: 30px; right: 30px; background: var(--brand-gradient); color: white;
+      padding: 14px 28px; border-radius: 99px; box-shadow: 0 15px 40px rgba(0, 87, 217, 0.5);
+      font-weight: 500; opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 999;
     }
     #toast.show { opacity: 1; transform: translateY(0); }
-
     dialog { border: none; background: transparent; padding: 0; }
-    dialog::backdrop { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+    dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); }
   </style>
 </head>
 
@@ -293,12 +198,8 @@
     <header>
       <div class="brand">
         <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
-        <div class="brand-text">
-          <h1>Axia Energia</h1>
-          <span>Gestão de Aniversariantes</span>
-        </div>
+        <div class="brand-text"><h1>Axia Energia</h1><span>Painel Oficial</span></div>
       </div>
-
       <nav class="nav-tabs">
         <button class="nav-tab" data-view="home" data-active="true"><i class="fa-solid fa-house"></i> <span>Hoje</span></button>
         <button class="nav-tab" data-view="calendar"><i class="fa-regular fa-calendar"></i> <span>Calendário</span></button>
@@ -306,7 +207,6 @@
         <button class="nav-tab" data-view="future"><i class="fa-solid fa-clock-rotate-left"></i> <span>Futuros</span></button>
         <button class="nav-tab" data-view="charts"><i class="fa-solid fa-chart-pie"></i> <span>Gráficos</span></button>
       </nav>
-
       <div style="display:flex; gap:8px;">
         <button id="theme-toggle" class="btn btn-ghost btn-icon"><i class="fa-solid fa-moon"></i></button>
         <button id="celebrate-btn" class="btn btn-primary"><i class="fa-solid fa-gift"></i> Celebrar</button>
@@ -336,14 +236,14 @@
               <span>Tema:</span><strong style="color:var(--text-main)" id="current-theme">Dark</strong>
             </div>
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
-              <span>Total Cadastros:</span><strong style="color:var(--brand-primary)" id="total-records">0</strong>
+              <span>Total Cadastros:</span><strong style="color:var(--axia-blue)" id="total-records">0</strong>
             </div>
             <div style="display:flex; justify-content:space-between;">
-              <span>Sistema:</span><strong style="color:var(--brand-secondary)">Online</strong>
+              <span>Sistema:</span><strong style="color:var(--axia-green)">Online</strong>
             </div>
           </div>
-          <div style="margin-top:20px; padding:16px; background:rgba(0, 196, 106, 0.1); border:1px solid rgba(0, 196, 106, 0.2); border-radius:16px; font-size:12px; color:var(--brand-secondary);">
-            <i class="fa-regular fa-lightbulb"></i> Dica: Pressione <strong>"C"</strong> para celebrar com a equipe!
+          <div style="margin-top:20px; padding:16px; background:rgba(0, 196, 106, 0.1); border:1px solid rgba(0, 196, 106, 0.2); border-radius:16px; font-size:12px; color:var(--axia-green);">
+            <i class="fa-regular fa-lightbulb"></i> Dica: Pressione <strong>"C"</strong> para celebrar!
           </div>
         </aside>
       </section>
@@ -353,13 +253,17 @@
           <div class="card-header">
             <div><h2 class="card-title">Calendário</h2><p class="card-sub" id="calendar-month-label">Mês atual</p></div>
           </div>
+          <div class="calendar-weekdays">
+            <div class="weekday">Dom</div><div class="weekday">Seg</div><div class="weekday">Ter</div>
+            <div class="weekday">Qua</div><div class="weekday">Qui</div><div class="weekday">Sex</div><div class="weekday">Sab</div>
+          </div>
           <div id="calendar-grid" class="calendar-grid"></div>
         </div>
         <aside class="card">
           <div class="card-header"><h3 class="card-title">Resumo</h3></div>
           <p class="card-sub" id="calendar-summary" style="margin-bottom:20px;">Calculando...</p>
           <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">
-            O calendário exibe os aniversariantes do mês atual. Use os filtros da lista para ver outros meses.
+            Visualize a distribuição semanal dos aniversários. Use o filtro da lista para trocar o mês.
           </div>
         </aside>
       </section>
@@ -426,7 +330,7 @@
   </div>
 
   <dialog id="login-modal">
-    <div class="card" style="width:360px; border:1px solid var(--brand-primary); box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
+    <div class="card" style="width:360px; border:1px solid var(--axia-blue); box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
       <div style="text-align:center; margin-bottom:24px;">
         <h3 style="font-size:20px;">Acesso Admin</h3>
         <p style="font-size:12px; color:var(--text-muted);">Área restrita Axia Energia</p>
@@ -447,7 +351,7 @@
 
   <script>
     /* =========================================
-       LÓGICA PRINCIPAL (Axia Energia)
+       LÓGICA PRINCIPAL - V3.0 PRODUCTION
        ========================================= */
     let dataArr = [];
     let isAdmin = false;
@@ -463,10 +367,11 @@
     // --- Helpers ---
     const toast = (msg, err=false) => {
       const t = document.getElementById('toast');
-      t.textContent = msg; t.style.background = err ? 'var(--danger)' : 'var(--brand-primary)';
+      t.textContent = msg; t.style.background = err ? 'var(--danger)' : 'var(--brand-gradient)';
       t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000);
     };
     const uid = () => 'id-' + Math.random().toString(36).substr(2, 9);
+    const normalizeSetor = (s) => (s || '').trim().toUpperCase(); // Ponto 2: Setor Maiúsculo
     
     // --- Renderização ---
     function renderHome() {
@@ -478,17 +383,17 @@
       const content = document.getElementById('today-content');
       if(todayMatches.length > 0) {
         content.innerHTML = todayMatches.map(p => `
-          <div class="person-row" style="width:100%; border:1px solid var(--brand-primary); background:rgba(0, 87, 217, 0.1);">
-            <div class="avatar" style="background:var(--brand-primary)">${p.nome.charAt(0)}</div>
+          <div class="person-row" style="width:100%; border:1px solid var(--axia-blue); background:rgba(0, 87, 217, 0.1);">
+            <div class="avatar" style="background:var(--axia-blue)">${p.nome.charAt(0)}</div>
             <div class="person-info"><h4>${p.nome}</h4><p>${p.setor} • Hoje!</p></div>
-            <i class="fa-solid fa-cake-candles" style="margin-left:auto; color:var(--brand-secondary);"></i>
+            <i class="fa-solid fa-cake-candles" style="margin-left:auto; color:var(--axia-green);"></i>
           </div>`).join('');
         if(!window.celebratedToday) { celebrateNow(true); window.celebratedToday = true; }
       } else {
         const nextList = getUpcoming(365);
         const next = nextList.length ? nextList[0] : null;
         content.innerHTML = next ? 
-          `<span style="font-size:14px;">Próximo: <strong style="color:var(--brand-secondary)">${next.nome}</strong> em ${next.dia}/${next.mes} (${next.diffDays} dias).</span>` : 
+          `<span style="font-size:14px;">Próximo: <strong style="color:var(--axia-green)">${next.nome}</strong> em ${next.dia}/${next.mes} (${next.diffDays} dias).</span>` : 
           '<span style="font-size:14px;">Nenhum aniversário cadastrado.</span>';
       }
 
@@ -514,7 +419,13 @@
         return matchName && matchMonth;
       });
 
-      filtered.sort((a,b) => (a.mes - b.mes) || (a.dia - b.dia) || a.nome.localeCompare(b.nome));
+      // Ponto 4: Ordenação (Mês -> Dia -> Nome)
+      filtered.sort((a,b) => {
+        if(a.mes !== b.mes) return a.mes - b.mes;
+        if(a.dia !== b.dia) return a.dia - b.dia;
+        return a.nome.localeCompare(b.nome);
+      });
+
       const paged = filtered.slice(0, (pageOffset + 1) * PAGE_SIZE);
 
       if(paged.length === 0) {
@@ -541,6 +452,7 @@
       document.getElementById('load-more').style.display = (filtered.length > paged.length) ? 'inline-block' : 'none';
     }
 
+    // Ponto 5: Calendário Alinhado
     function renderCalendar() {
       const grid = document.getElementById('calendar-grid');
       const now = new Date();
@@ -550,13 +462,21 @@
       document.getElementById('calendar-month-label').textContent = `${mNames[m]} / ${y}`;
       
       const daysInMonth = new Date(y, m + 1, 0).getDate();
+      const firstDayIndex = new Date(y, m, 1).getDay(); // 0 = Domingo
+      
       let html = '';
+      
+      // Células vazias antes do dia 1
+      for(let i=0; i<firstDayIndex; i++){
+        html += `<div class="day-cell empty"></div>`;
+      }
+
       let count = 0;
       for(let d=1; d<=daysInMonth; d++) {
         const matches = dataArr.filter(p => p.dia === d && p.mes === (m+1));
         count += matches.length;
         let badges = matches.map(p => `<div class="day-badge">${p.nome.split(' ')[0]}</div>`).join('');
-        html += `<div class="day-cell"><span style="font-size:11px; color:var(--text-muted); float:right;">${d}</span><div style="margin-top:18px;">${badges}</div></div>`;
+        html += `<div class="day-cell"><span class="day-num">${d}</span><div style="margin-top:18px;">${badges}</div></div>`;
       }
       grid.innerHTML = html;
       document.getElementById('calendar-summary').innerHTML = `Total: <strong>${count}</strong> aniversariantes em ${mNames[m]}.`;
@@ -570,7 +490,7 @@
         <div class="person-row" style="background:var(--hover-bg); border:1px solid var(--border-color);">
           <div class="avatar">${p.nome.charAt(0)}</div>
           <div class="person-info" style="flex:1"><h4>${p.nome}</h4><p>${p.setor}</p></div>
-          <div style="text-align:right"><div style="font-weight:600; color:var(--brand-primary);">${p.dia}/${p.mes}</div><div class="tag-days">${p.diffDays} dias</div></div>
+          <div style="text-align:right"><div style="font-weight:600; color:var(--axia-blue);">${p.dia}/${p.mes}</div><div class="tag-days">${p.diffDays} dias</div></div>
         </div>`).join('') : '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);">Nenhum neste período.</div>';
     }
 
@@ -582,7 +502,6 @@
       if(chartInstance) chartInstance.destroy();
       
       const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
-      // Cores Axia: Azul -> Verde
       gradient.addColorStop(0, '#0057d9'); gradient.addColorStop(1, '#00c46a');
       
       chartInstance = new Chart(ctx, {
@@ -611,7 +530,7 @@
       }).filter(p => p.diffDays >= 0 && p.diffDays <= days).sort((a,b) => a.diffDays - b.diffDays);
     }
 
-    // CRUD (Firebase/Local)
+    // CRUD (Ponto 2 aplicado: normalizeSetor)
     window.editRecord = async (id) => {
       const rec = dataArr.find(p => p.id === id); if(!rec) return;
       const novoNome = prompt('Nome:', rec.nome); if(novoNome === null) return;
@@ -619,11 +538,17 @@
       const novoDia = prompt('Dia:', rec.dia);
       const novoMes = prompt('Mês:', rec.mes);
       if(novoNome && novoDia && novoMes) {
+        const payload = { 
+          nome: novoNome, 
+          setor: normalizeSetor(novoSetor), 
+          dia: Number(novoDia), 
+          mes: Number(novoMes) 
+        };
         if(firebaseInitialized && isAdmin) {
-           await firebaseDb.collection('aniversariantes').doc(id).set({ nome: novoNome, setor: novoSetor || '', dia: Number(novoDia), mes: Number(novoMes) }, { merge: true });
+           await firebaseDb.collection('aniversariantes').doc(id).set(payload, { merge: true });
            toast('Atualizado!');
         } else {
-           rec.nome = novoNome; rec.setor = novoSetor; rec.dia = Number(novoDia); rec.mes = Number(novoMes);
+           Object.assign(rec, payload);
            renderList(true); toast('Atualizado (Local)');
         }
       } else toast('Dados inválidos.', true);
@@ -642,7 +567,6 @@
     function celebrateNow(auto=false) {
       const c = document.getElementById('confetti-canvas');
       const myConfetti = confetti.create(c, { resize: true });
-      // Cores Confetti Axia
       myConfetti({ particleCount: auto?100:200, spread: 70, origin: { y: 0.6 }, colors: ['#0057d9', '#00c46a', '#ffffff'] });
       if(!auto) {
         toast('🎉 Energia que move!');
@@ -657,6 +581,7 @@
     async function loadScript(src) { return new Promise((r, j) => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = j; document.head.appendChild(s); }); }
 
     async function initFirebase() {
+      // Ponto 1: Usando __firebase_config
       if(!window.__firebase_config) return false;
       try {
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
@@ -673,9 +598,24 @@
         });
 
         firebaseDb.collection('aniversariantes').onSnapshot(snap => {
-          dataArr = snap.docs.map(doc => { const d = doc.data(); return { id: doc.id, nome: d.nome||'', setor: (d.setor||'').toUpperCase(), dia: Number(d.dia), mes: Number(d.mes) }; });
-          // Dedupe simples
-          const unique = new Map(); dataArr.forEach(i => unique.set(i.nome+i.dia+i.mes, i)); dataArr = Array.from(unique.values());
+          dataArr = snap.docs.map(doc => { 
+            const d = doc.data(); 
+            return { 
+              id: doc.id, 
+              nome: d.nome||'', 
+              setor: normalizeSetor(d.setor), // Normaliza leitura
+              dia: Number(d.dia), 
+              mes: Number(d.mes) 
+            }; 
+          });
+          // Ponto 3: Deduplicação melhorada (Nome+Setor+Data)
+          const unique = new Map(); 
+          dataArr.forEach(i => {
+            const key = `${i.nome}|${i.setor}|${i.dia}|${i.mes}`;
+            unique.set(key, i);
+          }); 
+          dataArr = Array.from(unique.values());
+          
           const active = document.querySelector('.nav-tab[data-active="true"]'); if(active) active.click();
         });
         return true;
@@ -687,15 +627,17 @@
     document.addEventListener('DOMContentLoaded', async () => {
       const theme = localStorage.getItem('axia_theme') || 'dark';
       document.body.dataset.theme = theme;
+      document.getElementById('current-theme').textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
       document.getElementById('theme-toggle').innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 
-      const demoData = [ {id:'1', nome:'Colaborador Exemplo', setor:'Operações', dia:14, mes:12}, {id:'2', nome:'Ana Silva', setor:'TI', dia:1, mes:12} ];
+      const demoData = [ {id:'1', nome:'Colaborador Exemplo', setor:'OPERAÇÕES', dia:14, mes:12}, {id:'2', nome:'Ana Silva', setor:'TI', dia:1, mes:12} ];
       const fbOk = await initFirebase();
       if(!fbOk) { dataArr = demoData; console.log("Modo Demo"); document.querySelector('.nav-tab[data-view="home"]').click(); }
 
       document.getElementById('theme-toggle').addEventListener('click', () => {
         const next = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
         document.body.dataset.theme = next; localStorage.setItem('axia_theme', next);
+        document.getElementById('current-theme').textContent = next === 'dark' ? 'Dark Mode' : 'Light Mode';
         document.getElementById('theme-toggle').innerHTML = next === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
         renderCharts();
       });
@@ -735,8 +677,9 @@
         const nome = prompt('Nome:'); if(!nome) return;
         const setor = prompt('Setor:'); const dia = prompt('Dia:'); const mes = prompt('Mês:');
         if(nome && dia && mes) {
-          if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add({ nome, setor: setor||'', dia: Number(dia), mes: Number(mes) });
-          else { dataArr.push({ id: uid(), nome, setor: setor||'', dia: Number(dia), mes: Number(mes) }); renderList(true); toast('Adicionado (Local)'); }
+          const payload = { nome, setor: normalizeSetor(setor), dia: Number(dia), mes: Number(mes) };
+          if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add(payload);
+          else { dataArr.push({ id: uid(), ...payload }); renderList(true); toast('Adicionado (Local)'); }
         }
       });
 
@@ -751,7 +694,8 @@
             const parts = lines[i].match(/(".*?"|[^,]+)/g);
             if(parts && parts.length >= 3) {
               const cl = (v) => (v||'').replace(/^"|"$/g,'').trim();
-              const nome = cl(parts[0]); const setor = cl(parts[1]); const dia = parseInt(cl(parts[2])); const mes = parseInt(cl(parts[3]));
+              const nome = cl(parts[0]); const setor = normalizeSetor(cl(parts[1])); 
+              const dia = parseInt(cl(parts[2])); const mes = parseInt(cl(parts[3]));
               if(nome && !isNaN(dia) && !isNaN(mes)) {
                 if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes });
                 else dataArr.push({ id:uid(), nome, setor, dia, mes });
