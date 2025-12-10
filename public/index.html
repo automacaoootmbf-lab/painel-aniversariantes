@@ -17,9 +17,9 @@
        1. IDENTIDADE VISUAL AXIA ENERGIA
        ========================================= */
     :root {
-      --axia-blue-dark: #001f3d;   /* Azul Profundo */
-      --axia-blue: #0057d9;        /* Azul Vibrante */
-      --axia-green: #00c46a;       /* Verde Energia */
+      --axia-blue-dark: #001f3d;
+      --axia-blue: #0057d9;
+      --axia-green: #00c46a;
       
       --brand-gradient: linear-gradient(135deg, var(--axia-blue), var(--axia-green));
       
@@ -35,7 +35,6 @@
       --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.6);
     }
 
-    /* Tema Claro */
     [data-theme="light"] {
       --text-main: #0f172a;
       --text-muted: #64748b;
@@ -175,7 +174,6 @@
     td { padding: 14px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
     tr:hover td { background: var(--hover-bg); }
 
-    /* Utilitários & Animações */
     .admin-only { display: none; }
     #toast {
       position: fixed; bottom: 30px; right: 30px; background: var(--brand-gradient); color: white;
@@ -366,7 +364,7 @@
 
   <script>
     /* =========================================
-       LÓGICA PRINCIPAL - V3.2 PRODUCTION (FIXED DATA)
+       LÓGICA PRINCIPAL - V3.3 PRODUCTION (BLINDADO)
        ========================================= */
     let dataArr = [];
     let isAdmin = false;
@@ -387,11 +385,10 @@
     const uid = () => 'id-' + Math.random().toString(36).substr(2, 9);
     const normalizeSetor = (s) => (s || '').trim().toUpperCase();
 
-    // -- Correção de Mês Zero (NOVO) --
+    // -- Correção de Mês Zero --
     function normalizarMes(rawMes, textoData) {
       let m = Number(rawMes || 0);
-      if (m >= 1 && m <= 12) return m; // Já é válido
-      
+      if (m >= 1 && m <= 12) return m; 
       if (textoData) {
         const t = String(textoData).toLowerCase();
         if (t.includes('janeiro')) return 1;
@@ -407,7 +404,7 @@
         if (t.includes('novembro')) return 11;
         if (t.includes('dezembro')) return 12;
       }
-      return 0; // Ainda inválido
+      return 0; 
     }
 
     // --- Celebração ---
@@ -510,7 +507,6 @@
 
       let html = `<table><thead><tr><th>Colaborador</th><th>Setor</th><th>Data</th><th style="text-align:right">Ações</th></tr></thead><tbody>`;
       html += paged.map(p => {
-        // Formatação segura da data
         const diaStr = p.dia ? String(p.dia).padStart(2,'0') : '--';
         const mesStr = (p.mes && p.mes >= 1 && p.mes <= 12) ? String(p.mes).padStart(2,'0') : '--';
         
@@ -633,7 +629,6 @@
           toggleAdminUI(); renderList(true);
         });
 
-        // SNAPSHOT ATUALIZADO (com correção de mês)
         firebaseDb.collection('aniversariantes').onSnapshot(snap => {
           const novos = [];
           snap.forEach(doc => {
@@ -645,7 +640,7 @@
               nome: d.nome || '',
               setor: normalizeSetor(d.setor),
               dia: Number(d.dia),
-              mes: mesCorrigido // Agora sempre tenta corrigir
+              mes: mesCorrigido
             });
           });
           
@@ -707,8 +702,17 @@
       });
       document.getElementById('csv-file').addEventListener('change', (e) => {
         const f = e.target.files[0]; if(!f) return; const r = new FileReader();
+        
+        // CORREÇÃO SEGURA NO LOAD
         r.onload = async () => {
-          const lines = r.result.split(/\r?\n/).filter(l => l.trim()); const start = lines[0].toLowerCase().includes('nome') ? 1 : 0; let c = 0;
+          const raw = (r.result || '').toString();
+          const lines = raw.split(/\r?\n/).filter(l => l.trim());
+          if (!lines.length) { toast('Arquivo vazio.', true); return; }
+
+          const headerLine = typeof lines[0] === 'string' ? lines[0] : '';
+          const start = headerLine.toLowerCase().includes('nome') ? 1 : 0;
+          
+          let c = 0;
           for(let i=start; i<lines.length; i++) {
             const parts = lines[i].match(/(".*?"|[^,]+)/g);
             if(parts && parts.length >= 3) {
@@ -725,7 +729,15 @@
          const csv = "Nome,Setor,Dia,Mes\n" + dataArr.map(p => `"${p.nome}","${p.setor}",${p.dia},${p.mes}`).join('\n');
          const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'aniversariantes_axia.csv'; document.body.appendChild(a); a.click(); a.remove();
       });
-      document.addEventListener('keydown', (e) => { if(e.key.toLowerCase() === 'c' && document.activeElement.tagName !== 'INPUT') celebrateNow(false); });
+      
+      // CORREÇÃO SEGURA NO KEYDOWN
+      document.addEventListener('keydown', (e) => { 
+        const key = (e.key || '').toLowerCase();
+        const activeTag = (document.activeElement && document.activeElement.tagName) || '';
+        if (key === 'c' && activeTag !== 'INPUT' && activeTag !== 'TEXTAREA') {
+          celebrateNow(false);
+        }
+      });
     });
   </script>
 </body>
