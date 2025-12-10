@@ -3,1762 +3,654 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel de Aniversariantes — Dashboard</title>
-  <meta name="description" content="Painel corporativo de aniversariantes com calendário, lista, estatísticas e importação CSV." />
-  <meta name="theme-color" content="#10b981">
+  <title>Painel de Aniversariantes — Axia Energia</title>
+  <meta name="description" content="Gestão corporativa de aniversariantes." />
+  <meta name="theme-color" content="#0e7490">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
   <style>
-    :root{
-      --bg-light: #f5faf7;
-      --card-light: #ffffff;
-      --text-light: #020617;
-      --muted-light: #4b5563;
-      --bg-dark: #020817;
-      --card-dark: #020c1b;
-      --text-dark: #e5f4ff;
-      --muted-dark: #9ca3af;
-      --accent-green: #10b981;
-      --accent-blue: #0ea5e9;
+    /* =========================================
+       1. VARIAVEIS E TEMA (AXIA ENERGIA)
+       ========================================= */
+    :root {
+      /* Cores da Marca */
+      --brand-dark: #0f172a;       /* Navy Blue Profundo */
+      --brand-primary: #0891b2;    /* Ciano Energia */
+      --brand-secondary: #10b981;  /* Verde Sustentável */
+      --brand-gradient: linear-gradient(135deg, #0891b2, #10b981);
+      
+      /* UI Colors */
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --bg-body: #020617;
+      --card-bg: rgba(30, 41, 59, 0.7); /* Efeito vidro */
+      --border-color: rgba(148, 163, 184, 0.15);
+      --hover-bg: rgba(255, 255, 255, 0.05);
       --danger: #ef4444;
-      --contrast-border-light: rgba(15,23,42,0.08);
-      --contrast-border-dark: rgba(148,163,184,0.35);
-      --elevation: 0 18px 38px rgba(15,23,42,0.35);
-      --radius-lg: 18px;
-      --radius-md: 12px;
-      --nav-height: 64px;
+
+      /* Dimensões */
+      --radius-lg: 20px;
+      --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.5);
     }
 
-    [data-theme="light"]{
-      --bg: var(--bg-light);
-      --card: var(--card-light);
-      --text: var(--text-light);
-      --muted: var(--muted-light);
-      --accent: var(--accent-green);
-      --accent2: var(--accent-blue);
-      --contrast-border: var(--contrast-border-light);
-    }
-    [data-theme="dark"]{
-      --bg: var(--bg-dark);
-      --card: var(--card-dark);
-      --text: var(--text-dark);
-      --muted: var(--muted-dark);
-      --accent: var(--accent-green);
-      --accent2: var(--accent-blue);
-      --contrast-border: var(--contrast-border-dark);
+    [data-theme="light"] {
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --bg-body: #f0f9ff;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --border-color: rgba(148, 163, 184, 0.2);
+      --hover-bg: rgba(15, 23, 42, 0.05);
     }
 
-    /* select legível nos dois temas */
-    select{
-      background-color: var(--card);
-      color: var(--text);
-    }
-    select option{
-      background-color: var(--card);
-      color: var(--text);
-    }
-    [data-theme="dark"] select{
-      background-color: var(--card-dark);
-      color: var(--text-dark);
-    }
-    [data-theme="dark"] select option{
-      background-color: var(--card-dark);
-      color: var(--text-dark);
+    /* =========================================
+       2. RESET & BASE
+       ========================================= */
+    * { box-sizing: border-box; outline: none; }
+    
+    body {
+      margin: 0; font-family: 'Inter', sans-serif;
+      background-color: var(--bg-body);
+      /* Gradiente de fundo sutil */
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(8, 145, 178, 0.15), transparent 40%),
+        radial-gradient(circle at 85% 90%, rgba(16, 185, 129, 0.1), transparent 40%);
+      color: var(--text-main);
+      min-height: 100vh; overflow-x: hidden; line-height: 1.5;
     }
 
-    *,*::before,*::after{box-sizing:border-box}
-    html,body{
-      height:100%;
-      margin:0;
-      background:radial-gradient(circle at top, rgba(56,189,248,0.15), transparent 50%) , var(--bg);
-      color:var(--text);
-      font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;
-      line-height:1.35;
-    }
-    :focus{
-      outline:2px solid color-mix(in srgb, var(--accent) 40%, transparent);
-      outline-offset:3px;
-    }
-    @media (prefers-reduced-motion: reduce){
-      *{
-        animation-duration:0.001ms !important;
-        transition-duration:0.001ms !important;
-      }
-    }
+    h1, h2, h3, .card-title { font-family: 'Poppins', sans-serif; font-weight: 600; color: var(--text-main); margin: 0; }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 4px; }
 
-    .shell{
-      min-height:100vh;
-      max-width:1180px;
-      margin:0 auto;
-      padding:18px 18px 32px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-    }
+    .shell { max-width: 1280px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
 
-    /* HEADER / NAVBAR */
-    header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      padding:10px 16px;
-      border-radius:999px;
-      background:linear-gradient(90deg, rgba(15,23,42,0.08), transparent);
-      border:1px solid var(--contrast-border);
-      box-shadow:0 20px 60px rgba(15,23,42,0.32);
-      backdrop-filter:blur(18px);
-      position:sticky;
-      top:10px;
-      z-index:40;
+    /* =========================================
+       3. COMPONENTES UI
+       ========================================= */
+    /* Header Glass */
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; background: var(--card-bg);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color); border-radius: 999px;
+      box-shadow: var(--shadow-soft); position: sticky; top: 20px; z-index: 100;
+      transition: all 0.3s ease;
     }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-    .brand-logo{
-      width:40px;
-      height:40px;
-      border-radius:999px;
-      background:conic-gradient(from 220deg, var(--accent2), var(--accent), #22c55e);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:#f9fafb;
-      font-size:20px;
-      box-shadow:0 10px 24px rgba(16,185,129,0.45);
-    }
-    .brand-text h1{
-      margin:0;
-      font-size:18px;
-      font-weight:600;
-      letter-spacing:0.03em;
-    }
-    .brand-text p{
-      margin:0;
-      font-size:12px;
-      color:var(--muted);
-    }
+    @media(max-width: 980px) { header { flex-wrap: wrap; justify-content: center; gap: 15px; border-radius: 20px; } }
 
-    .nav-tabs{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      border-radius:999px;
-      padding:4px;
-      background:rgba(15,23,42,0.4);
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: var(--brand-gradient);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; color: white; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
     }
-    .nav-tab{
-      position:relative;
-      border:none;
-      border-radius:999px;
-      padding:6px 14px;
-      font-size:13px;
-      display:flex;
-      align-items:center;
-      gap:6px;
-      background:transparent;
-      color:var(--muted);
-      cursor:pointer;
-      transition:background .18s ease, color .18s ease, transform .12s ease;
-    }
-    .nav-tab i{
-      font-size:13px;
-    }
-    .nav-tab[data-active="true"]{
-      background:linear-gradient(90deg,var(--accent2),var(--accent));
-      color:#f9fafb;
-      box-shadow:0 10px 25px rgba(15,23,42,0.55);
-      transform:translateY(-1px);
-    }
-    .nav-tab[data-active="true"]::after{
-      content:'';
-      position:absolute;
-      left:16px;
-      right:16px;
-      bottom:-6px;
-      height:3px;
-      border-radius:999px;
-      background:linear-gradient(90deg,var(--accent2),var(--accent));
-      opacity:.9;
-    }
+    .brand-text h1 { font-size: 18px; letter-spacing: -0.5px; }
+    .brand-text span { font-size: 12px; color: var(--text-muted); font-weight: 500; }
 
-    .header-actions{
-      display:flex;
-      align-items:center;
-      gap:8px;
+    /* Botões */
+    .btn {
+      border: none; border-radius: 99px; padding: 10px 20px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease;
     }
+    .btn-primary { background: var(--brand-gradient); color: white; box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(8, 145, 178, 0.5); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+    .btn-ghost:hover { background: var(--hover-bg); color: var(--text-main); border-color: var(--text-muted); }
+    .btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; }
 
-    .btn{
-      appearance:none;
-      border-radius:999px;
-      border:1px solid transparent;
-      padding:7px 12px;
-      font-size:13px;
-      font-weight:500;
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      gap:6px;
-      background:linear-gradient(90deg,var(--accent2),var(--accent));
-      color:#f9fafb;
-      box-shadow:0 8px 20px rgba(16,185,129,0.4);
-      transition:transform .12s ease, box-shadow .12s ease, background .18s ease;
+    input, select {
+      background: rgba(15, 23, 42, 0.3); border: 1px solid var(--border-color);
+      color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 13px;
+      transition: border-color 0.2s;
     }
-    .btn:hover{
-      transform:translateY(-1px);
-      box-shadow:0 12px 26px rgba(15,23,42,0.5);
-    }
-    .btn-ghost{
-      background:transparent;
-      color:var(--muted);
-      border-color:var(--contrast-border);
-      box-shadow:none;
-    }
-    .btn-ghost:hover{
-      background:rgba(15,23,42,0.18);
-      color:var(--text);
-    }
-    .btn-icon{
-      width:34px;
-      height:34px;
-      padding:0;
-      align-items:center;
-      justify-content:center;
-      border-radius:999px;
-    }
+    input:focus, select:focus { border-color: var(--brand-primary); }
 
-    main{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
+    /* Nav Tabs */
+    .nav-tabs { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 99px; display: flex; gap: 4px; overflow-x: auto; }
+    .nav-tab {
+      background: transparent; border: none; color: var(--text-muted);
+      padding: 8px 16px; border-radius: 99px; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; white-space: nowrap;
     }
+    .nav-tab:hover { color: var(--text-main); }
+    .nav-tab[data-active="true"] { background: var(--brand-dark); color: var(--brand-primary); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+    [data-theme="light"] .nav-tab[data-active="true"] { background: white; }
 
-    .page{
-      display:none;
-      animation:fadeIn .3s ease both;
-    }
-    .page.active{
-      display:block;
-    }
+    /* =========================================
+       4. LAYOUT DE PÁGINAS
+       ========================================= */
+    .page { display: none !important; opacity: 0; transform: translateY(10px); transition: opacity 0.4s, transform 0.4s; }
+    .page.active { opacity: 1; transform: translateY(0); }
+    
+    .page.page-grid.active { display: grid !important; grid-template-columns: 2.2fr 1fr; gap: 24px; align-items: flex-start; }
+    .page.page-full.active { display: flex !important; flex-direction: column; gap: 24px; }
+    
+    @media(max-width: 980px) { .page.page-grid.active { grid-template-columns: 1fr !important; } }
 
-    .page-grid{
-      display:grid;
-      grid-template-columns:2.1fr 1.1fr;
-      gap:18px;
-      align-items:flex-start;
+    /* Cards */
+    .card {
+      background: var(--card-bg); border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg); padding: 24px; backdrop-filter: blur(10px);
+      box-shadow: var(--shadow-soft);
     }
-    .page-full{
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-    }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-title { font-size: 16px; letter-spacing: 0.02em; }
+    .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .pill-count { background: rgba(8, 145, 178, 0.15); color: var(--brand-primary); padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
 
-    @media(max-width:980px){
-      header{
-        flex-wrap:wrap;
-        border-radius:18px;
-        align-items:flex-start;
-      }
-      .nav-tabs{
-        flex-wrap:wrap;
-        width:100%;
-        justify-content:center;
-      }
-      .page-grid{
-        grid-template-columns:1fr;
-      }
+    /* List Items */
+    .person-row {
+      display: flex; align-items: center; gap: 14px; padding: 12px;
+      border-radius: 12px; border-bottom: 1px solid var(--border-color); transition: background 0.2s;
     }
+    .person-row:last-child { border-bottom: none; }
+    .person-row:hover { background: var(--hover-bg); }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(135deg, #1e293b, #334155); color: var(--text-main);
+      display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;
+    }
+    .person-info h4 { margin: 0; font-size: 14px; font-weight: 500; }
+    .person-info p { margin: 0; font-size: 12px; color: var(--text-muted); }
+    .tag-days { font-size: 11px; font-weight: 600; color: var(--brand-secondary); background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 6px; }
 
-    .card{
-      background:radial-gradient(circle at top left, rgba(56,189,248,0.14), transparent 55%), var(--card);
-      border-radius:var(--radius-lg);
-      padding:18px 18px 16px;
-      border:1px solid var(--contrast-border);
-      box-shadow:0 16px 35px rgba(15,23,42,0.25);
-      position:relative;
-      overflow:hidden;
-    }
-    .card-header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:8px;
-      margin-bottom:10px;
-    }
-    .card-title{
-      font-size:16px;
-      font-weight:600;
-    }
-    .card-sub{
-      font-size:13px;
-      color:var(--muted);
-    }
+    /* Tabela */
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding: 12px 8px; border-bottom: 1px solid var(--border-color); }
+    td { padding: 12px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
+    tr:hover td { background: var(--hover-bg); }
 
-    .pill{
-      font-size:12px;
-      padding:4px 10px;
-      border-radius:999px;
-      background:rgba(15,23,42,0.25);
-      color:var(--muted);
+    /* Utilitários */
+    .admin-only { display: none; }
+    #toast {
+      position: fixed; bottom: 30px; right: 30px; background: var(--brand-primary); color: white;
+      padding: 12px 24px; border-radius: 99px; box-shadow: 0 10px 30px rgba(8, 145, 178, 0.4);
+      font-weight: 500; opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 999;
     }
-
-    .today-highlight{
-      font-size:14px;
-      margin-top:6px;
-    }
-
-    .list-inline{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-top:6px;
-    }
-    .person-row{
-      display:flex;
-      align-items:flex-start;
-      gap:10px;
-      padding:8px 0;
-      border-bottom:1px solid rgba(148,163,184,0.2);
-    }
-    .person-row:last-child{
-      border-bottom:none;
-    }
-    .avatar{
-      width:36px;
-      height:36px;
-      border-radius:12px;
-      background:linear-gradient(135deg,var(--accent2),var(--accent));
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:white;
-      font-size:15px;
-      font-weight:600;
-      box-shadow:0 8px 18px rgba(16,185,129,0.45);
-    }
-    .person-main{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .person-name{
-      font-size:14px;
-      font-weight:500;
-    }
-    .person-meta{
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .calendar-grid{
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:8px;
-      margin-top:8px;
-    }
-    .day-cell{
-      min-height:90px;
-      border-radius:14px;
-      padding:8px;
-      border:1px dashed rgba(148,163,184,0.4);
-      position:relative;
-      background:linear-gradient(180deg, rgba(15,23,42,0.25), transparent);
-      font-size:12px;
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .day-num{
-      position:absolute;
-      right:8px;
-      top:6px;
-      font-size:11px;
-      color:var(--muted);
-      font-weight:500;
-    }
-    .day-badge{
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:13px;
-    }
-    th,td{
-      padding:10px 8px;
-      border-bottom:1px solid rgba(148,163,184,0.25);
-      text-align:left;
-    }
-    th{
-      color:var(--accent);
-      font-weight:600;
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:0.05em;
-    }
-    tbody tr:hover{
-      background:linear-gradient(90deg,rgba(15,23,42,0.32),transparent);
-    }
-    .table-actions{
-      display:flex;
-      justify-content:flex-end;
-      gap:4px;
-    }
-    .icon-btn{
-      border:none;
-      border-radius:999px;
-      width:26px;
-      height:26px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      background:rgba(15,23,42,0.55);
-      color:var(--muted);
-      cursor:pointer;
-      font-size:12px;
-    }
-    .icon-btn:hover{
-      background:rgba(15,23,42,0.9);
-      color:#e5e7eb;
-    }
-
-    .input, .input-sm{
-      border-radius:999px;
-      border:1px solid var(--contrast-border);
-      background:rgba(15,23,42,0.08);
-      color:var(--text);
-      padding:8px 10px;
-      font-size:13px;
-    }
-    .input-sm{
-      padding:6px 9px;
-      font-size:12px;
-    }
-    .input::placeholder{
-      color:var(--muted);
-    }
-
-    .chips-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:4px;
-    }
-
-    .badge-soft{
-      font-size:11px;
-      padding:4px 8px;
-      border-radius:999px;
-      background:rgba(15,23,42,0.35);
-      color:var(--muted);
-    }
-
-    .page-title{
-      font-size:18px;
-      font-weight:600;
-      margin:0 0 2px;
-    }
-
-    .page-sub{
-      font-size:13px;
-      color:var(--muted);
-      margin:0;
-    }
-
-    .footer-card{
-      margin-top:10px;
-      border-radius:18px;
-      padding:10px 16px;
-      border:1px solid var(--contrast-border);
-      background:linear-gradient(90deg,rgba(15,23,42,0.55),transparent);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      font-size:12px;
-      color:var(--muted);
-    }
-    .footer-right{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-
-    #toast{
-      position:fixed;
-      right:20px;
-      bottom:20px;
-      padding:12px 16px;
-      border-radius:999px;
-      background:var(--accent);
-      color:white;
-      box-shadow:0 18px 40px rgba(15,23,42,0.7);
-      transform:translateY(14px);
-      opacity:0;
-      transition:all .24s ease;
-      z-index:10020;
-      font-size:13px;
-    }
-    #toast.show{
-      opacity:1;
-      transform:translateY(0);
-    }
-
-    dialog{border:none}
-    .dialog{
-      padding:16px;
-      background:var(--card);
-      border-radius:16px;
-      min-width:320px;
-      border:1px solid var(--contrast-border);
-      box-shadow:var(--elevation);
-    }
-    .dialog h3{
-      margin-top:0;
-      margin-bottom:8px;
-      font-size:16px;
-    }
-
-    #confetti-canvas{
-      position:fixed;
-      left:0;
-      top:0;
-      width:100%;
-      height:100%;
-      pointer-events:none;
-      z-index:9999;
-    }
-    #balloon-wrap{
-      position:fixed;
-      left:0;
-      top:0;
-      width:100%;
-      height:100%;
-      pointer-events:none;
-      z-index:9980;
-    }
-
-    .admin-only{display:none}
-    .admin-visible{display:inline-flex}
-    .small{font-size:12px;color:var(--muted)}
-
-    .tag-green{
-      color:#22c55e;
-      font-weight:500;
-    }
-
-    @keyframes fadeIn{
-      from{opacity:0;transform:translateY(6px);}
-      to{opacity:1;transform:none;}
-    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    dialog { border: none; background: transparent; padding: 0; }
+    dialog::backdrop { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
   </style>
 </head>
 
-<body data-theme="light" lang="pt-BR">
-  <script src="/firebase-config.js"></script>
-
-  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
-  <div id="balloon-wrap" aria-hidden="true"></div>
-  <div id="toast" role="status" aria-live="polite"></div>
+<body data-theme="dark">
+  <script src="/firebase-config.js"></script> <canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+  <div id="toast"></div>
 
   <div class="shell">
     <header>
       <div class="brand">
-        <div class="brand-logo" aria-hidden="true">🎂</div>
+        <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
         <div class="brand-text">
-          <h1>Painel de Aniversariantes</h1>
-          <p>Visão rápida • Calendário • Estatísticas • Export/Import</p>
+          <h1>Axia Energia</h1>
+          <span>Painel de Aniversariantes</span>
         </div>
       </div>
 
-      <nav class="nav-tabs" aria-label="Seções do painel">
-        <button class="nav-tab" data-view="home" data-active="true"><i class="fa-solid fa-house"></i><span>Hoje</span></button>
-        <button class="nav-tab" data-view="calendar"><i class="fa-solid fa-calendar-days"></i><span>Calendário</span></button>
-        <button class="nav-tab" data-view="list"><i class="fa-solid fa-list"></i><span>Lista</span></button>
-        <button class="nav-tab" data-view="future"><i class="fa-solid fa-forward"></i><span>Futuros</span></button>
-        <button class="nav-tab" data-view="charts"><i class="fa-solid fa-chart-simple"></i><span>Gráficos</span></button>
+      <nav class="nav-tabs">
+        <button class="nav-tab" data-view="home" data-active="true"><i class="fa-solid fa-house"></i> <span>Hoje</span></button>
+        <button class="nav-tab" data-view="calendar"><i class="fa-regular fa-calendar"></i> <span>Calendário</span></button>
+        <button class="nav-tab" data-view="list"><i class="fa-solid fa-list-ul"></i> <span>Lista</span></button>
+        <button class="nav-tab" data-view="future"><i class="fa-solid fa-clock-rotate-left"></i> <span>Futuros</span></button>
+        <button class="nav-tab" data-view="charts"><i class="fa-solid fa-chart-pie"></i> <span>Gráficos</span></button>
       </nav>
 
-      <div class="header-actions">
-        <button id="theme-toggle" class="btn-ghost btn-icon" aria-pressed="false" title="Alternar modo claro/escuro">
-          <i class="fa-solid fa-moon"></i>
-        </button>
-        <button id="celebrate-btn" class="btn" title="Celebrar aniversariantes">
-          <i class="fa-solid fa-champagne-glasses"></i><span>Celebrar</span>
-        </button>
-        <button id="auth-btn" class="btn-ghost">
-          <i class="fa-solid fa-lock"></i><span>Entrar</span>
-        </button>
+      <div style="display:flex; gap:8px;">
+        <button id="theme-toggle" class="btn btn-ghost btn-icon"><i class="fa-solid fa-moon"></i></button>
+        <button id="celebrate-btn" class="btn btn-primary"><i class="fa-solid fa-gift"></i> Celebrar</button>
+        <button id="auth-btn" class="btn btn-ghost">Login</button>
       </div>
     </header>
 
     <main>
-      <section id="view-home" class="page page-grid active" aria-label="Visão de hoje">
+      <section id="view-home" class="page page-grid active">
         <div class="card">
           <div class="card-header">
-            <div>
-              <p class="page-title">Hoje</p>
-              <p class="page-sub" id="today-sub">Resumo do dia</p>
-            </div>
-            <span class="pill" id="today-count">—</span>
+            <div><h2 class="card-title">Visão Geral</h2><p class="card-sub">Aniversariantes do dia</p></div>
+            <span class="pill-count" id="today-count">0</span>
           </div>
-          <div id="today-content" class="today-highlight">Carregando...</div>
-
-          <div style="margin-top:14px;">
-            <div class="card-header" style="margin-bottom:6px;">
-              <div>
-                <div class="card-title" style="font-size:14px;">Próximos 5 dias</div>
-                <div class="card-sub">Visão rápida dos aniversariantes mais próximos.</div>
-              </div>
+          <div id="today-content" style="min-height: 80px; display:flex; align-items:center; color:var(--text-muted);">Carregando...</div>
+          <div style="margin-top: 32px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:12px;">
+              <h3 class="card-title" style="font-size:14px;">Próximos 5 dias</h3>
             </div>
-            <div id="home-upcoming" class="list-inline">Carregando...</div>
+            <div id="home-upcoming" style="display:flex; flex-direction:column; gap:8px;"></div>
           </div>
         </div>
-
         <aside class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Visão do sistema</div>
-              <div class="card-sub">Tema, idioma e versão do painel.</div>
-            </div>
+          <div class="card-header"><h3 class="card-title">Status</h3></div>
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:13px; color:var(--text-muted);">
+            <div style="display:flex; justify-content:space-between;"><span>Tema:</span><strong style="color:var(--text-main)" id="current-theme">Dark</strong></div>
+            <div style="display:flex; justify-content:space-between;"><span>Cadastros:</span><strong style="color:var(--brand-primary)" id="total-records">0</strong></div>
           </div>
-          <div class="chips-row">
-            <span class="badge-soft"><strong>Tema:</strong> <span id="current-theme">Claro</span></span>
-            <span class="badge-soft"><strong>Idioma:</strong>
-              <select id="locale-select" class="input-sm" aria-label="Selecione o idioma">
-                <option value="pt-BR">pt-BR</option>
-                <option value="en-US">en-US</option>
+          <div style="margin-top:20px; padding:12px; background:rgba(8, 145, 178, 0.1); border-radius:12px; font-size:12px; color:var(--brand-primary);">
+            <i class="fa-regular fa-lightbulb"></i> Dica: Pressione <strong>"C"</strong> para festa!
+          </div>
+        </aside>
+      </section>
+
+      <section id="view-calendar" class="page page-grid">
+        <div class="card">
+          <div class="card-header">
+            <div><h2 class="card-title">Calendário</h2><p class="card-sub" id="calendar-month-label">Mês atual</p></div>
+          </div>
+          <div id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;"></div>
+        </div>
+        <aside class="card">
+          <div class="card-header"><h3 class="card-title">Resumo</h3></div>
+          <p class="card-sub" id="calendar-summary">Calculando...</p>
+        </aside>
+      </section>
+
+      <section id="view-list" class="page page-grid">
+        <div class="card">
+          <div class="card-header">
+            <div><h2 class="card-title">Colaboradores</h2><p class="card-sub">Gestão de dados</p></div>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="search-input" placeholder="Buscar..." style="width:140px;">
+              <select id="month-filter" style="width:100px;">
+                <option value="all">Todos</option>
+                <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
+                <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
+                <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
+                <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
               </select>
-            </span>
-            <span class="badge-soft"><strong>Versão:</strong> <span id="ver-info">v1.0.3 • Internacionalização pronta</span></span>
-          </div>
-          <p class="small" style="margin-top:10px;">
-            <span class="tag-green">Dica:</span> pressione <code>C</code> para celebrar de qualquer lugar da página.
-          </p>
-        </aside>
-      </section>
-
-      <section id="view-calendar" class="page page-grid" aria-label="Calendário de aniversários">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <p class="page-title">Calendário</p>
-              <p class="page-sub">Visualização mensal dos aniversários cadastrados.</p>
+              <button id="add-btn" class="btn btn-primary btn-icon admin-only"><i class="fa-solid fa-plus"></i></button>
             </div>
           </div>
-          <div id="calendar-month-label" class="small" style="margin-bottom:4px;">Mês atual</div>
-          <div id="calendar-grid" class="calendar-grid"></div>
+          <div id="list-wrapper"></div>
+          <div style="text-align:center; margin-top:16px;"><button id="load-more" class="btn btn-ghost">Carregar mais</button></div>
         </div>
-
         <aside class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Resumo rápido</div>
-              <div class="card-sub">Total por mês e navegação rápida.</div>
-            </div>
-          </div>
-          <p class="small" id="calendar-summary">Carregando dados...</p>
-        </aside>
-      </section>
-
-      <section id="view-list" class="page page-grid" aria-label="Lista completa">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <p class="page-title">Lista completa</p>
-              <p class="page-sub">Busque, filtre e gerencie todos os aniversariantes.</p>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
-              <div style="display:flex;gap:6px;align-items:center;">
-                <input id="search-input" type="search" class="input" placeholder="Buscar por nome ou setor" aria-label="Buscar aniversariantes">
-                <button id="add-btn" class="btn-ghost admin-only"><i class="fa-solid fa-plus"></i></button>
-              </div>
-              <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end;">
-                <select id="month-filter" class="input-sm" aria-label="Filtrar por mês">
-                  <option value="all">Todos os meses</option>
-                  <option value="1">Jan</option><option value="2">Fev</option><option value="3">Mar</option>
-                  <option value="4">Abr</option><option value="5">Mai</option><option value="6">Jun</option>
-                  <option value="7">Jul</option><option value="8">Ago</option><option value="9">Set</option>
-                  <option value="10">Out</option><option value="11">Nov</option><option value="12">Dez</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div id="list-wrapper">Carregando...</div>
-          <div style="display:flex;justify-content:center;margin-top:8px;">
-            <button id="load-more" class="btn-ghost" style="font-size:12px;padding:6px 12px;">Carregar mais</button>
-          </div>
-        </div>
-
-        <aside class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Ações rápidas</div>
-              <div class="card-sub">Importe, exporte ou adicione registros em massa.</div>
-            </div>
-          </div>
-          <p class="small" id="actions-sub">
-            Ações administrativas disponíveis somente para usuários autenticados.
-          </p>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
-            <input id="csv-file" class="admin-only input-sm" type="file" accept=".csv" aria-label="Importar CSV">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button id="import-sample" class="btn-ghost admin-only" style="font-size:12px;padding:6px 10px;">
-                Importar Exemplo
-              </button>
-              <button id="export-csv" class="btn-ghost" style="font-size:12px;padding:6px 10px;">
-                Exportar CSV
-              </button>
+          <div class="card-header"><h3 class="card-title">Admin</h3></div>
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <p style="font-size:12px; color:var(--text-muted);">Importação (CSV)</p>
+            <input type="file" id="csv-file" accept=".csv" class="admin-only" style="font-size:11px;">
+            <div style="display:flex; gap:8px;">
+              <button id="import-sample" class="btn btn-ghost admin-only" style="flex:1; font-size:11px;">Exemplo</button>
+              <button id="export-csv" class="btn btn-ghost" style="flex:1; font-size:11px;">Exportar</button>
             </div>
           </div>
         </aside>
       </section>
 
-      <section id="view-future" class="page page-full" aria-label="Próximos aniversários">
+      <section id="view-future" class="page page-full">
         <div class="card">
           <div class="card-header">
-            <div>
-              <p class="page-title">Próximos aniversariantes</p>
-              <p class="page-sub">Visão estendida dos próximos dias.</p>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="small">Próximos</span>
-              <input id="days-ahead" type="number" min="1" max="365" value="30" class="input-sm" style="width:80px;">
-              <button id="refresh-future" class="btn-ghost" style="font-size:12px;padding:6px 10px;">Atualizar</button>
+            <h2 class="card-title">Linha do Tempo</h2>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="number" id="days-ahead" value="30" style="width:70px;">
+              <span style="font-size:13px; color:var(--text-muted);">dias</span>
+              <button id="refresh-future" class="btn btn-ghost btn-icon"><i class="fa-solid fa-arrows-rotate"></i></button>
             </div>
           </div>
-          <div id="future-list" class="list-inline">Carregando...</div>
+          <div id="future-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:16px;"></div>
         </div>
       </section>
 
-      <section id="view-charts" class="page page-grid" aria-label="Gráficos e estatísticas">
+      <section id="view-charts" class="page page-grid">
         <div class="card">
-          <div class="card-header">
-            <div>
-              <p class="page-title">Distribuição por mês</p>
-              <p class="page-sub">Quantidade de aniversariantes em cada mês.</p>
-            </div>
-          </div>
-          <canvas id="chart-monthly" style="width:100%;height:260px;margin-top:10px"></canvas>
+          <div class="card-header"><h2 class="card-title">Análise Anual</h2></div>
+          <div style="position:relative; height:300px;"><canvas id="chart-monthly"></canvas></div>
         </div>
-
         <aside class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Insights rápidos</div>
-              <div class="card-sub">Resumo dos meses mais cheios.</div>
-            </div>
-          </div>
-          <div class="small" id="charts-summary">Carregando...</div>
+          <div class="card-header"><h3 class="card-title">Insights</h3></div>
+          <div id="charts-summary" style="font-size:14px; line-height:1.6; color:var(--text-muted);">...</div>
         </aside>
       </section>
     </main>
-
-    <div class="footer-card">
-      <span>🎂 Painel de Aniversariantes • <span id="footer-version">v1.0.3</span></span>
-      <div class="footer-right">
-        <span>Idioma atual: <strong id="footer-locale">pt-BR</strong></span>
-        <span>Tema: <strong id="footer-theme">Claro</strong></span>
-      </div>
-    </div>
   </div>
 
-  <dialog id="login-modal" aria-labelledby="login-heading">
-    <div class="dialog">
-      <h3 id="login-heading">Login administrativo</h3>
-      <p class="small" style="margin-bottom:10px;">
-        Use seu usuário e senha cadastrados para gerenciar aniversariantes.
-      </p>
-      <form id="login-form">
-        <label class="small">E-mail
-          <input id="login-email" type="email" required class="input" style="width:100%;margin-top:4px;">
-        </label>
-        <label class="small" style="margin-top:8px;">Senha
-          <input id="login-pass" type="password" required class="input" style="width:100%;margin-top:4px;">
-        </label>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
-          <button type="button" id="close-login" class="btn-ghost">Fechar</button>
-          <button type="submit" class="btn">Entrar</button>
+  <dialog id="login-modal">
+    <div class="card" style="width:360px; border:1px solid var(--brand-primary); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
+      <div style="text-align:center; margin-bottom:20px;">
+        <h3 style="font-size:18px;">Acesso Admin</h3>
+        <p style="font-size:12px; color:var(--text-muted);">Área restrita</p>
+      </div>
+      <form id="login-form" style="display:flex; flex-direction:column; gap:12px;">
+        <input type="email" id="login-email" placeholder="E-mail" required>
+        <input type="password" id="login-pass" placeholder="Senha" required>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <button type="button" id="close-login" class="btn btn-ghost" style="flex:1;">Cancelar</button>
+          <button type="submit" class="btn btn-primary" style="flex:1;">Entrar</button>
         </div>
       </form>
     </div>
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <script>
-    // ---------------------------
-    // ESTADO GLOBAL
-    // ---------------------------
-    const DEFAULT_LOCALE = 'pt-BR';
-    let locale = localStorage.getItem('locale') || DEFAULT_LOCALE;
-
-    let dataArr = []; // {id, nome, setor, dia, mes}
-    let page = 0;
+    /* =========================================
+       LÓGICA PRINCIPAL (Full Features)
+       ========================================= */
+    let dataArr = [];
+    let isAdmin = false;
+    let chartInstance = null;
+    let pageOffset = 0;
     const PAGE_SIZE = 25;
-    let chart = null;
-
-    // Firebase
+    
+    // Firebase State
     let firebaseInitialized = false;
     let firebaseDb = null;
     let firebaseAuth = null;
-    let isAdmin = false;
-    let celebratedDate = null;
 
-    // ---------------------------
-    // HELPERS
-    // ---------------------------
-    function toast(msg, error = false){
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.style.background = error ? 'var(--danger)' : 'var(--accent)';
-      el.classList.add('show');
-      setTimeout(()=> el.classList.remove('show'), 3500);
-    }
-
-    function uid(){ return 'id-'+Math.random().toString(36).slice(2,9); }
-
-    function escapeHTML(s){
-      return String(s || '').replace(/[&<>"']/g, c => (
-        {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
-      ));
-    }
-
-    function initials(name){
-      return (name || '')
-        .split(' ')
-        .filter(Boolean)
-        .map(p => p[0])
-        .join('')
-        .slice(0,2)
-        .toUpperCase();
-    }
-
-    function normalizeSector(s){
-      return (s || '').toString().trim().toUpperCase();
-    }
-
-    function nextDate(rec, from = new Date()){
-      const y = from.getFullYear();
-      let d = new Date(y, rec.mes - 1, rec.dia, 12);
-      if (d < from) d = new Date(y + 1, rec.mes - 1, rec.dia, 12);
-      return d;
-    }
-
-    function formatDate(d){
-      try{
-        return new Intl.DateTimeFormat(locale, {
-          day:'2-digit', month:'2-digit', year:'numeric'
-        }).format(d);
-      }catch(e){
-        return d.toLocaleDateString();
-      }
-    }
-
-    function monthName(m){
-      const names = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-      return names[m-1] || String(m);
-    }
-
-    function inferMonthFromTexto(texto){
-      if(!texto) return 0;
-      const t = texto.toLowerCase();
-      const map = {
-        'janeiro':1,'fevereiro':2,'março':3,'marco':3,'abril':4,
-        'maio':5,'junho':6,'julho':7,'agosto':8,'setembro':9,
-        'outubro':10,'novembro':11,'dezembro':12
-      };
-      for(const k in map){
-        if(t.includes(k)) return map[k];
-      }
-      return 0;
-    }
-
-    function dedupeRecords(records){
-      const map = new Map();
-      for(const r of records){
-        const key = (r.nome || '').toUpperCase().trim() + '|' + r.dia + '|' + r.mes;
-        if(!map.has(key)){
-          map.set(key, r);
-        }
-      }
-      return Array.from(map.values());
-    }
-
-    function getUpcoming(days){
-      if(!dataArr.length) return [];
+    // --- Helpers ---
+    const toast = (msg, err=false) => {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.style.background = err ? 'var(--danger)' : 'var(--brand-primary)';
+      t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000);
+    };
+    const uid = () => 'id-' + Math.random().toString(36).substr(2, 9);
+    
+    // --- Renderização ---
+    function renderHome() {
       const now = new Date();
-      const end = new Date(now.getTime() + days*24*60*60*1000);
-      return dataArr
-        .map(p => ({...p, date: nextDate(p, now)}))
-        .filter(x => x.date >= now && x.date <= end)
-        .sort((a,b) => a.date - b.date);
+      const todayMatches = dataArr.filter(p => p.dia === now.getDate() && p.mes === (now.getMonth() + 1));
+      document.getElementById('today-count').textContent = todayMatches.length;
+      document.getElementById('total-records').textContent = dataArr.length;
+      
+      const content = document.getElementById('today-content');
+      if(todayMatches.length > 0) {
+        content.innerHTML = todayMatches.map(p => `
+          <div class="person-row" style="width:100%; border:1px solid var(--brand-primary); background:rgba(8,145,178,0.1);">
+            <div class="avatar" style="background:var(--brand-primary)">${p.nome.charAt(0)}</div>
+            <div class="person-info"><h4>${p.nome}</h4><p>${p.setor} • Hoje!</p></div>
+            <i class="fa-solid fa-cake-candles" style="margin-left:auto; color:var(--brand-secondary);"></i>
+          </div>`).join('');
+        if(!window.celebratedToday) { celebrateNow(true); window.celebratedToday = true; }
+      } else {
+        content.innerHTML = '<span style="font-size:14px;">Nenhum aniversário hoje.</span>';
+      }
+
+      // Próximos
+      const upcoming = getUpcoming(5);
+      const upContainer = document.getElementById('home-upcoming');
+      upContainer.innerHTML = upcoming.length ? upcoming.map(p => `
+        <div class="person-row">
+          <div class="avatar" style="width:32px; height:32px; font-size:12px;">${p.nome.charAt(0)}</div>
+          <div class="person-info"><h4>${p.nome}</h4><p>${p.dia}/${p.mes}</p></div>
+          <div class="tag-days" style="margin-left:auto">${p.diffDays} dias</div>
+        </div>`).join('') : '<span style="font-size:13px; color:var(--text-muted)">Sem aniversários próximos.</span>';
     }
 
-    // ---------------------------
-    // TEMA
-    // ---------------------------
-    function setTheme(t){
-      const theme = (t === 'dark') ? 'dark' : 'light';
-      document.body.setAttribute('data-theme', theme);
-      localStorage.setItem('theme', theme);
-
-      const label = (theme === 'dark') ? 'Escuro' : 'Claro';
-      const themeToggle = document.getElementById('theme-toggle');
-      const icon = themeToggle.querySelector('i');
-      if(icon){
-        icon.className = theme === 'dark'
-          ? 'fa-solid fa-sun'
-          : 'fa-solid fa-moon';
-      }
-      const currentTheme = document.getElementById('current-theme');
-      const footerTheme = document.getElementById('footer-theme');
-      if(currentTheme) currentTheme.textContent = label;
-      if(footerTheme) footerTheme.textContent = label;
-      renderStats(); // atualiza cores do gráfico
-    }
-
-    // ---------------------------
-    // RENDERIZAÇÃO - HOME
-    // ---------------------------
-    function renderToday(){
-      const todayContent = document.getElementById('today-content');
-      const todayCount = document.getElementById('today-count');
-      const todaySub = document.getElementById('today-sub');
-      if(!todayContent) return;
-
-      const now = new Date();
-      const d = now.getDate();
-      const m = now.getMonth() + 1;
-
-      const matches = dataArr.filter(p => Number(p.dia) === d && Number(p.mes) === m);
-      todayCount.textContent = `${matches.length} encontrado(s)`;
-
-      if(matches.length === 0){
-        const upcoming = getUpcoming(365);
-        if(upcoming.length){
-          const next = upcoming[0];
-          const days = Math.ceil((next.date - now)/(1000*60*60*24));
-          todayContent.innerHTML = `
-            <p class="today-highlight">
-              Nenhum aniversariante hoje — próximo: <strong>${escapeHTML(next.nome)}</strong>
-              em ${String(next.dia).padStart(2,'0')}/${String(next.mes).padStart(2,'0')} (${days} dia(s)).
-            </p>`;
-          todaySub.textContent = 'Sem aniversários hoje';
-        }else{
-          todayContent.innerHTML = '<p class="today-highlight">Nenhum aniversariante cadastrado.</p>';
-          todaySub.textContent = 'Sem dados';
-        }
-      }else{
-        todaySub.textContent = 'Aniversariantes do dia';
-        todayContent.innerHTML = '';
-        const list = document.createElement('div');
-        list.className = 'list-inline';
-        matches.forEach(p => {
-          const row = document.createElement('div');
-          row.className = 'person-row';
-          row.innerHTML = `
-            <div class="avatar" aria-hidden="true">${initials(p.nome)}</div>
-            <div class="person-main">
-              <div class="person-name">${escapeHTML(p.nome)}</div>
-              <div class="person-meta">${escapeHTML(p.setor || '')}</div>
-            </div>`;
-          list.appendChild(row);
-        });
-        todayContent.appendChild(list);
-
-        const todayKey = new Date().toISOString().slice(0,10);
-        if(celebratedDate !== todayKey){
-          celebratedDate = todayKey;
-          setTimeout(() => celebrateNow(true), 600);
-        }
-      }
-
-      // próximos 5 dias (home)
-      const homeUpcoming = document.getElementById('home-upcoming');
-      if(homeUpcoming){
-        const up = getUpcoming(5);
-        if(!up.length){
-          homeUpcoming.innerHTML = '<p class="small">Nenhum aniversário nos próximos 5 dias.</p>';
-        }else{
-          homeUpcoming.innerHTML = '';
-          up.forEach(p => {
-            const days = Math.ceil((p.date - now)/(1000*60*60*24));
-            const row = document.createElement('div');
-            row.className = 'person-row';
-            row.innerHTML = `
-              <div class="avatar" aria-hidden="true">${initials(p.nome)}</div>
-              <div class="person-main">
-                <div class="person-name">${escapeHTML(p.nome)}</div>
-                <div class="person-meta">
-                  ${escapeHTML(p.setor || '')} • ${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}
-                  <span class="tag-green">• em ${days} dia(s)</span>
-                </div>
-              </div>`;
-            homeUpcoming.appendChild(row);
-          });
-        }
-      }
-    }
-
-    // ---------------------------
-    // RENDER FUTUROS
-    // ---------------------------
-    function renderFuture(){
-      const container = document.getElementById('future-list');
-      if(!container) return;
-      const inp = document.getElementById('days-ahead');
-      const daysAhead = Number(inp && inp.value ? inp.value : 30) || 30;
-      const now = new Date();
-
-      const arr = getUpcoming(daysAhead);
-      if(!arr.length){
-        container.innerHTML = `<p class="small">Nenhum aniversário nos próximos ${daysAhead} dias.</p>`;
-        return;
-      }
-
-      container.innerHTML = '';
-      arr.forEach(p => {
-        const days = Math.ceil((p.date - now)/(1000*60*60*24));
-        const row = document.createElement('div');
-        row.className = 'person-row';
-        const tone =
-          days <= 5 ? 'style="color:#22c55e;"' :
-          days <= 15 ? 'style="color:#eab308;"' :
-          'style="color:#38bdf8;"';
-        row.innerHTML = `
-          <div class="avatar" aria-hidden="true">${initials(p.nome)}</div>
-          <div class="person-main">
-            <div class="person-name">${escapeHTML(p.nome)}</div>
-            <div class="person-meta">
-              ${escapeHTML(p.setor || '')} • ${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}
-              <span ${tone}>• em ${days} dia(s)</span>
-            </div>
-          </div>`;
-        container.appendChild(row);
-      });
-    }
-
-    // ---------------------------
-    // RENDER CALENDÁRIO
-    // ---------------------------
-    function renderCalendar(){
-      const grid = document.getElementById('calendar-grid');
-      const label = document.getElementById('calendar-month-label');
-      if(!grid) return;
-
-      const now = new Date();
-      const month = now.getMonth(); // 0-11
-      const year = now.getFullYear();
-      const daysInMonth = new Date(year, month+1, 0).getDate();
-
-      if(label){
-        label.textContent = `Mês atual: ${monthName(month+1)} / ${year}`;
-      }
-
-      grid.innerHTML = '';
-      for(let d=1; d<=daysInMonth; d++){
-        const cell = document.createElement('div');
-        cell.className = 'day-cell';
-        cell.setAttribute('tabindex','0');
-
-        const num = document.createElement('div');
-        num.className = 'day-num';
-        num.textContent = d;
-        cell.appendChild(num);
-
-        const matches = dataArr
-          .filter(p => Number(p.dia) === d && Number(p.mes) === month+1)
-          .sort((a,b)=> a.nome.localeCompare(b.nome,'pt-BR',{sensitivity:'base'}));
-
-        if(matches.length === 0){
-          cell.innerHTML += '<span class="small" style="opacity:.4;">—</span>';
-        }else{
-          matches.forEach(m => {
-            const line = document.createElement('div');
-            line.className = 'day-badge';
-            line.textContent = `🎂 ${m.nome}`;
-            cell.appendChild(line);
-          });
-        }
-        grid.appendChild(cell);
-      }
-
-      const summary = document.getElementById('calendar-summary');
-      if(summary){
-        const total = dataArr.filter(p => Number(p.mes) === month+1).length;
-        summary.textContent = `Este mês possui ${total} aniversariante(s) cadastrado(s).`;
-      }
-    }
-
-    // ---------------------------
-    // RENDER LISTA
-    // ---------------------------
-    function renderList(reset = false){
+    function renderList(reset = false) {
+      if(reset) pageOffset = 0;
       const wrapper = document.getElementById('list-wrapper');
-      if(!wrapper) return;
-
-      if(reset) page = 0;
-      const start = page * PAGE_SIZE;
-      const end = start + PAGE_SIZE;
-
-      const search = (document.getElementById('search-input').value || '').toLowerCase();
-      const monthFilter = document.getElementById('month-filter').value || 'all';
-
-      let items = dataArr.slice();
-
-      if(monthFilter !== 'all'){
-        const m = Number(monthFilter);
-        items = items.filter(p => Number(p.mes) === m);
-      }
-
-      if(search){
-        items = items.filter(p =>
-          (p.nome || '').toLowerCase().includes(search) ||
-          (p.setor || '').toLowerCase().includes(search)
-        );
-      }
-
-      items.sort((a,b) =>
-        (a.nome || '').localeCompare(b.nome || '', 'pt-BR', {sensitivity:'base'})
-      );
-
-      const slice = items.slice(0, end);
-      if(!slice.length){
-        wrapper.innerHTML = '<p class="small">Nenhum registro encontrado.</p>';
-      }else{
-        const userLogged = firebaseInitialized && firebaseAuth && firebaseAuth.currentUser && isAdmin;
-        let html = `
-          <table role="table" aria-label="Tabela de aniversariantes">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Setor</th>
-                <th>Data</th>
-                <th style="text-align:right;">Ações</th>
-              </tr>
-            </thead>
-            <tbody>`;
-
-        slice.forEach(p => {
-          html += `
-            <tr>
-              <td>${escapeHTML(p.nome)}</td>
-              <td>${escapeHTML(p.setor || '')}</td>
-              <td>${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}</td>
-              <td>
-                <div class="table-actions">`;
-          if(userLogged){
-            html += `
-                  <button class="icon-btn edit-btn" data-id="${p.id}" title="Editar">
-                    <i class="fa-solid fa-pen"></i>
-                  </button>
-                  <button class="icon-btn del-btn" data-id="${p.id}" title="Excluir">
-                    <i class="fa-solid fa-trash"></i>
-                  </button>`;
-          }else{
-            html += `<span class="small">Somente admin</span>`;
-          }
-          html += `</div></td></tr>`;
-        });
-
-        html += '</tbody></table>';
-        wrapper.innerHTML = html;
-
-        if(userLogged){
-          wrapper.querySelectorAll('.del-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-              const id = e.currentTarget.dataset.id;
-              if(!confirm('Excluir este registro?')) return;
-              if(firebaseInitialized && firebaseDb){
-                try{
-                  await firebaseDb.collection('aniversariantes').doc(id).delete();
-                  toast('Registro excluído');
-                }catch(err){
-                  toast('Erro ao excluir: ' + err.message, true);
-                }
-              }
-            });
-          });
-
-          wrapper.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-              const id = e.currentTarget.dataset.id;
-              const rec = dataArr.find(x => x.id === id);
-              if(!rec) return;
-
-              const nome = prompt('Nome completo:', rec.nome) || '';
-              const setorIn = prompt('Setor (opcional):', rec.setor || '') || '';
-              const setor = normalizeSector(setorIn);
-              const dia = parseInt(prompt('Dia (1-31):', rec.dia),10);
-              const mes = parseInt(prompt('Mês (1-12):', rec.mes),10);
-
-              if(!nome || isNaN(dia) || isNaN(mes)){
-                toast('Dados inválidos', true);
-                return;
-              }
-
-              if(firebaseInitialized && firebaseDb){
-                try{
-                  await firebaseDb.collection('aniversariantes').doc(id).set(
-                    { nome, setor, dia, mes },
-                    { merge:true }
-                  );
-                  toast('Registro atualizado');
-                }catch(err){
-                  toast('Erro ao atualizar: ' + err.message, true);
-                }
-              }
-            });
-          });
-        }
-      }
-
-      const loadMore = document.getElementById('load-more');
-      if(loadMore){
-        loadMore.style.display = items.length > end ? 'inline-flex' : 'none';
-      }
-    }
-
-    // ---------------------------
-    // GRÁFICOS
-    // ---------------------------
-    function renderStats(){
-      const canvas = document.getElementById('chart-monthly');
-      if(!canvas) return;
-      const ctx = canvas.getContext('2d');
-
-      const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-      const counts = new Array(12).fill(0);
-      dataArr.forEach(p => {
-        if(p.mes >= 1 && p.mes <= 12) counts[p.mes - 1]++;
+      const search = document.getElementById('search-input').value.toLowerCase();
+      const filterM = document.getElementById('month-filter').value;
+      
+      let filtered = dataArr.filter(p => {
+        const matchName = p.nome.toLowerCase().includes(search) || (p.setor || '').toLowerCase().includes(search);
+        const matchMonth = filterM === 'all' || p.mes == filterM;
+        return matchName && matchMonth;
       });
 
-      const accent = getComputedStyle(document.body).getPropertyValue('--accent') || '#10b981';
-      const accent2 = getComputedStyle(document.body).getPropertyValue('--accent2') || '#0ea5e9';
+      filtered.sort((a,b) => (a.mes - b.mes) || (a.dia - b.dia));
+      const paged = filtered.slice(0, (pageOffset + 1) * PAGE_SIZE);
 
-      if(chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type:'bar',
-        data:{
-          labels:months,
-          datasets:[{
-            label:'Aniversariantes',
-            data:counts,
-            backgroundColor:counts.map((_,i)=> i%2 ? accent2 : accent)
-          }]
-        },
-        options:{
-          responsive:true,
-          scales:{
-            y:{
-              beginAtZero:true,
-              ticks:{precision:0}
-            }
-          },
-          plugins:{ legend:{display:false} }
-        }
-      });
-
-      const summary = document.getElementById('charts-summary');
-      if(summary){
-        const maxVal = Math.max(...counts);
-        const maxIdx = counts.findIndex(c => c === maxVal);
-        const zeros = counts
-          .map((v,i) => v === 0 ? months[i] : null)
-          .filter(Boolean);
-        let txt = '';
-        if(maxVal === 0){
-          txt = 'Nenhum aniversariante cadastrado ainda.';
-        }else{
-          txt = `Mês com mais aniversariantes: ${months[maxIdx]} (${maxVal}).`;
-          if(zeros.length){
-            txt += ` Meses sem aniversários cadastrados: ${zeros.join(', ')}.`;
-          }
-        }
-        summary.textContent = txt;
-      }
-    }
-
-    // ---------------------------
-    // CONFETTI / BALÕES
-    // ---------------------------
-    function setupCanvasSize(){
-      const c = document.getElementById('confetti-canvas');
-      if(!c) return;
-      c.width = window.innerWidth;
-      c.height = window.innerHeight;
-    }
-    window.addEventListener('resize', setupCanvasSize);
-    setupCanvasSize();
-
-    function launchConfetti(count = 260){
-      const canvas = document.getElementById('confetti-canvas');
-      if(!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const width = canvas.width;
-      const height = canvas.height;
-      const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
-
-      const pieces = [];
-      for(let i=0; i<count; i++){
-        pieces.push({
-          x: Math.random()*width,
-          y: -20 - Math.random()*200,
-          vx: (Math.random()-0.5)*2,
-          vy: 2 + Math.random()*2,
-          r: 4 + Math.random()*6,
-          color: colors[Math.floor(Math.random()*colors.length)],
-          rot: Math.random()*360,
-          vr: (Math.random()-0.5)*8
-        });
-      }
-
-      function frame(){
-        ctx.clearRect(0,0,width,height);
-        pieces.forEach(p => {
-          p.vy += 0.05;
-          p.x += p.vx;
-          p.y += p.vy;
-          p.rot += p.vr;
-
-          ctx.save();
-          ctx.translate(p.x,p.y);
-          ctx.rotate(p.rot * Math.PI/180);
-          ctx.fillStyle = p.color;
-          ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6);
-          ctx.restore();
-        });
-        if(pieces.some(p => p.y < height + 40)){
-          requestAnimationFrame(frame);
-        }else{
-          ctx.clearRect(0,0,width,height);
-        }
-      }
-      frame();
-    }
-
-    function launchBalloons(count = 18){
-      const wrap = document.getElementById('balloon-wrap');
-      if(!wrap) return;
-      const colors = ['#10b981','#0ea5e9','#4ade80','#38bdf8','#16a34a'];
-
-      for(let i=0;i<count;i++){
-        const el = document.createElementNS('http://www.w3.org/2000/svg','svg');
-        el.setAttribute('width','48');
-        el.setAttribute('height','80');
-        el.setAttribute('viewBox','0 0 48 80');
-        el.style.position = 'fixed';
-        el.style.left = Math.random()*100 + '%';
-        el.style.bottom = '-120px';
-        el.style.pointerEvents = 'none';
-        const color = colors[i%colors.length];
-        el.innerHTML = `
-          <ellipse cx="24" cy="24" rx="18" ry="22" fill="${color}" opacity="0.98"></ellipse>
-          <path d="M24 46 L24 78" stroke="#0f172a" stroke-opacity="0.2" stroke-width="1"/>`;
-        wrap.appendChild(el);
-
-        const duration = 9000 + Math.random()*6000;
-        const delay = Math.random()*800;
-        const anim = el.animate(
-          [
-            { transform:'translateY(0)', opacity:1 },
-            { transform:'translateY(-120vh)', opacity:0 }
-          ],
-          { duration, delay, easing:'cubic-bezier(.2,.9,.2,1)' }
-        );
-        anim.onfinish = () => el.remove();
-      }
-    }
-
-    function celebrateNow(auto = false){
-      launchConfetti(auto ? 220 : 320);
-      launchBalloons(auto ? 16 : 24);
-      if(!auto) toast('🎉 Celebração ativada!');
-    }
-
-    // ---------------------------
-    // CSV
-    // ---------------------------
-    function quoteCSV(s){
-      return '"' + String(s || '').replace(/"/g,'""') + '"';
-    }
-
-    function exportCSV(){
-      if(!dataArr.length){
-        toast('Sem dados para exportar', true);
+      if(paged.length === 0) {
+        wrapper.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted)">Nenhum registro.</div>';
+        document.getElementById('load-more').style.display = 'none';
         return;
       }
-      const header = ['nome','setor','dia','mes'];
-      const rows = dataArr.map(r =>
-        `${quoteCSV(r.nome)},${quoteCSV(r.setor || '')},${r.dia},${r.mes}`
-      );
-      const csv = [header.join(','), ...rows].join('\n');
-      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'aniversariantes.csv';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      toast('CSV exportado');
+
+      let html = `<table><thead><tr><th>Nome</th><th>Setor</th><th>Data</th><th style="text-align:right">Ações</th></tr></thead><tbody>`;
+      html += paged.map(p => `
+        <tr>
+          <td style="font-weight:500">${p.nome}</td>
+          <td style="color:var(--text-muted)">${p.setor || '-'}</td>
+          <td>${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}</td>
+          <td style="text-align:right;">
+             ${isAdmin ? 
+              `<button class="btn btn-ghost btn-icon" style="width:28px;height:28px;" onclick="editRecord('${p.id}')" title="Editar"><i class="fa-solid fa-pen" style="font-size:12px"></i></button>
+               <button class="btn btn-ghost btn-icon" style="width:28px;height:28px; color:var(--danger);" onclick="deleteRecord('${p.id}')" title="Excluir"><i class="fa-solid fa-trash" style="font-size:12px"></i></button>` 
+              : `<i class="fa-solid fa-lock" style="font-size:10px; opacity:0.3"></i>`}
+          </td>
+        </tr>`).join('');
+      html += `</tbody></table>`;
+      wrapper.innerHTML = html;
+      document.getElementById('load-more').style.display = (filtered.length > paged.length) ? 'inline-block' : 'none';
     }
 
-    function parseCSV(text){
-      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      if(!lines.length) return [];
-      const header = lines.shift().split(',').map(h => h.trim().toLowerCase());
-      const idxNome = header.indexOf('nome');
-      const idxSetor = header.indexOf('setor');
-      const idxDia = header.indexOf('dia');
-      const idxMes = header.indexOf('mes');
-      if(idxNome < 0 || idxDia < 0 || idxMes < 0){
-        toast('CSV precisa ter colunas nome,dia,mes', true);
-        return [];
+    function renderCalendar() {
+      const grid = document.getElementById('calendar-grid');
+      const now = new Date();
+      const m = now.getMonth();
+      const y = now.getFullYear();
+      const mNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      document.getElementById('calendar-month-label').textContent = `${mNames[m]} / ${y}`;
+      
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      let html = '';
+      let count = 0;
+      for(let d=1; d<=daysInMonth; d++) {
+        const matches = dataArr.filter(p => p.dia === d && p.mes === (m+1));
+        count += matches.length;
+        let badges = matches.map(p => `<div style="font-size:10px; background:rgba(8,145,178,0.2); color:#67e8f9; padding:2px 4px; border-radius:4px; margin-top:2px; white-space:nowrap; overflow:hidden;">${p.nome.split(' ')[0]}</div>`).join('');
+        html += `<div style="min-height:90px; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:12px; padding:8px;"><span style="font-size:11px; color:var(--text-muted); float:right;">${d}</span><div style="margin-top:18px;">${badges}</div></div>`;
       }
-      const out = [];
-      for(const ln of lines){
-        const parts = ln.match(/(".*?"|[^,]+)/g) || [];
-        const nome = (parts[idxNome] || '').replace(/^"|"$/g,'').trim();
-        const setorRaw = (parts[idxSetor] || '').replace(/^"|"$/g,'').trim();
-        const setor = normalizeSector(setorRaw);
-        const dia = parseInt((parts[idxDia] || '').replace(/^"|"$/g,''), 10);
-        const mes = parseInt((parts[idxMes] || '').replace(/^"|"$/g,''), 10);
-        if(nome && !Number.isNaN(dia) && !Number.isNaN(mes)){
-          out.push({ id: uid(), nome, setor, dia, mes });
+      grid.innerHTML = html;
+      document.getElementById('calendar-summary').innerHTML = `Total: <strong>${count}</strong> aniversariantes em ${mNames[m]}.`;
+    }
+
+    function renderFuture() {
+      const days = parseInt(document.getElementById('days-ahead').value) || 30;
+      const list = getUpcoming(days);
+      const container = document.getElementById('future-list');
+      container.innerHTML = list.length ? list.map(p => `
+        <div class="person-row" style="background:var(--hover-bg); border:1px solid var(--border-color);">
+          <div class="avatar">${p.nome.charAt(0)}</div>
+          <div class="person-info" style="flex:1"><h4>${p.nome}</h4><p>${p.setor}</p></div>
+          <div style="text-align:right"><div style="font-weight:600; color:var(--brand-primary);">${p.dia}/${p.mes}</div><div class="tag-days">${p.diffDays} dias</div></div>
+        </div>`).join('') : '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);">Nenhum neste período.</div>';
+    }
+
+    function renderCharts() {
+      const ctx = document.getElementById('chart-monthly');
+      if(!ctx) return;
+      const counts = Array(12).fill(0);
+      dataArr.forEach(p => { if(p.mes >= 1 && p.mes <= 12) counts[p.mes - 1]++; });
+      if(chartInstance) chartInstance.destroy();
+      const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, '#0891b2'); gradient.addColorStop(1, '#10b981');
+      
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+          datasets: [{ label: 'Qtd', data: counts, backgroundColor: gradient, borderRadius: 6 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero:true, grid:{color:'rgba(148,163,184,0.1)'} }, x: { grid:{display:false} } }
         }
-      }
-      return out;
-    }
-
-    // ---------------------------
-    // FIREBASE
-    // ---------------------------
-    function loadScript(src){
-      return new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = src;
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
       });
+      const max = Math.max(...counts);
+      document.getElementById('charts-summary').innerHTML = `Maior pico: <strong>${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][counts.indexOf(max)]}</strong> (${max} pessoas).`;
     }
 
-    async function tryInitFirebase(){
+    // --- Lógica de Dados (Firebase + Local) ---
+    function getUpcoming(days) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      return dataArr.map(p => {
+        let nextDate = new Date(today.getFullYear(), p.mes - 1, p.dia);
+        if (nextDate < today) nextDate.setFullYear(today.getFullYear() + 1);
+        const diffDays = Math.ceil((nextDate - today) / (86400000));
+        return { ...p, diffDays };
+      }).filter(p => p.diffDays >= 0 && p.diffDays <= days).sort((a,b) => a.diffDays - b.diffDays);
+    }
+
+    window.editRecord = async (id) => {
+      const rec = dataArr.find(p => p.id === id);
+      if(!rec) return;
+      const novoNome = prompt('Nome:', rec.nome); if(novoNome === null) return;
+      const novoSetor = prompt('Setor:', rec.setor);
+      const novoDia = prompt('Dia:', rec.dia);
+      const novoMes = prompt('Mês:', rec.mes);
+      if(novoNome && novoDia && novoMes) {
+        if(firebaseInitialized && isAdmin) {
+           await firebaseDb.collection('aniversariantes').doc(id).set({ nome: novoNome, setor: novoSetor || '', dia: Number(novoDia), mes: Number(novoMes) }, { merge: true });
+           toast('Atualizado!');
+        } else {
+           rec.nome = novoNome; rec.setor = novoSetor; rec.dia = Number(novoDia); rec.mes = Number(novoMes);
+           renderList(true); toast('Atualizado (Local)');
+        }
+      } else toast('Dados inválidos.', true);
+    };
+
+    window.deleteRecord = async (id) => {
+      if(!confirm('Excluir este registro?')) return;
+      if(firebaseInitialized && firebaseDb) {
+        try { await firebaseDb.collection('aniversariantes').doc(id).delete(); toast('Removido.'); }
+        catch(e) { toast('Erro.', true); }
+      } else {
+        dataArr = dataArr.filter(x => x.id !== id); renderList(true); toast('Removido (Local)');
+      }
+    };
+
+    function celebrateNow(auto=false) {
+      const c = document.getElementById('confetti-canvas');
+      const myConfetti = confetti.create(c, { resize: true });
+      myConfetti({ particleCount: auto?100:200, spread: 70, origin: { y: 0.6 }, colors: ['#0891b2', '#10b981', '#f59e0b'] });
+      if(!auto) toast('🎉 Parabéns!');
+    }
+
+    // --- Inicialização ---
+    async function loadScript(src) { return new Promise((r, j) => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = j; document.head.appendChild(s); }); }
+
+    async function initFirebase() {
       if(!window.__firebase_config) return false;
-      try{
+      try {
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js');
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js');
-
         firebase.initializeApp(window.__firebase_config);
-        firebaseDb = firebase.firestore();
-        firebaseAuth = firebase.auth();
+        firebaseDb = firebase.firestore(); firebaseAuth = firebase.auth();
         firebaseInitialized = true;
 
-        firebaseDb.collection('aniversariantes').onSnapshot(snapshot => {
-          const docs = snapshot.docs.map(d => {
-            const data = d.data() || {};
-            const dia = Number(data.dia ?? data.day ?? 0);
-            let mes = Number(data.mes ?? data.month ?? 0);
-            if(!mes && data.textoData){
-              const inferred = inferMonthFromTexto(data.textoData);
-              if(inferred) mes = inferred;
-            }
-            return {
-              id: d.id,
-              nome: data.nome || data.name || '',
-              setor: normalizeSector(data.setor || data.sector || ''),
-              dia,
-              mes
-            };
-          });
-          dataArr = dedupeRecords(docs);
-          syncRenderAll();
-        }, err => {
-          console.error('onSnapshot error', err);
-          toast('Erro ao carregar dados do Firebase', true);
-        });
-
         firebaseAuth.onAuthStateChanged(async user => {
-          if(user){
-            try{
-              const tokenRes = await user.getIdTokenResult(true);
-              isAdmin = !!tokenRes.claims.admin;
-            }catch(e){
-              console.warn('Erro ao obter claims', e);
-              isAdmin = false;
-            }
-          }else{
-            isAdmin = false;
-          }
-          updateAuthUI();
+          if(user) { const t = await user.getIdTokenResult(); isAdmin = !!t.claims.admin; document.getElementById('auth-btn').textContent = 'Sair'; }
+          else { isAdmin = false; document.getElementById('auth-btn').textContent = 'Login'; }
+          toggleAdminUI(); renderList(true);
         });
 
+        firebaseDb.collection('aniversariantes').onSnapshot(snap => {
+          dataArr = snap.docs.map(doc => { const d = doc.data(); return { id: doc.id, nome: d.nome||'', setor: (d.setor||'').toUpperCase(), dia: Number(d.dia), mes: Number(d.mes) }; });
+          // Remove duplicatas
+          const unique = new Map(); dataArr.forEach(i => unique.set(i.nome+i.dia+i.mes, i)); dataArr = Array.from(unique.values());
+          const active = document.querySelector('.nav-tab[data-active="true"]'); if(active) active.click();
+        });
         return true;
-      }catch(e){
-        console.error('Firebase init error', e);
-        return false;
-      }
+      } catch(e) { console.error(e); return false; }
     }
 
-    function updateAuthUI(){
-      const logged = firebaseInitialized && firebaseAuth && firebaseAuth.currentUser;
-      const admin = logged && isAdmin;
+    function toggleAdminUI() { document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? (el.tagName === 'BUTTON' ? 'inline-flex' : 'block') : 'none'); }
 
-      document.querySelectorAll('.admin-only, .admin-visible').forEach(el => {
-        if(admin){
-          if(el.classList.contains('admin-only')){
-            el.classList.remove('admin-only');
-            el.classList.add('admin-visible');
-          }
-          el.style.display = '';
-        }else{
-          if(el.classList.contains('admin-visible')){
-            el.classList.remove('admin-visible');
-            el.classList.add('admin-only');
-          }
-          el.style.display = el.id === 'export-csv' ? '' : 'none'; // export pode aparecer sempre
-        }
-      });
-
-      const authBtn = document.getElementById('auth-btn');
-      if(authBtn){
-        if(logged){
-          authBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i><span>Sair</span>';
-        }else{
-          authBtn.innerHTML = '<i class="fa-solid fa-lock"></i><span>Entrar</span>';
-        }
-      }
-    }
-
-    // ---------------------------
-    // RENDER GERAL
-    // ---------------------------
-    function syncRenderAll(){
-      renderToday();
-      renderFuture();
-      renderList(true);
-      renderCalendar();
-      renderStats();
-    }
-
-    // ---------------------------
-    // EVENTOS GERAIS
-    // ---------------------------
     document.addEventListener('DOMContentLoaded', async () => {
-      // tema
-      setTheme(localStorage.getItem('theme') || 'dark');
+      // Tema
+      const theme = localStorage.getItem('axia_theme') || 'dark';
+      document.body.dataset.theme = theme;
+      document.getElementById('current-theme').textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
+      document.getElementById('theme-toggle').innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 
-      // locale
-      const localeSelect = document.getElementById('locale-select');
-      const footerLocale = document.getElementById('footer-locale');
-      if(localeSelect){
-        localeSelect.value = locale;
-        localeSelect.addEventListener('change', e => {
-          locale = e.target.value;
-          localStorage.setItem('locale', locale);
-          if(footerLocale) footerLocale.textContent = locale;
-          renderToday();
-          renderFuture();
-          renderCalendar();
-          renderStats();
-        });
-      }
-      if(footerLocale) footerLocale.textContent = locale;
+      // Dados Demo se Firebase falhar
+      const demoData = [ {id:'1', nome:'Evandro Silva', setor:'OPS', dia:14, mes:12}, {id:'2', nome:'Erick Ketes', setor:'TI', dia:1, mes:12} ];
+      const fbOk = await initFirebase();
+      if(!fbOk) { dataArr = demoData; console.log("Modo Demo"); document.querySelector('.nav-tab[data-view="home"]').click(); }
 
-      // botão tema
+      // Listeners
       document.getElementById('theme-toggle').addEventListener('click', () => {
-        const cur = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        setTheme(cur);
+        const next = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.body.dataset.theme = next; localStorage.setItem('axia_theme', next);
+        document.getElementById('current-theme').textContent = next === 'dark' ? 'Dark Mode' : 'Light Mode';
+        document.getElementById('theme-toggle').innerHTML = next === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+        renderCharts();
       });
 
-      // Celebrar
+      document.querySelectorAll('.nav-tab').forEach(btn => btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-tab').forEach(b => b.setAttribute('data-active', 'false'));
+        btn.setAttribute('data-active', 'true');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        const target = document.getElementById(`view-${btn.dataset.view}`);
+        if(target) target.classList.add('active');
+        if(btn.dataset.view === 'home') renderHome();
+        if(btn.dataset.view === 'calendar') renderCalendar();
+        if(btn.dataset.view === 'list') renderList(true);
+        if(btn.dataset.view === 'future') renderFuture();
+        if(btn.dataset.view === 'charts') renderCharts();
+      }));
+
       document.getElementById('celebrate-btn').addEventListener('click', () => celebrateNow(false));
-
-      // Navegação de abas
-      document.querySelectorAll('.nav-tab').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const view = btn.dataset.view;
-          document.querySelectorAll('.nav-tab').forEach(b => b.setAttribute('data-active','false'));
-          btn.setAttribute('data-active','true');
-
-          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-          const sec = document.getElementById('view-' + view);
-          if(sec) sec.classList.add('active');
-
-          if(view === 'charts') renderStats();
-          if(view === 'calendar') renderCalendar();
-          if(view === 'future') renderFuture();
-          if(view === 'list') renderList(true);
-          if(view === 'home') renderToday();
-        });
-      });
-
-      // Lista: busca / filtros
       document.getElementById('search-input').addEventListener('input', () => renderList(true));
-      document.getElementById('month-filter').addEventListener('change', () => {
-        renderList(true);
-        renderCalendar();
-        renderStats();
-      });
-      document.getElementById('load-more').addEventListener('click', () => {
-        page++;
-        renderList(false);
-      });
-
-      // Futuro
+      document.getElementById('month-filter').addEventListener('change', () => renderList(true));
+      document.getElementById('load-more').addEventListener('click', () => { pageOffset++; renderList(); });
       document.getElementById('refresh-future').addEventListener('click', renderFuture);
-
-      // CSV
-      document.getElementById('export-csv').addEventListener('click', exportCSV);
-      document.getElementById('csv-file').addEventListener('change', e => {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const recs = parseCSV(reader.result);
-          if(!recs.length) return;
-          if(firebaseInitialized && firebaseDb && firebaseAuth && firebaseAuth.currentUser && isAdmin){
-            for(const r of recs){
-              try{
-                await firebaseDb.collection('aniversariantes').add({
-                  nome:r.nome,
-                  setor:r.setor,
-                  dia:r.dia,
-                  mes:r.mes
-                });
-              }catch(err){
-                console.error(err);
-              }
-            }
-            toast(`Importado(s) ${recs.length} registro(s)`);
-          }else{
-            dataArr = dedupeRecords(dataArr.concat(recs));
-            syncRenderAll();
-            toast(`Importado(s) ${recs.length} registro(s) (modo local)`);
-          }
-        };
-        reader.readAsText(file, 'utf-8');
-        e.target.value = '';
-      });
-
-      document.getElementById('import-sample').addEventListener('click', async () => {
-        const sample = 'nome,setor,dia,mes\n"Maria Silva",RH,5,11\n"João Pereira",Financeiro,12,3\n"Luiza Costa",Vendas,28,12';
-        const recs = parseCSV(sample);
-        if(!recs.length) return;
-        if(firebaseInitialized && firebaseDb && firebaseAuth && firebaseAuth.currentUser && isAdmin){
-          for(const r of recs){
-            try{
-              await firebaseDb.collection('aniversariantes').add({
-                nome:r.nome, setor:r.setor, dia:r.dia, mes:r.mes
-              });
-            }catch(err){
-              console.error(err);
-            }
-          }
-          toast('Exemplo importado');
-        }else{
-          dataArr = dedupeRecords(dataArr.concat(recs));
-          syncRenderAll();
-          toast('Exemplo importado (modo local)');
-        }
-      });
-
-      // Novo registro
-      document.getElementById('add-btn').addEventListener('click', async () => {
-        const nome = prompt('Nome completo:') || '';
-        if(!nome) return;
-        const setor = normalizeSector(prompt('Setor (opcional):','') || '');
-        const dia = parseInt(prompt('Dia (1-31):','1'),10);
-        const mes = parseInt(prompt('Mês (1-12):','1'),10);
-        if(isNaN(dia) || isNaN(mes)){
-          toast('Data inválida', true);
-          return;
-        }
-        if(firebaseInitialized && firebaseDb && firebaseAuth && firebaseAuth.currentUser && isAdmin){
-          try{
-            await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes });
-            toast('Registro criado');
-          }catch(err){
-            toast('Erro ao criar: ' + err.message, true);
-          }
-        }else{
-          dataArr.push({ id:uid(), nome, setor, dia, mes });
-          dataArr = dedupeRecords(dataArr);
-          syncRenderAll();
-          toast('Registro criado (modo local)');
-        }
-      });
-
+      
       // Login
-      const loginModal = document.getElementById('login-modal');
-      document.getElementById('auth-btn').addEventListener('click', () => {
-        if(firebaseInitialized && firebaseAuth && firebaseAuth.currentUser){
-          firebaseAuth.signOut()
-            .then(() => toast('Logout realizado'))
-            .catch(e => toast('Erro no logout: ' + e.message, true));
-        }else{
-          loginModal.showModal();
-        }
-      });
-      document.getElementById('close-login').addEventListener('click', () => loginModal.close());
+      const modal = document.getElementById('login-modal');
+      document.getElementById('auth-btn').addEventListener('click', () => { if(firebaseAuth && firebaseAuth.currentUser) firebaseAuth.signOut(); else modal.showModal(); });
+      document.getElementById('close-login').addEventListener('click', () => modal.close());
       document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
-        if(firebaseInitialized && firebaseAuth){
-          try{
-            await firebaseAuth.signInWithEmailAndPassword(email, pass);
-            toast('Bem-vindo!'); 
-            loginModal.close();
-          }catch(err){
-            toast('Erro no login: ' + err.message, true);
+        const email = document.getElementById('login-email').value; const pass = document.getElementById('login-pass').value;
+        if(firebaseAuth) { try { await firebaseAuth.signInWithEmailAndPassword(email, pass); modal.close(); toast('Bem-vindo!'); } catch(e) { toast('Erro login', true); } }
+        else { if(email === 'admin' && pass === 'admin') { isAdmin = true; toggleAdminUI(); renderList(true); modal.close(); toast('Admin Demo'); } else toast('Erro', true); }
+      });
+
+      // Add & CSV
+      document.getElementById('add-btn').addEventListener('click', async () => {
+        const nome = prompt('Nome:'); if(!nome) return;
+        const setor = prompt('Setor:'); const dia = prompt('Dia:'); const mes = prompt('Mês:');
+        if(nome && dia && mes) {
+          if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add({ nome, setor: setor||'', dia: Number(dia), mes: Number(mes) });
+          else { dataArr.push({ id: uid(), nome, setor: setor||'', dia: Number(dia), mes: Number(mes) }); renderList(true); toast('Adicionado (Local)'); }
+        }
+      });
+
+      document.getElementById('csv-file').addEventListener('change', (e) => {
+        const f = e.target.files[0]; if(!f) return;
+        const r = new FileReader();
+        r.onload = async () => {
+          const lines = r.result.split(/\r?\n/).filter(l => l.trim());
+          const start = lines[0].toLowerCase().includes('nome') ? 1 : 0;
+          let c = 0;
+          for(let i=start; i<lines.length; i++) {
+            const parts = lines[i].match(/(".*?"|[^,]+)/g);
+            if(parts && parts.length >= 3) {
+              const cl = (v) => (v||'').replace(/^"|"$/g,'').trim();
+              const nome = cl(parts[0]); const setor = cl(parts[1]); const dia = parseInt(cl(parts[2])); const mes = parseInt(cl(parts[3]));
+              if(nome && !isNaN(dia) && !isNaN(mes)) {
+                if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes });
+                else dataArr.push({ id:uid(), nome, setor, dia, mes });
+                c++;
+              }
+            }
           }
-        }else{
-          toast('Firebase não configurado', true);
-          loginModal.close();
-        }
+          if(!firebaseInitialized) renderList(true);
+          toast(`${c} importados.`); e.target.value = '';
+        };
+        r.readAsText(f);
       });
-
-      // Atalhos
-      document.addEventListener('keydown', (e) => {
-        const activeTag = document.activeElement && document.activeElement.tagName;
-        if(activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
-        if(e.key === 'c' || e.key === 'C') celebrateNow(false);
-        if(e.key === '/') {
-          e.preventDefault();
-          const s = document.getElementById('search-input');
-          if(s) s.focus();
-        }
+      
+      document.getElementById('export-csv').addEventListener('click', () => {
+         if(!dataArr.length) return toast('Sem dados.', true);
+         const csv = "Nome,Setor,Dia,Mes\n" + dataArr.map(p => `"${p.nome}","${p.setor}",${p.dia},${p.mes}`).join('\n');
+         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'aniversariantes.csv';
+         document.body.appendChild(a); a.click(); a.remove();
       });
-
-      document.getElementById('footer-version').textContent = 'v1.0.3';
-
-      const ok = await tryInitFirebase();
-      if(!ok){
-        // modo demo local
-        dataArr = [
-          { id:'local1', nome:'Eliomar', setor:'AMBIENTAL', dia:15, mes:1 },
-          { id:'local2', nome:'Ana Silva', setor:'TI', dia:20, mes:1 },
-          { id:'local3', nome:'Gabriel Dutra', setor:'ENGENHARIA', dia:21, mes:10 }
-        ];
-        dataArr = dedupeRecords(dataArr);
-        syncRenderAll();
-        updateAuthUI();
-      }
+      
+      document.addEventListener('keydown', (e) => { if(e.key.toLowerCase() === 'c' && document.activeElement.tagName !== 'INPUT') celebrateNow(false); });
     });
   </script>
 </body>
