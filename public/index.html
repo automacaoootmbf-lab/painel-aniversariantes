@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Painel de Aniversariantes — Axia Energia</title>
-  <meta name="description" content="Gestão corporativa de aniversariantes." />
-  <meta name="theme-color" content="#0e7490">
+  <title>Painel Axia Energia — Gestão de Aniversariantes</title>
+  <meta name="description" content="Painel corporativo de aniversariantes com calendário, lista e estatísticas." />
+  <meta name="theme-color" content="#003B71">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,36 +14,40 @@
 
   <style>
     /* =========================================
-       1. VARIAVEIS E TEMA (AXIA ENERGIA)
+       1. IDENTIDADE VISUAL AXIA ENERGIA
        ========================================= */
     :root {
-      /* Cores da Marca */
-      --brand-dark: #0f172a;       /* Navy Blue Profundo */
-      --brand-primary: #0891b2;    /* Ciano Energia */
-      --brand-secondary: #10b981;  /* Verde Sustentável */
-      --brand-gradient: linear-gradient(135deg, #0891b2, #10b981);
+      /* Paleta da Marca (Baseada em Azul, Verde-Limão e Verde) */
+      --axia-blue: #003B71;       /* Azul Profundo (Eixo/Confiança) */
+      --axia-light-blue: #00A3E0; /* Azul Energia (Vento/Futuro) */
+      --axia-lime: #C4D600;       /* Verde-Limão (Solar/Inovação) */
+      --axia-green: #009B3A;      /* Verde (Sustentabilidade) */
       
+      /* Gradiente da Marca */
+      --brand-gradient: linear-gradient(135deg, var(--axia-blue), var(--axia-green));
+      --accent-gradient: linear-gradient(135deg, var(--axia-light-blue), var(--axia-lime));
+
       /* UI Colors */
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --bg-body: #020617;
-      --card-bg: rgba(30, 41, 59, 0.7); /* Efeito vidro */
+      --bg-body: #020617; /* Fundo Dark Profundo */
+      --card-bg: rgba(15, 23, 42, 0.75); /* Glassmorphism Dark */
       --border-color: rgba(148, 163, 184, 0.15);
       --hover-bg: rgba(255, 255, 255, 0.05);
       --danger: #ef4444;
 
       /* Dimensões */
-      --radius-lg: 20px;
-      --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.5);
+      --radius-lg: 24px;
+      --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.6);
     }
 
     [data-theme="light"] {
       --text-main: #0f172a;
-      --text-muted: #64748b;
-      --bg-body: #f0f9ff;
-      --card-bg: rgba(255, 255, 255, 0.85);
-      --border-color: rgba(148, 163, 184, 0.2);
-      --hover-bg: rgba(15, 23, 42, 0.05);
+      --text-muted: #475569;
+      --bg-body: #f8fafc;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --border-color: rgba(148, 163, 184, 0.3);
+      --hover-bg: rgba(0, 59, 113, 0.05);
     }
 
     /* =========================================
@@ -54,10 +58,10 @@
     body {
       margin: 0; font-family: 'Inter', sans-serif;
       background-color: var(--bg-body);
-      /* Gradiente de fundo sutil */
+      /* Background com a aura da marca */
       background-image: 
-        radial-gradient(circle at 15% 10%, rgba(8, 145, 178, 0.15), transparent 40%),
-        radial-gradient(circle at 85% 90%, rgba(16, 185, 129, 0.1), transparent 40%);
+        radial-gradient(circle at 10% 10%, rgba(0, 163, 224, 0.15), transparent 50%),
+        radial-gradient(circle at 90% 90%, rgba(196, 214, 0, 0.1), transparent 50%);
       color: var(--text-main);
       min-height: 100vh; overflow-x: hidden; line-height: 1.5;
     }
@@ -65,9 +69,10 @@
     h1, h2, h3, .card-title { font-family: 'Poppins', sans-serif; font-weight: 600; color: var(--text-main); margin: 0; }
     
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.3); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.2); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--axia-light-blue); }
 
     .shell { max-width: 1280px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
 
@@ -77,23 +82,23 @@
     /* Header Glass */
     header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 20px; background: var(--card-bg);
-      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      padding: 12px 24px; background: var(--card-bg);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border-color); border-radius: 999px;
       box-shadow: var(--shadow-soft); position: sticky; top: 20px; z-index: 100;
       transition: all 0.3s ease;
     }
-    @media(max-width: 980px) { header { flex-wrap: wrap; justify-content: center; gap: 15px; border-radius: 20px; } }
+    @media(max-width: 980px) { header { flex-wrap: wrap; justify-content: center; gap: 15px; border-radius: 24px; } }
 
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-icon {
-      width: 42px; height: 42px; border-radius: 50%;
-      background: var(--brand-gradient);
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent-gradient);
       display: flex; align-items: center; justify-content: center;
-      font-size: 20px; color: white; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+      font-size: 18px; color: var(--axia-blue); box-shadow: 0 0 20px rgba(196, 214, 0, 0.3);
     }
     .brand-text h1 { font-size: 18px; letter-spacing: -0.5px; }
-    .brand-text span { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .brand-text span { font-size: 11px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
 
     /* Botões */
     .btn {
@@ -101,29 +106,35 @@
       font-size: 13px; font-weight: 600; cursor: pointer;
       display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease;
     }
-    .btn-primary { background: var(--brand-gradient); color: white; box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3); }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(8, 145, 178, 0.5); }
+    .btn-primary { 
+      background: var(--brand-gradient); color: white; 
+      box-shadow: 0 4px 15px rgba(0, 59, 113, 0.4); 
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 163, 224, 0.4); }
     .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
-    .btn-ghost:hover { background: var(--hover-bg); color: var(--text-main); border-color: var(--text-muted); }
+    .btn-ghost:hover { background: var(--hover-bg); color: var(--text-main); border-color: var(--axia-light-blue); }
     .btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; }
 
     input, select {
-      background: rgba(15, 23, 42, 0.3); border: 1px solid var(--border-color);
-      color: var(--text-main); padding: 8px 12px; border-radius: 8px; font-size: 13px;
+      background: rgba(15, 23, 42, 0.4); border: 1px solid var(--border-color);
+      color: var(--text-main); padding: 8px 12px; border-radius: 12px; font-size: 13px;
       transition: border-color 0.2s;
     }
-    input:focus, select:focus { border-color: var(--brand-primary); }
+    input:focus, select:focus { border-color: var(--axia-light-blue); }
 
     /* Nav Tabs */
     .nav-tabs { background: rgba(0,0,0,0.2); padding: 5px; border-radius: 99px; display: flex; gap: 4px; overflow-x: auto; }
     .nav-tab {
       background: transparent; border: none; color: var(--text-muted);
-      padding: 8px 16px; border-radius: 99px; font-size: 13px; font-weight: 500;
-      cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; white-space: nowrap;
+      padding: 8px 18px; border-radius: 99px; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap;
     }
     .nav-tab:hover { color: var(--text-main); }
-    .nav-tab[data-active="true"] { background: var(--brand-dark); color: var(--brand-primary); box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-    [data-theme="light"] .nav-tab[data-active="true"] { background: white; }
+    .nav-tab[data-active="true"] { 
+      background: var(--axia-blue); color: var(--axia-lime); 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    [data-theme="light"] .nav-tab[data-active="true"] { background: white; color: var(--axia-blue); }
 
     /* =========================================
        4. LAYOUT DE PÁGINAS
@@ -139,51 +150,61 @@
     /* Cards */
     .card {
       background: var(--card-bg); border: 1px solid var(--border-color);
-      border-radius: var(--radius-lg); padding: 24px; backdrop-filter: blur(10px);
+      border-radius: var(--radius-lg); padding: 24px; backdrop-filter: blur(12px);
       box-shadow: var(--shadow-soft);
     }
     .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .card-title { font-size: 16px; letter-spacing: 0.02em; }
     .card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-    .pill-count { background: rgba(8, 145, 178, 0.15); color: var(--brand-primary); padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 600; }
+    .pill-count { background: rgba(196, 214, 0, 0.15); color: var(--axia-lime); padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 700; }
 
     /* List Items */
     .person-row {
       display: flex; align-items: center; gap: 14px; padding: 12px;
-      border-radius: 12px; border-bottom: 1px solid var(--border-color); transition: background 0.2s;
+      border-radius: 16px; border: 1px solid transparent; transition: all 0.2s;
+      background: rgba(255,255,255,0.02);
     }
-    .person-row:last-child { border-bottom: none; }
-    .person-row:hover { background: var(--hover-bg); }
+    .person-row:hover { background: var(--hover-bg); border-color: var(--border-color); transform: translateX(4px); }
+    
     .avatar {
-      width: 40px; height: 40px; border-radius: 12px;
-      background: linear-gradient(135deg, #1e293b, #334155); color: var(--text-main);
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, var(--axia-blue), #0f172a); color: white;
       display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
     .person-info h4 { margin: 0; font-size: 14px; font-weight: 500; }
     .person-info p { margin: 0; font-size: 12px; color: var(--text-muted); }
-    .tag-days { font-size: 11px; font-weight: 600; color: var(--brand-secondary); background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 6px; }
+    
+    .tag-days { 
+      font-size: 11px; font-weight: 600; color: var(--axia-blue); 
+      background: var(--axia-lime); padding: 3px 10px; border-radius: 8px; 
+    }
 
     /* Tabela */
     table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding: 12px 8px; border-bottom: 1px solid var(--border-color); }
-    td { padding: 12px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
+    th { text-align: left; color: var(--text-muted); font-size: 11px; text-transform: uppercase; padding: 16px 8px; border-bottom: 1px solid var(--border-color); letter-spacing: 0.05em; }
+    td { padding: 14px 8px; border-bottom: 1px solid var(--border-color); color: var(--text-main); }
     tr:hover td { background: var(--hover-bg); }
 
     /* Utilitários */
     .admin-only { display: none; }
     #toast {
-      position: fixed; bottom: 30px; right: 30px; background: var(--brand-primary); color: white;
-      padding: 12px 24px; border-radius: 99px; box-shadow: 0 10px 30px rgba(8, 145, 178, 0.4);
+      position: fixed; bottom: 30px; right: 30px; 
+      background: var(--brand-gradient); color: white;
+      padding: 14px 28px; border-radius: 99px; box-shadow: 0 15px 40px rgba(0, 59, 113, 0.5);
       font-weight: 500; opacity: 0; transform: translateY(20px); transition: all 0.3s; z-index: 999;
     }
     #toast.show { opacity: 1; transform: translateY(0); }
     dialog { border: none; background: transparent; padding: 0; }
-    dialog::backdrop { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+    dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); }
   </style>
 </head>
 
 <body data-theme="dark">
-  <script src="/firebase-config.js"></script> <canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+  <script src="/firebase-config.js"></script>
+
+  <canvas id="confetti-canvas" style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+  <div id="balloon-wrap" style="position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9980;"></div>
   <div id="toast"></div>
 
   <div class="shell">
@@ -192,7 +213,7 @@
         <div class="brand-icon"><i class="fa-solid fa-bolt"></i></div>
         <div class="brand-text">
           <h1>Axia Energia</h1>
-          <span>Painel de Aniversariantes</span>
+          <span>Gestão de Aniversariantes</span>
         </div>
       </div>
 
@@ -215,7 +236,7 @@
       <section id="view-home" class="page page-grid active">
         <div class="card">
           <div class="card-header">
-            <div><h2 class="card-title">Visão Geral</h2><p class="card-sub">Aniversariantes do dia</p></div>
+            <div><h2 class="card-title">Visão Geral</h2><p class="card-sub">Resumo do dia</p></div>
             <span class="pill-count" id="today-count">0</span>
           </div>
           <div id="today-content" style="min-height: 80px; display:flex; align-items:center; color:var(--text-muted);">Carregando...</div>
@@ -228,12 +249,19 @@
         </div>
         <aside class="card">
           <div class="card-header"><h3 class="card-title">Status</h3></div>
-          <div style="display:flex; flex-direction:column; gap:12px; font-size:13px; color:var(--text-muted);">
-            <div style="display:flex; justify-content:space-between;"><span>Tema:</span><strong style="color:var(--text-main)" id="current-theme">Dark</strong></div>
-            <div style="display:flex; justify-content:space-between;"><span>Cadastros:</span><strong style="color:var(--brand-primary)" id="total-records">0</strong></div>
+          <div style="display:flex; flex-direction:column; gap:16px; font-size:13px; color:var(--text-muted);">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+              <span>Tema:</span><strong style="color:var(--text-main)" id="current-theme">Dark</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-color); padding-bottom:8px;">
+              <span>Total Cadastros:</span><strong style="color:var(--axia-light-blue)" id="total-records">0</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span>Sistema:</span><strong style="color:var(--axia-green)">Online</strong>
+            </div>
           </div>
-          <div style="margin-top:20px; padding:12px; background:rgba(8, 145, 178, 0.1); border-radius:12px; font-size:12px; color:var(--brand-primary);">
-            <i class="fa-regular fa-lightbulb"></i> Dica: Pressione <strong>"C"</strong> para festa!
+          <div style="margin-top:20px; padding:16px; background:rgba(196, 214, 0, 0.1); border:1px solid rgba(196, 214, 0, 0.2); border-radius:16px; font-size:12px; color:var(--axia-lime);">
+            <i class="fa-regular fa-lightbulb"></i> Dica: Pressione <strong>"C"</strong> para celebrar com a equipe!
           </div>
         </aside>
       </section>
@@ -247,7 +275,10 @@
         </div>
         <aside class="card">
           <div class="card-header"><h3 class="card-title">Resumo</h3></div>
-          <p class="card-sub" id="calendar-summary">Calculando...</p>
+          <p class="card-sub" id="calendar-summary" style="margin-bottom:20px;">Calculando...</p>
+          <div style="font-size:12px; color:var(--text-muted); line-height:1.6;">
+            O calendário exibe os aniversariantes do mês atual. Use os filtros da lista para ver outros meses.
+          </div>
         </aside>
       </section>
 
@@ -268,13 +299,15 @@
             </div>
           </div>
           <div id="list-wrapper"></div>
-          <div style="text-align:center; margin-top:16px;"><button id="load-more" class="btn btn-ghost">Carregar mais</button></div>
+          <div style="text-align:center; margin-top:20px;"><button id="load-more" class="btn btn-ghost">Carregar mais</button></div>
         </div>
         <aside class="card">
           <div class="card-header"><h3 class="card-title">Admin</h3></div>
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <p style="font-size:12px; color:var(--text-muted);">Importação (CSV)</p>
-            <input type="file" id="csv-file" accept=".csv" class="admin-only" style="font-size:11px;">
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <div style="padding:16px; border:1px dashed var(--border-color); border-radius:16px; text-align:center;">
+              <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Importação (CSV)</p>
+              <input type="file" id="csv-file" accept=".csv" class="admin-only" style="font-size:11px; width:100%;">
+            </div>
             <div style="display:flex; gap:8px;">
               <button id="import-sample" class="btn btn-ghost admin-only" style="flex:1; font-size:11px;">Exemplo</button>
               <button id="export-csv" class="btn btn-ghost" style="flex:1; font-size:11px;">Exportar</button>
@@ -293,14 +326,14 @@
               <button id="refresh-future" class="btn btn-ghost btn-icon"><i class="fa-solid fa-arrows-rotate"></i></button>
             </div>
           </div>
-          <div id="future-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:16px;"></div>
+          <div id="future-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:16px;"></div>
         </div>
       </section>
 
       <section id="view-charts" class="page page-grid">
         <div class="card">
           <div class="card-header"><h2 class="card-title">Análise Anual</h2></div>
-          <div style="position:relative; height:300px;"><canvas id="chart-monthly"></canvas></div>
+          <div style="position:relative; height:320px;"><canvas id="chart-monthly"></canvas></div>
         </div>
         <aside class="card">
           <div class="card-header"><h3 class="card-title">Insights</h3></div>
@@ -311,12 +344,12 @@
   </div>
 
   <dialog id="login-modal">
-    <div class="card" style="width:360px; border:1px solid var(--brand-primary); box-shadow: 0 20px 50px rgba(0,0,0,0.8);">
-      <div style="text-align:center; margin-bottom:20px;">
-        <h3 style="font-size:18px;">Acesso Admin</h3>
-        <p style="font-size:12px; color:var(--text-muted);">Área restrita</p>
+    <div class="card" style="width:360px; border:1px solid var(--axia-light-blue); box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
+      <div style="text-align:center; margin-bottom:24px;">
+        <h3 style="font-size:20px;">Acesso Admin</h3>
+        <p style="font-size:12px; color:var(--text-muted);">Área restrita Axia Energia</p>
       </div>
-      <form id="login-form" style="display:flex; flex-direction:column; gap:12px;">
+      <form id="login-form" style="display:flex; flex-direction:column; gap:16px;">
         <input type="email" id="login-email" placeholder="E-mail" required>
         <input type="password" id="login-pass" placeholder="Senha" required>
         <div style="display:flex; gap:8px; margin-top:8px;">
@@ -332,7 +365,7 @@
 
   <script>
     /* =========================================
-       LÓGICA PRINCIPAL (Full Features)
+       LÓGICA PRINCIPAL (Axia Energia)
        ========================================= */
     let dataArr = [];
     let isAdmin = false;
@@ -348,7 +381,7 @@
     // --- Helpers ---
     const toast = (msg, err=false) => {
       const t = document.getElementById('toast');
-      t.textContent = msg; t.style.background = err ? 'var(--danger)' : 'var(--brand-primary)';
+      t.textContent = msg; t.style.background = err ? 'var(--danger)' : 'var(--brand-gradient)';
       t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000);
     };
     const uid = () => 'id-' + Math.random().toString(36).substr(2, 9);
@@ -363,20 +396,23 @@
       const content = document.getElementById('today-content');
       if(todayMatches.length > 0) {
         content.innerHTML = todayMatches.map(p => `
-          <div class="person-row" style="width:100%; border:1px solid var(--brand-primary); background:rgba(8,145,178,0.1);">
-            <div class="avatar" style="background:var(--brand-primary)">${p.nome.charAt(0)}</div>
+          <div class="person-row" style="width:100%; border:1px solid var(--axia-light-blue); background:rgba(0,163,224,0.1);">
+            <div class="avatar" style="background:var(--axia-light-blue)">${p.nome.charAt(0)}</div>
             <div class="person-info"><h4>${p.nome}</h4><p>${p.setor} • Hoje!</p></div>
-            <i class="fa-solid fa-cake-candles" style="margin-left:auto; color:var(--brand-secondary);"></i>
+            <i class="fa-solid fa-cake-candles" style="margin-left:auto; color:var(--axia-lime);"></i>
           </div>`).join('');
         if(!window.celebratedToday) { celebrateNow(true); window.celebratedToday = true; }
       } else {
-        content.innerHTML = '<span style="font-size:14px;">Nenhum aniversário hoje.</span>';
+        const nextList = getUpcoming(365);
+        const next = nextList.length ? nextList[0] : null;
+        content.innerHTML = next ? 
+          `<span style="font-size:14px;">Próximo: <strong style="color:var(--axia-lime)">${next.nome}</strong> em ${next.dia}/${next.mes} (${next.diffDays} dias).</span>` : 
+          '<span style="font-size:14px;">Nenhum aniversário cadastrado.</span>';
       }
 
       // Próximos
       const upcoming = getUpcoming(5);
-      const upContainer = document.getElementById('home-upcoming');
-      upContainer.innerHTML = upcoming.length ? upcoming.map(p => `
+      document.getElementById('home-upcoming').innerHTML = upcoming.length ? upcoming.map(p => `
         <div class="person-row">
           <div class="avatar" style="width:32px; height:32px; font-size:12px;">${p.nome.charAt(0)}</div>
           <div class="person-info"><h4>${p.nome}</h4><p>${p.dia}/${p.mes}</p></div>
@@ -396,7 +432,7 @@
         return matchName && matchMonth;
       });
 
-      filtered.sort((a,b) => (a.mes - b.mes) || (a.dia - b.dia));
+      filtered.sort((a,b) => (a.mes - b.mes) || (a.dia - b.dia) || a.nome.localeCompare(b.nome));
       const paged = filtered.slice(0, (pageOffset + 1) * PAGE_SIZE);
 
       if(paged.length === 0) {
@@ -405,16 +441,16 @@
         return;
       }
 
-      let html = `<table><thead><tr><th>Nome</th><th>Setor</th><th>Data</th><th style="text-align:right">Ações</th></tr></thead><tbody>`;
+      let html = `<table><thead><tr><th>Colaborador</th><th>Setor</th><th>Data</th><th style="text-align:right">Ações</th></tr></thead><tbody>`;
       html += paged.map(p => `
         <tr>
           <td style="font-weight:500">${p.nome}</td>
           <td style="color:var(--text-muted)">${p.setor || '-'}</td>
           <td>${String(p.dia).padStart(2,'0')}/${String(p.mes).padStart(2,'0')}</td>
-          <td style="text-align:right;">
+          <td style="text-align:right; white-space:nowrap;">
              ${isAdmin ? 
               `<button class="btn btn-ghost btn-icon" style="width:28px;height:28px;" onclick="editRecord('${p.id}')" title="Editar"><i class="fa-solid fa-pen" style="font-size:12px"></i></button>
-               <button class="btn btn-ghost btn-icon" style="width:28px;height:28px; color:var(--danger);" onclick="deleteRecord('${p.id}')" title="Excluir"><i class="fa-solid fa-trash" style="font-size:12px"></i></button>` 
+               <button class="btn btn-ghost btn-icon" style="width:28px;height:28px; color:var(--danger); border-color:var(--danger);" onclick="deleteRecord('${p.id}')" title="Excluir"><i class="fa-solid fa-trash" style="font-size:12px"></i></button>` 
               : `<i class="fa-solid fa-lock" style="font-size:10px; opacity:0.3"></i>`}
           </td>
         </tr>`).join('');
@@ -428,7 +464,7 @@
       const now = new Date();
       const m = now.getMonth();
       const y = now.getFullYear();
-      const mNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+      const mNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
       document.getElementById('calendar-month-label').textContent = `${mNames[m]} / ${y}`;
       
       const daysInMonth = new Date(y, m + 1, 0).getDate();
@@ -437,7 +473,7 @@
       for(let d=1; d<=daysInMonth; d++) {
         const matches = dataArr.filter(p => p.dia === d && p.mes === (m+1));
         count += matches.length;
-        let badges = matches.map(p => `<div style="font-size:10px; background:rgba(8,145,178,0.2); color:#67e8f9; padding:2px 4px; border-radius:4px; margin-top:2px; white-space:nowrap; overflow:hidden;">${p.nome.split(' ')[0]}</div>`).join('');
+        let badges = matches.map(p => `<div style="font-size:10px; background:rgba(196, 214, 0, 0.2); color:var(--axia-lime); padding:2px 4px; border-radius:4px; margin-top:2px; white-space:nowrap; overflow:hidden;">${p.nome.split(' ')[0]}</div>`).join('');
         html += `<div style="min-height:90px; background:rgba(255,255,255,0.02); border:1px solid var(--border-color); border-radius:12px; padding:8px;"><span style="font-size:11px; color:var(--text-muted); float:right;">${d}</span><div style="margin-top:18px;">${badges}</div></div>`;
       }
       grid.innerHTML = html;
@@ -452,7 +488,7 @@
         <div class="person-row" style="background:var(--hover-bg); border:1px solid var(--border-color);">
           <div class="avatar">${p.nome.charAt(0)}</div>
           <div class="person-info" style="flex:1"><h4>${p.nome}</h4><p>${p.setor}</p></div>
-          <div style="text-align:right"><div style="font-weight:600; color:var(--brand-primary);">${p.dia}/${p.mes}</div><div class="tag-days">${p.diffDays} dias</div></div>
+          <div style="text-align:right"><div style="font-weight:600; color:var(--axia-light-blue);">${p.dia}/${p.mes}</div><div class="tag-days">${p.diffDays} dias</div></div>
         </div>`).join('') : '<div style="grid-column:1/-1; text-align:center; padding:20px; color:var(--text-muted);">Nenhum neste período.</div>';
     }
 
@@ -462,14 +498,15 @@
       const counts = Array(12).fill(0);
       dataArr.forEach(p => { if(p.mes >= 1 && p.mes <= 12) counts[p.mes - 1]++; });
       if(chartInstance) chartInstance.destroy();
+      
       const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
-      gradient.addColorStop(0, '#0891b2'); gradient.addColorStop(1, '#10b981');
+      gradient.addColorStop(0, '#00A3E0'); gradient.addColorStop(1, '#C4D600');
       
       chartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
-          datasets: [{ label: 'Qtd', data: counts, backgroundColor: gradient, borderRadius: 6 }]
+          datasets: [{ label: 'Colaboradores', data: counts, backgroundColor: gradient, borderRadius: 6 }]
         },
         options: {
           responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
@@ -477,10 +514,10 @@
         }
       });
       const max = Math.max(...counts);
-      document.getElementById('charts-summary').innerHTML = `Maior pico: <strong>${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][counts.indexOf(max)]}</strong> (${max} pessoas).`;
+      document.getElementById('charts-summary').innerHTML = `Maior concentração: <strong>${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][counts.indexOf(max)]}</strong> (${max}).`;
     }
 
-    // --- Lógica de Dados (Firebase + Local) ---
+    // --- Lógica de Dados ---
     function getUpcoming(days) {
       const today = new Date(); today.setHours(0,0,0,0);
       return dataArr.map(p => {
@@ -491,9 +528,9 @@
       }).filter(p => p.diffDays >= 0 && p.diffDays <= days).sort((a,b) => a.diffDays - b.diffDays);
     }
 
+    // CRUD (Firebase/Local)
     window.editRecord = async (id) => {
-      const rec = dataArr.find(p => p.id === id);
-      if(!rec) return;
+      const rec = dataArr.find(p => p.id === id); if(!rec) return;
       const novoNome = prompt('Nome:', rec.nome); if(novoNome === null) return;
       const novoSetor = prompt('Setor:', rec.setor);
       const novoDia = prompt('Dia:', rec.dia);
@@ -522,8 +559,14 @@
     function celebrateNow(auto=false) {
       const c = document.getElementById('confetti-canvas');
       const myConfetti = confetti.create(c, { resize: true });
-      myConfetti({ particleCount: auto?100:200, spread: 70, origin: { y: 0.6 }, colors: ['#0891b2', '#10b981', '#f59e0b'] });
-      if(!auto) toast('🎉 Parabéns!');
+      myConfetti({ particleCount: auto?100:200, spread: 70, origin: { y: 0.6 }, colors: ['#00A3E0', '#C4D600', '#ffffff'] });
+      if(!auto) {
+        toast('🎉 Energia que move!');
+        const wrap = document.getElementById('balloon-wrap');
+        const b = document.createElement('div'); b.innerHTML = '⚡';
+        b.style.cssText = `position:absolute; left:${Math.random()*90}%; bottom:-50px; font-size:40px; transition:bottom 4s ease-in; color:#C4D600;`;
+        wrap.appendChild(b); setTimeout(() => b.style.bottom = '110%', 50); setTimeout(() => b.remove(), 4100);
+      }
     }
 
     // --- Inicialização ---
@@ -547,7 +590,7 @@
 
         firebaseDb.collection('aniversariantes').onSnapshot(snap => {
           dataArr = snap.docs.map(doc => { const d = doc.data(); return { id: doc.id, nome: d.nome||'', setor: (d.setor||'').toUpperCase(), dia: Number(d.dia), mes: Number(d.mes) }; });
-          // Remove duplicatas
+          // Dedupe simples
           const unique = new Map(); dataArr.forEach(i => unique.set(i.nome+i.dia+i.mes, i)); dataArr = Array.from(unique.values());
           const active = document.querySelector('.nav-tab[data-active="true"]'); if(active) active.click();
         });
@@ -558,18 +601,15 @@
     function toggleAdminUI() { document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? (el.tagName === 'BUTTON' ? 'inline-flex' : 'block') : 'none'); }
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Tema
       const theme = localStorage.getItem('axia_theme') || 'dark';
       document.body.dataset.theme = theme;
       document.getElementById('current-theme').textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
       document.getElementById('theme-toggle').innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
 
-      // Dados Demo se Firebase falhar
-      const demoData = [ {id:'1', nome:'Evandro Silva', setor:'OPS', dia:14, mes:12}, {id:'2', nome:'Erick Ketes', setor:'TI', dia:1, mes:12} ];
+      const demoData = [ {id:'1', nome:'Colaborador Exemplo', setor:'Operações', dia:14, mes:12}, {id:'2', nome:'Ana Silva', setor:'TI', dia:1, mes:12} ];
       const fbOk = await initFirebase();
       if(!fbOk) { dataArr = demoData; console.log("Modo Demo"); document.querySelector('.nav-tab[data-view="home"]').click(); }
 
-      // Listeners
       document.getElementById('theme-toggle').addEventListener('click', () => {
         const next = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
         document.body.dataset.theme = next; localStorage.setItem('axia_theme', next);
@@ -646,7 +686,7 @@
       document.getElementById('export-csv').addEventListener('click', () => {
          if(!dataArr.length) return toast('Sem dados.', true);
          const csv = "Nome,Setor,Dia,Mes\n" + dataArr.map(p => `"${p.nome}","${p.setor}",${p.dia},${p.mes}`).join('\n');
-         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'aniversariantes.csv';
+         const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'aniversariantes_axia.csv';
          document.body.appendChild(a); a.click(); a.remove();
       });
       
