@@ -185,6 +185,7 @@
     dialog { border: none; background: transparent; padding: 0; }
     dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); }
 
+    /* Animações */
     @keyframes floatUp {
       0% { transform: translateY(100vh) rotate(0deg) scale(0.8); opacity: 0; }
       10% { opacity: 1; }
@@ -198,6 +199,25 @@
       position: fixed; bottom: 0; pointer-events: none; z-index: 9990;
       will-change: transform, opacity, margin-left;
     }
+
+    /* === MARCA D'ÁGUA DO DESENVOLVEDOR === */
+    .watermark-dev {
+      position: fixed;
+      right: 24px;
+      bottom: 16px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      opacity: 0.55;
+      pointer-events: none;
+      z-index: 5;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .watermark-dev i { font-size: 10px; }
   </style>
 </head>
 
@@ -365,7 +385,7 @@
 
   <script>
     /* =========================================
-       LÓGICA PRINCIPAL - V3.5 PRODUCTION (AUDIT READY)
+       LÓGICA PRINCIPAL - V3.6 PRODUCTION (FINAL)
        ========================================= */
     let dataArr = [];
     let isAdmin = false;
@@ -614,7 +634,6 @@
         if (firebaseInitialized && isAdmin) {
           const now = firebase.firestore.FieldValue.serverTimestamp();
 
-          // Payload COMPLETO, com audit fields
           const payloadDb = {
             nome:  novoNome,
             setor: normalizeSetor(novoSetor),
@@ -656,7 +675,6 @@
     async function loadScript(src) { return new Promise((r, j) => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = j; document.head.appendChild(s); }); }
 
     async function initFirebase() {
-      // Ponto 1: Usando __firebase_config
       if(!window.__firebase_config) return false;
       try {
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
@@ -672,28 +690,24 @@
           toggleAdminUI(); renderList(true);
         });
 
-        // SNAPSHOT ATUALIZADO (lê tudo para preservar createdAt no edit)
         firebaseDb.collection('aniversariantes').onSnapshot(snap => {
           const novos = [];
           snap.forEach(doc => {
             const d = doc.data();
             const mesCorrigido = normalizarMes(d.mes, d.textoData);
-            
             novos.push({
               id: doc.id,
               nome: d.nome || '',
               setor: normalizeSetor(d.setor),
               dia: Number(d.dia),
               mes: mesCorrigido,
-              createdAt: d.createdAt, // Preserva
-              createdBy: d.createdBy  // Preserva
+              createdAt: d.createdAt,
+              createdBy: d.createdBy
             });
           });
-          
           const unique = new Map(); 
           novos.forEach(i => { const key = `${i.nome}|${i.setor}|${i.dia}|${i.mes}`; unique.set(key, i); }); 
           dataArr = Array.from(unique.values());
-          
           const active = document.querySelector('.nav-tab[data-active="true"]'); if(active) active.click();
         });
         return true;
@@ -740,20 +754,15 @@
         else { if(email === 'admin' && pass === 'admin') { isAdmin = true; toggleAdminUI(); renderList(true); modal.close(); toast('Admin Demo'); } else toast('Erro', true); }
       });
       
-      // ADD BUTTON - COM AUDIT FIELDS
+      // ADD COM AUDIT FIELDS
       document.getElementById('add-btn').addEventListener('click', async () => {
         const nome = prompt('Nome:'); if(!nome) return; const setor = prompt('Setor:'); const dia = prompt('Dia:'); const mes = prompt('Mês:');
         if(nome && dia && mes) {
           if(firebaseInitialized && isAdmin) {
             const now = firebase.firestore.FieldValue.serverTimestamp();
             await firebaseDb.collection('aniversariantes').add({ 
-              nome, 
-              setor: normalizeSetor(setor), 
-              dia: Number(dia), 
-              mes: Number(mes),
-              createdAt: now,
-              updatedAt: now,
-              createdBy: firebaseAuth?.currentUser?.email || 'painel-axia'
+              nome, setor: normalizeSetor(setor), dia: Number(dia), mes: Number(mes),
+              createdAt: now, updatedAt: now, createdBy: firebaseAuth?.currentUser?.email || 'painel-axia'
             });
           } else { 
             dataArr.push({ id: uid(), nome, setor: normalizeSetor(setor), dia: Number(dia), mes: Number(mes) }); 
@@ -762,19 +771,15 @@
         }
       });
 
-      // CSV IMPORT - COM AUDIT FIELDS
+      // IMPORT COM AUDIT FIELDS
       document.getElementById('csv-file').addEventListener('change', (e) => {
         const f = e.target.files[0]; if(!f) return; const r = new FileReader();
-        
-        // CORREÇÃO SEGURA NO LOAD
         r.onload = async () => {
           const raw = (r.result || '').toString();
           const lines = raw.split(/\r?\n/).filter(l => l.trim());
           if (!lines.length) { toast('Arquivo vazio.', true); return; }
-
           const headerLine = typeof lines[0] === 'string' ? lines[0] : '';
           const start = headerLine.toLowerCase().includes('nome') ? 1 : 0;
-          
           let c = 0;
           for(let i=start; i<lines.length; i++) {
             const parts = lines[i].match(/(".*?"|[^,]+)/g);
@@ -783,15 +788,8 @@
               if(nome && !isNaN(dia) && !isNaN(mes)) { 
                 if(firebaseInitialized && isAdmin) {
                   const now = firebase.firestore.FieldValue.serverTimestamp();
-                  await firebaseDb.collection('aniversariantes').add({ 
-                    nome, setor, dia, mes,
-                    createdAt: now,
-                    updatedAt: now,
-                    createdBy: firebaseAuth?.currentUser?.email || 'csv-import'
-                  });
-                } else {
-                  dataArr.push({ id:uid(), nome, setor, dia, mes }); 
-                }
+                  await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes, createdAt: now, updatedAt: now, createdBy: 'csv-import' });
+                } else dataArr.push({ id:uid(), nome, setor, dia, mes }); 
                 c++; 
               }
             }
@@ -806,7 +804,6 @@
          const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'aniversariantes_axia.csv'; document.body.appendChild(a); a.click(); a.remove();
       });
       
-      // CORREÇÃO SEGURA NO KEYDOWN
       document.addEventListener('keydown', (e) => { 
         const key = (e.key || '').toLowerCase();
         const activeTag = (document.activeElement && document.activeElement.tagName) || '';
@@ -816,5 +813,6 @@
       });
     });
   </script>
+  <div class="watermark-dev"><i class="fa-solid fa-bolt"></i> Desenvolvido por Gabriel Dutra Barbosa</div>
 </body>
 </html>
