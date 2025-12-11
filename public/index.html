@@ -35,6 +35,7 @@
       --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.6);
     }
 
+    /* Tema Claro */
     [data-theme="light"] {
       --text-main: #0f172a;
       --text-muted: #64748b;
@@ -364,7 +365,7 @@
 
   <script>
     /* =========================================
-       LÓGICA PRINCIPAL - V3.3 PRODUCTION (BLINDADO)
+       LÓGICA PRINCIPAL - V3.5 PRODUCTION (AUDIT READY)
        ========================================= */
     let dataArr = [];
     let isAdmin = false;
@@ -594,15 +595,56 @@
       }).filter(p => p.diffDays >= 0 && p.diffDays <= days).sort((a,b) => a.diffDays - b.diffDays);
     }
 
+    // CRUD SEGURO - COM AUDIT FIELDS E MERGE FALSE
     window.editRecord = async (id) => {
-      const rec = dataArr.find(p => p.id === id); if(!rec) return;
-      const novoNome = prompt('Nome:', rec.nome); if(novoNome === null) return;
-      const novoSetor = prompt('Setor:', rec.setor); const novoDia = prompt('Dia:', rec.dia); const novoMes = prompt('Mês:', rec.mes);
-      if(novoNome && novoDia && novoMes) {
-        const payload = { nome: novoNome, setor: normalizeSetor(novoSetor), dia: Number(novoDia), mes: Number(novoMes) };
-        if(firebaseInitialized && isAdmin) { await firebaseDb.collection('aniversariantes').doc(id).set(payload, { merge: true }); toast('Atualizado!'); }
-        else { Object.assign(rec, payload); renderList(true); toast('Atualizado (Local)'); }
-      } else toast('Dados inválidos.', true);
+      const rec = dataArr.find(p => p.id === id);
+      if (!rec) return;
+
+      const novoNome = prompt('Nome:', rec.nome);
+      if (novoNome === null) return;
+
+      const novoSetor = prompt('Setor:', rec.setor);
+      const novoDia   = prompt('Dia:',  rec.dia);
+      const novoMes   = prompt('Mês:',  rec.mes);
+
+      if (novoNome && novoDia && novoMes) {
+        const diaNum = Number(novoDia);
+        const mesNum = Number(novoMes);
+
+        if (firebaseInitialized && isAdmin) {
+          const now = firebase.firestore.FieldValue.serverTimestamp();
+
+          // Payload COMPLETO, com audit fields
+          const payloadDb = {
+            nome:  novoNome,
+            setor: normalizeSetor(novoSetor),
+            dia:   diaNum,
+            mes:   mesNum,
+            createdAt: rec.createdAt || now,
+            updatedAt: now,
+            createdBy: rec.createdBy || (firebaseAuth?.currentUser?.email || 'painel-axia')
+          };
+
+          await firebaseDb
+            .collection('aniversariantes')
+            .doc(id)
+            .set(payloadDb, { merge: false });
+
+          toast('Atualizado!');
+        } else {
+          const payloadLocal = {
+            nome:  novoNome,
+            setor: normalizeSetor(novoSetor),
+            dia:   diaNum,
+            mes:   mesNum
+          };
+          Object.assign(rec, payloadLocal);
+          renderList(true);
+          toast('Atualizado (Local)');
+        }
+      } else {
+        toast('Dados inválidos.', true);
+      }
     };
 
     window.deleteRecord = async (id) => {
@@ -614,6 +656,7 @@
     async function loadScript(src) { return new Promise((r, j) => { const s = document.createElement('script'); s.src = src; s.onload = r; s.onerror = j; document.head.appendChild(s); }); }
 
     async function initFirebase() {
+      // Ponto 1: Usando __firebase_config
       if(!window.__firebase_config) return false;
       try {
         await loadScript('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
@@ -629,6 +672,7 @@
           toggleAdminUI(); renderList(true);
         });
 
+        // SNAPSHOT ATUALIZADO (lê tudo para preservar createdAt no edit)
         firebaseDb.collection('aniversariantes').onSnapshot(snap => {
           const novos = [];
           snap.forEach(doc => {
@@ -640,7 +684,9 @@
               nome: d.nome || '',
               setor: normalizeSetor(d.setor),
               dia: Number(d.dia),
-              mes: mesCorrigido
+              mes: mesCorrigido,
+              createdAt: d.createdAt, // Preserva
+              createdBy: d.createdBy  // Preserva
             });
           });
           
@@ -660,6 +706,7 @@
       const theme = localStorage.getItem('axia_theme') || 'dark'; document.body.dataset.theme = theme;
       document.getElementById('current-theme').textContent = theme === 'dark' ? 'Dark Mode' : 'Light Mode';
       document.getElementById('theme-toggle').innerHTML = theme === 'dark' ? '<i class="fa-solid fa-sun"></i>' : '<i class="fa-solid fa-moon"></i>';
+
       const demoData = [ {id:'1', nome:'Colaborador Exemplo', setor:'OPERAÇÕES', dia:14, mes:12}, {id:'2', nome:'Ana Silva', setor:'TI', dia:1, mes:12} ];
       const fbOk = await initFirebase();
       if(!fbOk) { dataArr = demoData; console.log("Modo Demo"); document.querySelector('.nav-tab[data-view="home"]').click(); }
@@ -692,14 +739,30 @@
         if(firebaseAuth) { try { await firebaseAuth.signInWithEmailAndPassword(email, pass); modal.close(); toast('Bem-vindo!'); } catch(e) { toast('Erro login', true); } }
         else { if(email === 'admin' && pass === 'admin') { isAdmin = true; toggleAdminUI(); renderList(true); modal.close(); toast('Admin Demo'); } else toast('Erro', true); }
       });
+      
+      // ADD BUTTON - COM AUDIT FIELDS
       document.getElementById('add-btn').addEventListener('click', async () => {
         const nome = prompt('Nome:'); if(!nome) return; const setor = prompt('Setor:'); const dia = prompt('Dia:'); const mes = prompt('Mês:');
         if(nome && dia && mes) {
-          const payload = { nome, setor: normalizeSetor(setor), dia: Number(dia), mes: Number(mes) };
-          if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add(payload);
-          else { dataArr.push({ id: uid(), ...payload }); renderList(true); toast('Adicionado (Local)'); }
+          if(firebaseInitialized && isAdmin) {
+            const now = firebase.firestore.FieldValue.serverTimestamp();
+            await firebaseDb.collection('aniversariantes').add({ 
+              nome, 
+              setor: normalizeSetor(setor), 
+              dia: Number(dia), 
+              mes: Number(mes),
+              createdAt: now,
+              updatedAt: now,
+              createdBy: firebaseAuth?.currentUser?.email || 'painel-axia'
+            });
+          } else { 
+            dataArr.push({ id: uid(), nome, setor: normalizeSetor(setor), dia: Number(dia), mes: Number(mes) }); 
+            renderList(true); toast('Adicionado (Local)'); 
+          }
         }
       });
+
+      // CSV IMPORT - COM AUDIT FIELDS
       document.getElementById('csv-file').addEventListener('change', (e) => {
         const f = e.target.files[0]; if(!f) return; const r = new FileReader();
         
@@ -717,7 +780,20 @@
             const parts = lines[i].match(/(".*?"|[^,]+)/g);
             if(parts && parts.length >= 3) {
               const cl = (v) => (v||'').replace(/^"|"$/g,'').trim(); const nome = cl(parts[0]); const setor = normalizeSetor(cl(parts[1])); const dia = parseInt(cl(parts[2])); const mes = parseInt(cl(parts[3]));
-              if(nome && !isNaN(dia) && !isNaN(mes)) { if(firebaseInitialized && isAdmin) await firebaseDb.collection('aniversariantes').add({ nome, setor, dia, mes }); else dataArr.push({ id:uid(), nome, setor, dia, mes }); c++; }
+              if(nome && !isNaN(dia) && !isNaN(mes)) { 
+                if(firebaseInitialized && isAdmin) {
+                  const now = firebase.firestore.FieldValue.serverTimestamp();
+                  await firebaseDb.collection('aniversariantes').add({ 
+                    nome, setor, dia, mes,
+                    createdAt: now,
+                    updatedAt: now,
+                    createdBy: firebaseAuth?.currentUser?.email || 'csv-import'
+                  });
+                } else {
+                  dataArr.push({ id:uid(), nome, setor, dia, mes }); 
+                }
+                c++; 
+              }
             }
           }
           if(!firebaseInitialized) renderList(true); toast(`${c} importados.`); e.target.value = '';
